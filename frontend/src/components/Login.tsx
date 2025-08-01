@@ -14,7 +14,7 @@ const Login: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!usuario.trim() || !senha.trim()) {
-      setMensagemErro('SEU USUÁRIO E/OU SENHA ESTÃO INCORRETAS, TENTE NOVAMENTE');
+      setMensagemErro('SEU USUÁRIO E/OU SENHA ESTÃO INCORRETOS, TENTE NOVAMENTE');
       setErro(true);
       return;
     }
