@@ -6,6 +6,8 @@ import asyncpg                                      # Conexão assíncrona com P
 from passlib.context import CryptContext            # Hash seguro de senha (bcrypt)
 from dotenv import load_dotenv                      # Carregar variáveis do .env
 import os                                           # Para acessar variáveis de ambiente
+from google.oauth2 import id_token                  # Validar tokens do Google
+from google.auth.transport import requests as grequests
 
 # Carrega variáveis de ambiente do arquivo .env (ex: DATABASE_URL)
 load_dotenv()
@@ -27,6 +29,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Recupera a string de conexão do banco a partir do .env
 DATABASE_URL = os.getenv("DATABASE_URL")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
 # Função assíncrona utilitária para obter conexão com o banco PostgreSQL
 async def get_db():
@@ -40,6 +43,10 @@ async def get_db():
 class LoginData(BaseModel):
     usuario: str
     senha: str
+
+
+class GoogleToken(BaseModel):
+    token: str
 
 # Função utilitária para gerar hash seguro (use ao cadastrar usuário!)
 def gerar_hash_senha(senha: str) -> str:
@@ -85,6 +92,23 @@ async def login(data: LoginData, db=Depends(get_db)):
 
     # Login realizado com sucesso, retorna só o nome do usuário (pode expandir para JWT depois)
     return {"message": "Login realizado com sucesso!", "usuario": row["usuario"]}
+
+
+# Endpoint de autenticação com Google
+@app.post("/auth/google")
+async def auth_google(token: GoogleToken):
+    try:
+        idinfo = id_token.verify_oauth2_token(
+            token.token,
+            grequests.Request(),
+            GOOGLE_CLIENT_ID,
+        )
+        return {"message": "Token Google válido", "email": idinfo.get("email")}
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido",
+        )
 
 # Endpoint simples para health check/ping
 @app.get("/ping")
