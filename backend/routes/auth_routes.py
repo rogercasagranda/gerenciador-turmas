@@ -1,8 +1,8 @@
 # backend/routes/auth_routes.py
 
 from fastapi import APIRouter, HTTPException
-from models.user import UserLogin
-from auth.auth_handler import verify_user
+from ..models.user import UserLogin
+from ..auth.auth_handler import verify_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
