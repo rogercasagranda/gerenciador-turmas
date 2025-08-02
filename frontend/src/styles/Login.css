@@ -1,105 +1,84 @@
-/* ============================
-   Fundo degradê roxo suave → verde manjericão
-   ============================ */
-body, .login-background {
-  /* Gradiente linear roxo para verde, sem azul */
-  background: linear-gradient(135deg, #BA68C8 0%, #43a047 100%);
-  min-height: 100vh;
-  min-width: 100vw;
-  margin: 0;
-  padding: 0;
-  transition: background 0.5s;
-  overflow-x: hidden;
-}
+/* frontend/src/styles/Login.css */
 
-/* Centraliza vertical e horizontal */
-.login-background, .login-container {
+.login-background {
+  height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  min-width: 100vw;
+  align-items: center;
+  background: linear-gradient(135deg, #b46ec7, #5aa565);
 }
 
-/* Força largura e alinhamento idêntico para todos filhos da caixa */
-.login-box > * {
-  width: 100%;
-  box-sizing: border-box;
-  margin-left: 0;
-  margin-right: 0;
-}
-
-/* Caixa branca centralizada */
-.login-box {
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 4px 32px rgba(67, 160, 71, 0.10), 0 2px 8px rgba(186, 104, 200, 0.09);
-  padding: 40px 32px;
-  max-width: 370px;
-  width: 100%;
+.login-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* Campo de input */
+.login-box {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  z-index: 1;
+}
+
 .login-input {
-  padding: 12px 16px;
-  margin-bottom: 18px;
-  border-radius: 8px;
-  border: 1.5px solid #ba68c8; /* Roxo suave */
-  outline: none;
-  font-size: 16px;
-  transition: border-color 0.2s;
-  color: #333;
-  background: #f8f8fd;
+  padding: 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 }
 
-/* Borda verde ao focar */
-.login-input:focus {
-  border-color: #43a047;
-}
-
-/* Botão "Entrar" */
 .login-button {
-  padding: 13px 0;
-  background: #BA68C8;      /* Roxo */
-  color: #fff;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 8px;
+  padding: 0.8rem;
+  background-color: #6a1b9a;
+  color: white;
+  font-weight: bold;
   border: none;
-  box-shadow: 0 2px 8px rgba(186, 104, 200, 0.15);
-  margin-bottom: 18px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background-color 0.3s ease;
 }
 
-/* Efeito hover no botão "Entrar" */
-.login-button:hover, .login-button:focus {
-  background: #8E24AA;     /* Roxo mais escuro */
+.login-button:hover {
+  background-color: #8e24aa;
 }
 
-/* Container do componente GoogleLogin */
 .login-google-wrapper {
-  margin-top: 10px;
-  width: 100%;
   display: flex;
   justify-content: center;
 }
 
-/* Responsividade para mobile */
-@media (max-width: 480px) {
-  .login-box {
-    padding: 25px 8px;
-    max-width: 97vw;
-  }
-  .login-background, .login-container {
-    min-width: unset;
-  }
+.popup-container {
+  position: absolute;
+  top: 0;
+  right: -320px;
+  width: 300px;
+  background-color: #f44336;
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+  z-index: 10;
 }
 
-/* Remove scroll horizontal */
-html {
-  overflow-x: hidden;
+.popup-close {
+  background: none;
+  border: none;
+  color: white;
+  font-weight: bold;
+  float: right;
+  cursor: pointer;
+}
+
+.popup-timer {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  text-align: right;
+  opacity: 0.8;
 }

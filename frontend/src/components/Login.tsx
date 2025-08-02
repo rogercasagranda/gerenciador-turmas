@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import '../styles/Login.css';
 import ErrorPopup from './ErrorPopup';
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,7 +14,6 @@ const Login: React.FC = () => {
   const [mensagemErro, setMensagemErro] = useState('');
   const navigate = useNavigate();
 
-  // Validação do formulário e popup de erro
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!usuario.trim() || !senha.trim()) {
@@ -25,13 +24,13 @@ const Login: React.FC = () => {
     alert(`Login realizado!\nUsuário: ${usuario}`);
   };
 
-  // Autenticação via Google
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+  const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
     if (!credentialResponse.credential) {
       setMensagemErro('Token do Google não recebido');
       setErro(true);
       return;
     }
+
     try {
       await axios.post('http://localhost:8000/auth/google', {
         token: credentialResponse.credential,
@@ -48,7 +47,6 @@ const Login: React.FC = () => {
     setErro(true);
   };
 
-  // Fecha popup de erro
   const fecharPopup = () => setErro(false);
 
   return (
