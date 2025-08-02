@@ -80,36 +80,12 @@ body, .login-background {
   background: #8E24AA;     /* Roxo mais escuro */
 }
 
-/* Botão de login com Google */
-.login-google-button {
-  padding: 12px 0;
-  background: #fff;
-  color: #444;
-  font-size: 16px;
-  font-weight: 500;
-  border: 1.5px solid #ba68c8; /* Roxo suave */
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+/* Container do componente GoogleLogin */
+.login-google-wrapper {
   margin-top: 10px;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-/* Efeito hover no botão Google */
-.login-google-button:hover {
-  border-color: #43a047; /* Verde manjericão */
-  box-shadow: 0 2px 8px rgba(67, 160, 71, 0.12);
-}
-
-/* Ícone "G" roxo estilizado */
-.login-google-icon {
-  width: 22px;
-  height: 22px;
-  margin-right: 10px;
-  display: inline-block;
-  vertical-align: middle;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 /* Responsividade para mobile */
