@@ -1,0 +1,86 @@
+/* Define fonte padrão */
+body {
+  font-family: 'Inter', sans-serif;               /* Aplica fonte moderna */
+  background-color: #f5f5f5;                       /* Fundo cinza claro */
+  margin: 0;                                       /* Remove margem padrão */
+  padding: 0;                                      /* Remove padding padrão */
+  min-height: 100vh;                               /* Garante altura mínima */
+}
+
+/* Centraliza o formulário na área visível sem quebrar o layout */
+.cadastro-container {
+  display: flex;                                   /* Ativa flexbox */
+  justify-content: center;                         /* Centraliza horizontalmente */
+  align-items: flex-start;                         /* Alinha no topo */
+  padding: 40px 0;                                  /* Espaço superior e inferior */
+  width: 100%;                                     /* Ocupa toda a largura */
+  height: auto;                                    /* Altura fluida */
+}
+
+/* Estiliza o formulário */
+.cadastro-form {
+  background-color: #ffffff;                       /* Fundo branco */
+  padding: 40px;                                   /* Espaçamento interno */
+  border-radius: 12px;                             /* Cantos arredondados */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);         /* Sombra suave */
+  width: 100%;                                     /* Largura total */
+  max-width: 420px;                                /* Limite máximo de largura */
+  display: flex;                                   /* Flexbox interno */
+  flex-direction: column;                          /* Coluna */
+}
+
+/* Título centralizado */
+.cadastro-form h2 {
+  text-align: center;                              /* Centraliza texto */
+  margin-bottom: 24px;                             /* Espaço inferior */
+  color: #5e17eb;                                  /* Roxo institucional */
+}
+
+/* Estiliza os labels */
+.cadastro-form label {
+  font-weight: 600;                                /* Negrito */
+  font-size: 14px;                                 /* Tamanho padrão */
+  margin-bottom: 4px;                              /* Espaço inferior */
+  color: #333;                                     /* Cor escura */
+}
+
+/* Inputs e selects */
+.cadastro-form input,
+.cadastro-form select {
+  padding: 10px;                                   /* Espaçamento interno */
+  margin-bottom: 16px;                             /* Espaço entre elementos */
+  border-radius: 8px;                              /* Arredondado */
+  border: 1px solid #ccc;                          /* Borda cinza */
+  font-size: 14px;                                 /* Texto padrão */
+}
+
+/* Botão de envio */
+.cadastro-form button {
+  background-color: #5e17eb;                       /* Roxo institucional */
+  color: #fff;                                     /* Texto branco */
+  font-weight: 600;                                /* Negrito */
+  border: none;                                    /* Sem borda */
+  border-radius: 8px;                              /* Arredondado */
+  padding: 12px;                                   /* Espaçamento interno */
+  cursor: pointer;                                 /* Cursor de clique */
+  font-size: 16px;                                 /* Tamanho grande */
+  transition: background 0.3s ease;                /* Animação no hover */
+}
+
+/* Hover no botão */
+.cadastro-form button:hover {
+  background-color: #4a0fca;                       /* Roxo escuro no hover */
+}
+
+/* Checkbox alinhado */
+.cadastro-form input[type="checkbox"] {
+  margin-right: 8px;                               /* Espaço ao lado */
+}
+
+/* Estilo de erro */
+.erro {
+  color: red;                                      /* Texto vermelho */
+  font-size: 14px;                                 /* Texto pequeno */
+  text-align: center;                              /* Centralizado */
+  margin-bottom: 12px;                             /* Espaço inferior */
+}

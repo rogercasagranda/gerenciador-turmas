@@ -21,6 +21,7 @@ const Login: React.FC = () => {
       setErro(true);
       return;
     }
+
     alert(`Login realizado!\nUsuário: ${usuario}`);
   };
 
@@ -50,38 +51,46 @@ const Login: React.FC = () => {
   const fecharPopup = () => setErro(false);
 
   return (
-    <div className="login-background">
-      <div className="login-container">
-        <form className="login-box" onSubmit={handleSubmit} autoComplete="off">
-          <input
-            type="text"
-            className="login-input"
-            placeholder="Usuário"
-            value={usuario}
-            onChange={e => setUsuario(e.target.value)}
-            autoComplete="username"
-            required
-          />
-          <input
-            type="password"
-            className="login-input"
-            placeholder="Senha"
-            value={senha}
-            onChange={e => setSenha(e.target.value)}
-            autoComplete="current-password"
-            required
-          />
-          <button type="submit" className="login-button">
-            Entrar
-          </button>
-          <div className="login-google-wrapper">
-            <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
-          </div>
-        </form>
-        {erro && (
-          <ErrorPopup mensagem={mensagemErro} onClose={fecharPopup} />
-        )}
+    <div className="login-wrapper">
+      <div className="login-background">
+        <div className="login-container">
+          <form className="login-box" onSubmit={handleSubmit} autoComplete="off">
+            <input
+              type="text"
+              className="login-input"
+              placeholder="Usuário"
+              value={usuario}
+              onChange={e => setUsuario(e.target.value)}
+              autoComplete="username"
+              required
+            />
+            <input
+              type="password"
+              className="login-input"
+              placeholder="Senha"
+              value={senha}
+              onChange={e => setSenha(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
+            <button type="submit" className="login-button">
+              Entrar
+            </button>
+            <div className="login-google-wrapper">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap
+                auto_select
+                clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as unknown as string}
+              />
+            </div>
+          </form>
+        </div>
       </div>
+      {erro && (
+        <ErrorPopup mensagem={mensagemErro} onClose={fecharPopup} />
+      )}
     </div>
   );
 };

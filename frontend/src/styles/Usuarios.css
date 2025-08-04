@@ -1,0 +1,88 @@
+/* Container geral das telas de usuários */
+.usuario-container {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  max-width: 700px;
+  margin: 20px auto;
+}
+
+/* Título da tela */
+.usuario-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #5B21B6;
+}
+
+/* Estilo do formulário */
+.usuario-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Estilo dos inputs e selects */
+.usuario-form input,
+.usuario-form select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+/* Botão de envio */
+.usuario-form button {
+  background-color: #5B21B6;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* Tabela de usuários */
+.usuario-tabela {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Cabeçalho da tabela */
+.usuario-tabela th {
+  background-color: #ede9fe;
+  color: #5B21B6;
+  padding: 10px;
+  text-align: left;
+}
+
+/* Células da tabela */
+.usuario-tabela td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+/* Container de botões */
+.usuario-botoes {
+  display: flex;                          /* Flexbox */
+  justify-content: center;               /* Centraliza */
+  gap: 20px;                              /* Espaço entre botões */
+  margin-top: 30px;                       /* Espaço acima */
+}
+
+/* Estilo dos botões principais */
+.usuario-botoes button {
+  background-color: #5B21B6;             /* Roxo */
+  color: white;                          /* Texto branco */
+  padding: 12px 20px;                    /* Espaço interno */
+  border: none;                          /* Remove borda */
+  border-radius: 6px;                    /* Bordas arredondadas */
+  font-size: 1rem;                       /* Tamanho da fonte */
+  cursor: pointer;                       /* Cursor clicável */
+  transition: background-color 0.2s;     /* Animação de hover */
+}
+
+/* Efeito ao passar o mouse */
+.usuario-botoes button:hover {
+  background-color: #4c1d95;             /* Roxo mais escuro */
+}

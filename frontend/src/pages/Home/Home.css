@@ -1,0 +1,21 @@
+/* frontend/src/pages/Home/Home.css */
+
+/* Define o container da tela Home */
+.home-container {
+  padding: 40px;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+/* Estilo do título principal */
+.home-container h1 {
+  color: #5e17eb; /* Roxo institucional */
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+/* Estilo do subtítulo */
+.home-container p {
+  font-size: 18px;
+  color: #444;
+}
