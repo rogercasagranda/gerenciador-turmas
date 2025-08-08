@@ -1,29 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
-    <!-- Define codificação de caracteres -->
+    <!-- Define o charset como UTF-8 para suporte a caracteres especiais -->
     <meta charset="UTF-8" />
-
-    <!-- Garante responsividade no mobile -->
+    
+    <!-- Define como o site deve se comportar em dispositivos móveis -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Define o título da aplicação -->
-    <title>Portal do Professor</title>
+    <!-- Define a cor da barra superior no mobile -->
+    <meta name="theme-color" content="#ffffff" />
 
-    <!-- Define cor do navegador e da barra de status do app PWA -->
-    <meta name="theme-color" content="#4a148c" />
+    <!-- Define o nome do aplicativo para instalação no PWA -->
+    <meta name="apple-mobile-web-app-title" content="Portal do Professor" />
+    <meta name="application-name" content="Portal do Professor" />
 
-    <!-- Importa o manifesto do PWA -->
-    <link rel="manifest" href="/manifest.webmanifest" />
-
-    <!-- Importa o ícone principal da aplicação -->
+    <!-- Define o ícone principal da aplicação (requer que o arquivo exista em public/) -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
 
-    <!-- Arquivo de entrada Vite -->
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- Manifesto do PWA (deve estar presente em public/manifest.webmanifest) -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Título da aba do navegador -->
+    <title>Portal do Professor</title>
   </head>
   <body>
-    <!-- Root da aplicação React -->
+    <!-- Container onde a aplicação React será injetada -->
     <div id="root"></div>
+
+    <!-- Script Vite que importa e inicializa a aplicação React -->
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
