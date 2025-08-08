@@ -17,6 +17,8 @@ const Login: React.FC = () => {
 
   // Controle de exibição do popup de erro
   const [showPopup, setShowPopup] = useState(false);
+  // Estado para mensagem dinâmica do popup
+  const [popupMessage, setPopupMessage] = useState("SEU USUÁRIO E/OU SENHA ESTÃO INCORRETAS, TENTE NOVAMENTE");
 
   // Contador regressivo do popup de erro
   const [countdown, setCountdown] = useState(5);
@@ -26,6 +28,49 @@ const Login: React.FC = () => {
 
   // Hook de navegação
   const navigate = useNavigate();
+
+  // Armazena o token conforme a opção 'Continuar conectado'
+  function storeToken(token: string) {
+    try {
+      if (keepConnected) {
+        localStorage.setItem('auth_token', token);
+      } else {
+        sessionStorage.setItem('auth_token', token);
+      }
+    } catch {}
+  }
+
+
+  // Verifica se veio err=USER_NOT_FOUND na URL (fluxo Google)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('err');
+    if (err === 'USER_NOT_FOUND') {
+      setPopupMessage('Cadastro não encontrado, procure a secretaria da sua escola');
+      setShowPopup(true);
+      setCountdown(5);
+      // Remove o parâmetro da URL sem recarregar
+      const url = new URL(window.location.href);
+      url.searchParams.delete('err');
+      window.history.replaceState({}, document.title, url.toString());
+    }
+  }, []);
+
+// Captura token do Google (?token=...) e redireciona para Home
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  if (token) {
+    storeToken(token);
+    // Remove o parâmetro da URL sem recarregar
+    const url = new URL(window.location.href);
+    url.searchParams.delete('token');
+    window.history.replaceState({}, document.title, url.toString());
+    navigate('/home');
+  }
+}, []);
+
+
 
   // Envia dados para o backend ao submeter o formulário
   const handleLogin = async (e: React.FormEvent) => {
@@ -45,13 +90,27 @@ const Login: React.FC = () => {
 
       // Se falhar, exibe o popup
       if (!response.ok) {
+        if (response.status === 403) {
+          try {
+            const data = await response.json();
+            if (data && (data.code === 'USER_NOT_FOUND' || data?.detail?.code === 'USER_NOT_FOUND')) {
+              setPopupMessage('Cadastro não encontrado, procure a secretaria da sua escola');
+            }
+          } catch {}
+        }
         setShowPopup(true);
         setCountdown(5);
         return;
       }
 
-      // Se sucesso, redireciona para a tela Home
-      navigate("/home");
+      // Se sucesso, armazena token (se existir) e redireciona para a tela Home
+      try {
+        const data = await response.json();
+        if (data && data.token) {
+          storeToken(data.token);
+        }
+      } catch {}
+      navigate('/home');
     } catch (error) {
       // Exibe erro
       console.error("Erro ao fazer login:", error);
@@ -134,7 +193,7 @@ const Login: React.FC = () => {
       {/* Popup de erro com botão e contador */}
       {showPopup && (
         <div className="popup-erro">
-          <p>SEU USUÁRIO E/OU SENHA ESTÃO INCORRETAS, TENTE NOVAMENTE</p>
+          <p>{popupMessage}</p>
           <button onClick={() => window.location.reload()}>Fechar</button>
           <span className="contador">{countdown} segundos</span>
         </div>

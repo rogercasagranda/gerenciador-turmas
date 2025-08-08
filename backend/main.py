@@ -10,6 +10,25 @@ import psycopg2                               # Importa psycopg2 para conexão s
 from psycopg2 import Error as PsycopgError    # Importa a classe de erro específica do psycopg2
 
 # ======================================================
+# JWT: criação de token de acesso
+# ======================================================
+from datetime import datetime, timedelta
+from jose import jwt
+
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    # Cria payload com expiração
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    # Gera o token JWT
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+# ======================================================
 # Importa FastAPI e utilidades
 # ======================================================
 from fastapi import FastAPI, Request, HTTPException, Depends   # Importa classes e funções da FastAPI
@@ -117,10 +136,11 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # --------------------------------------------------
     usuario = db.query(Usuarios).filter(Usuarios.email == email).first()  # Busca usuário por e-mail
     if not usuario:                                                       # Verifica inexistência
-        logger.warning(f"❌ E-mail não encontrado: {email}")               # Registra e-mail ausente
-        raise HTTPException(                                              # Retorna 401 padronizado
-            status_code=401,
-            detail="SEU USUÁRIO E/OU SENHA ESTÃO INCORRETAS, TENTE NOVAMENTE"
+        logger.warning(f"⛔ Usuário não pré-cadastrado (LOCAL): {email}")  # Registra pré-cadastro ausente
+        from fastapi.responses import JSONResponse                         # Importa resposta JSON específica
+        return JSONResponse(                                               # Retorna 403 com código e mensagem
+            status_code=403,
+            content={"code": "USER_NOT_FOUND", "message": "Cadastro não encontrado, procure a secretaria da sua escola"}
         )
 
     # --------------------------------------------------
@@ -136,11 +156,10 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # --------------------------------------------------
     # Sucesso
     # --------------------------------------------------
-    logger.info(f"✅ Login realizado com sucesso para: {email}")       # Registra sucesso de login
-    return {                                                           # Retorna resposta
-        "mensagem": "Login realizado com sucesso",                     # Define mensagem de sucesso
-        "usuario": usuario.email                                       # Retorna o e-mail do usuário autenticado
-    }
+    logger.info(f"✅ Login realizado com sucesso para: {email}")
+    # Gera JWT com subject = e-mail
+    token = create_access_token({"sub": email})
+    return {"message": "Login realizado com sucesso", "token": token, "email": email}
 
 # ======================================================
 # (As rotas /google-login e /google-callback permanecem como no seu código aprovado)
@@ -215,11 +234,20 @@ def google_callback(request: Request):
             result = cur.fetchone()
 
             if not result:
-                logger.warning(f"⛔ Usuário não pré-cadastrado: {user_email}")
-                raise HTTPException(status_code=401, detail="Usuário não autorizado")
+                logger.warning(f"⛔ Usuário não pré-cadastrado (GOOGLE): {user_email}")
+                from fastapi.responses import RedirectResponse
+                frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+                # Redireciona de volta ao frontend para a tela de login com sinalizador de erro
+                return RedirectResponse(url=f"{frontend_url}/login?err=USER_NOT_FOUND", status_code=302)
+
 
             logger.info(f"✅ Usuário autorizado: {user_email}")
-            return {"status": "autorizado", "email": user_email, "dados": user_data}
+            # Cria o JWT e redireciona para o frontend com o token
+            token = create_access_token({"sub": user_email})
+            from fastapi.responses import RedirectResponse
+            frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+            # Evita logar token
+            return RedirectResponse(url=f"{frontend_url}/login?token={token}", status_code=302)
 
         except PsycopgError as db_err:
             logger.error(f"❌ Erro ao consultar banco de dados: {db_err}")
