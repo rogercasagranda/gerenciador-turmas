@@ -1,26 +1,28 @@
-# Importa o roteador do FastAPI
-from fastapi import APIRouter
+# Importa os módulos necessários para autenticação
+from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse
+import os
 
-# Importa o modelo de dados do Pydantic
-from pydantic import BaseModel
-
-
-# Cria o roteador da aplicação
+# Cria o roteador de login
 router = APIRouter()
 
-# Define o modelo esperado no corpo da requisição
-class GoogleToken(BaseModel):
-    token: str  # Token JWT fornecido pelo login com o Google
+# Define a rota /google-login
+@router.get("/google-login")
+async def google_login():
+    # Obtém variáveis de ambiente
+    client_id = os.getenv("GOOGLE_CLIENT_ID")
+    redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
 
-# Rota POST que trata login via Google OAuth
-@router.post("/login/google")
-async def login_google(data: GoogleToken):
-    # Aqui você poderia validar o token com a API do Google
-    # Neste exemplo, retornamos dados fixos de um "usuário autenticado"
+    # Monta a URL de autenticação do Google com os parâmetros necessários
+    auth_url = (
+        "https://accounts.google.com/o/oauth2/v2/auth"
+        "?response_type=code"
+        f"&client_id={client_id}"
+        f"&redirect_uri={redirect_uri}"
+        "&scope=openid%20email%20profile"
+        "&access_type=offline"
+        "&prompt=consent"
+    )
 
-    return {
-        "email": "roger.rodriguez05@gmail.com",
-        "nome": "Roger Casagranda",
-        "tipo_perfil": "master"
-    }
-
+    # Retorna redirecionamento para o Google Auth
+    return RedirectResponse(url=auth_url)

@@ -9,6 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // Exporta a configuração do Vite
 export default defineConfig({
+  // Aplica os plugins
   plugins: [
     react(),                 // Ativa plugin React
     VitePWA({                // Ativa PWA com configurações
@@ -37,5 +38,17 @@ export default defineConfig({
         ]
       }
     })
-  ]
+  ],
+
+  // Corrige erro de WebSocket (HMR)
+  server: {
+    host: 'localhost',        // Define o host como localhost
+    port: 5173,               // Define a porta fixa do Vite
+    strictPort: true,         // Garante que o Vite use essa porta
+    hmr: {
+      protocol: 'ws',         // Usa WebSocket sem SSL
+      host: 'localhost',      // Corrige o destino do HMR
+      port: 5173              // Garante que o HMR use a mesma porta do Vite
+    }
+  }
 })
