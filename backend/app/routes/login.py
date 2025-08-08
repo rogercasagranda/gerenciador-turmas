@@ -1,47 +1,48 @@
-# --- NOVO ENDPOINT: Login via token Google --- #
+# Importa o roteador do FastAPI
+from fastapi import APIRouter, Request, HTTPException
 
-# Importa a biblioteca do Google para validação de tokens
-from google.oauth2 import id_token
-from google.auth.transport import requests
+# Importa o schema de entrada do login
+from pydantic import BaseModel
 
-# Define modelo de entrada para login com Google
-class GoogleToken(BaseModel):
-    token: str  # Token JWT recebido do frontend
+# Importa a função de busca assíncrona no banco
+from app.database.database import get_user_by_email_or_phone
 
-# Endpoint para autenticação via Google
-@router.post("/login/google")
-async def login_google(data: GoogleToken, request: Request):
-    try:
-        # Valida o token JWT com a chave pública da Google
-        idinfo = id_token.verify_oauth2_token(
-            data.token,
-            requests.Request(),
-            os.getenv("GOOGLE_CLIENT_ID")  # Define o client_id esperado (deve estar no .env)
-        )
+# Importa função para verificação de hash
+from passlib.context import CryptContext
 
-        # Extrai o ID do usuário Google
-        google_id = idinfo["sub"]  # Sub = subject = ID único do usuário Google
+# Cria o roteador da rota /login
+router = APIRouter()
 
-        # Extrai o nome (opcional, pode ser salvo no cadastro)
-        nome = idinfo.get("name", "")
-        email = idinfo.get("email", "")
+# Define o contexto de criptografia para comparar senhas
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-    except ValueError:
-        # Token inválido
-        raise HTTPException(status_code=401, detail="Token inválido")
+# Define o schema esperado para o corpo da requisição de login
+class LoginRequest(BaseModel):
+    usuario: str
+    senha: str
 
-    # Busca usuário no banco de dados com base no google_id
-    pool: asyncpg.pool.Pool = request.app.state.db
-    query = "SELECT * FROM usuarios WHERE google_id = $1"
-    user = await pool.fetchrow(query, google_id)
+# Define o endpoint POST /login
+@router.post("/login")
+async def login(request: Request, body: LoginRequest):
+    # Busca o usuário usando e-mail ou telefone
+    user = await get_user_by_email_or_phone(body.usuario)
 
+    # Se não encontrar o usuário, retorna erro 401
     if not user:
-        # Usuário com esse google_id não cadastrado
-        raise HTTPException(status_code=403, detail="Usuário não encontrado. Acesso negado.")
+        raise HTTPException(status_code=401, detail="Usuário não encontrado")
 
-    # Retorna dados mínimos ao frontend
+    # Verifica se a senha informada bate com o hash salvo no banco
+    senha_valida = pwd_context.verify(body.senha, user["senha_hash"])
+
+    # Se a senha for inválida, retorna erro 401
+    if not senha_valida:
+        raise HTTPException(status_code=401, detail="Senha incorreta")
+
+    # Retorna os dados básicos do usuário autenticado (sem a senha)
     return {
-        "mensagem": "Login com Google realizado com sucesso",
-        "usuario_id": str(user["id"]),
-        "nome": user["nome"]
+        "nome": user["nome"],
+        "email": user["email"],
+        "tipo_perfil": user["tipo_perfil"],
+        "foi_pre_cadastrado": user["foi_pre_cadastrado"],
+        "ativo": user["ativo"]
     }

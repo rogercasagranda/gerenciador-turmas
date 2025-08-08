@@ -55,3 +55,25 @@ async def criar_usuario(dados: UsuarioCreate, db: asyncpg.Connection = Depends(g
     await db.execute(query_log, novo_id, datetime.now())
 
     return {"mensagem": "Usuário cadastrado com sucesso", "id_usuario": novo_id}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

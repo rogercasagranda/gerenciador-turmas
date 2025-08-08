@@ -1,196 +1,154 @@
-/* Estilo do cabeçalho */
-.home-header {
-  display: flex;                        /* Usa flexbox */
-  justify-content: space-between;      /* Espaço entre logo e ações */
-  align-items: center;                 /* Alinha verticalmente */
-  background-color: #5B21B6;           /* Roxo escuro */
-  color: white;                        /* Texto branco */
-  padding: 16px;                       /* Espaçamento interno */
-}
-
-/* Estilo do nome/logo da escola */
-.home-logo {
-  font-size: 1.5rem;                   /* Tamanho da fonte */
-  font-weight: bold;                  /* Negrito */
-}
-
-/* Botões do canto superior direito */
-.home-header-actions .icon-button {
-  background: transparent;            /* Sem fundo */
-  border: none;                       /* Sem borda */
-  color: white;                       /* Cor branca */
-  font-size: 1.2rem;                  /* Tamanho dos ícones */
-  margin-left: 12px;                  /* Espaço entre ícones */
-  cursor: pointer;                    /* Cursor em formato de clique */
-}
-
-/* Navbar de navegação */
-.home-navbar {
-  display: flex;                      /* Usa flexbox */
-  background-color: #ede9fe;          /* Lavanda */
-  padding: 10px 20px;                 /* Espaçamento interno */
-  gap: 20px;                          /* Espaço entre links */
-  border-bottom: 1px solid #ccc;      /* Linha inferior */
-}
-
-/* Links do menu (usando <Link> ou <a>) */
-.home-navbar a,
-.home-navbar .menu-usuarios {
-  text-decoration: none;             /* Remove sublinhado */
-  color: #5B21B6;                    /* Roxo */
-  font-weight: 500;                  /* Peso médio */
-  padding: 4px 8px;                  /* Espaço interno */
-}
-
-/* Container principal */
+/* Define container geral da tela home */
 .home-container {
-  font-family: sans-serif;           /* Fonte base */
-  background-color: #F3F4F6;         /* Fundo cinza claro */
-  min-height: 100vh;                 /* Altura total da tela */
-  display: flex;                     /* Usa flexbox */
-  flex-direction: column;           /* Organiza em coluna */
+  display: flex;              /* Aplica layout flexível */
+  flex-direction: column;     /* Organiza em coluna (header > body > footer) */
+  height: 100vh;              /* Ocupa 100% da altura da tela */
 }
 
-/* Conteúdo principal */
-.home-content {
-  flex: 1;                           /* Ocupa espaço restante */
-  padding: 20px;                     /* Espaço interno */
+/* Cabeçalho fixo no topo */
+.home-header {
+  background-color: #4a148c;  /* Roxo escuro institucional */
+  color: white;               /* Texto branco */
+  padding: 1rem;              /* Espaçamento interno */
+  text-align: center;         /* Centraliza o título */
 }
 
-/* Título da página */
-.page-title {
-  font-size: 24px;                   /* Tamanho da fonte */
-  margin-bottom: 16px;              /* Espaço abaixo */
+/* Estrutura principal com menu lateral e conteúdo */
+.home-body {
+  flex: 1;                    /* Ocupa todo o espaço disponível */
+  display: flex;              /* Organiza em linha */
+  overflow: hidden;           /* Oculta rolagem lateral */
 }
 
-/* Cards principais */
-.home-cards-container {
-  display: flex;                    /* Usa flexbox */
-  justify-content: space-around;   /* Espaço uniforme */
-  flex-wrap: wrap;                 /* Permite quebra de linha */
-  gap: 20px;                       /* Espaçamento entre cards */
-  margin-top: 20px;                /* Espaço acima */
+/* Menu lateral fixo à esquerda */
+.home-sidebar {
+  width: 200px;               /* Largura fixa no desktop */
+  background-color: #ede7f6;  /* Lavanda suave */
+  padding: 1rem;              /* Espaçamento interno */
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* Sombra lateral */
 }
 
-/* Card individual */
-.home-card {
-  background-color: white;          /* Fundo branco */
-  padding: 20px;                    /* Espaço interno */
-  border-radius: 10px;              /* Bordas arredondadas */
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* Sombra leve */
-  flex: 1 1 180px;                  /* Tamanho mínimo */
-  max-width: 200px;                /* Largura máxima */
-  text-align: center;              /* Centraliza conteúdo */
+/* Itens principais do menu */
+.menu-item {
+  cursor: pointer;            /* Cursor interativo */
+  font-weight: bold;          /* Negrito */
+  margin-bottom: 1rem;        /* Espaço inferior */
+  position: relative;         /* Necessário para submenu absoluto */
 }
 
-/* Ícone do card */
-.card-icon {
-  font-size: 1.8rem;                /* Tamanho grande */
-  margin-bottom: 8px;              /* Espaço abaixo */
-}
-
-/* Título do card */
-.card-title {
-  font-weight: bold;               /* Negrito */
-  margin-bottom: 4px;              /* Espaço abaixo */
-}
-
-/* Valor do card */
-.card-value {
-  font-size: 0.95rem;              /* Tamanho médio */
-  color: #4B5563;                  /* Cinza escuro */
-}
-
-/* Linha do tempo de eventos */
-.event-timeline {
-  background-color: #fff;          /* Fundo branco */
-  padding: 16px;                   /* Espaçamento interno */
-  border-radius: 10px;             /* Bordas arredondadas */
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1); /* Sombra leve */
-}
-
-/* Título da seção de eventos */
-.section-title {
-  font-size: 18px;                 /* Tamanho da fonte */
-  margin-bottom: 12px;            /* Espaço abaixo */
-}
-
-/* Lista de eventos */
-.event-list {
-  list-style: none;               /* Remove bullets */
-  padding: 0;                     /* Remove padding */
-  margin: 0;                      /* Remove margem */
-}
-
-/* Cada item da lista */
-.event-list li {
-  padding: 8px 0;                 /* Espaço vertical */
-  border-bottom: 1px solid #eee;  /* Linha separadora */
-}
-
-/* Botão principal de ação */
-.btn-ver-turmas {
-  margin-top: 24px;               /* Espaço acima */
-  background-color: #5B21B6;      /* Roxo */
-  color: white;                   /* Texto branco */
-  padding: 12px 20px;             /* Espaço interno */
-  border: none;                   /* Remove borda */
-  border-radius: 8px;             /* Bordas arredondadas */
-  font-size: 1rem;                /* Tamanho da fonte */
-  cursor: pointer;                /* Cursor clicável */
-}
-
-/* Rodapé da página */
-.footer {
-  background-color: #e5e7eb;      /* Cinza claro */
-  text-align: center;             /* Centraliza texto */
-  padding: 12px;                  /* Espaço interno */
-  font-size: 0.9rem;              /* Tamanho menor */
-  color: #4B5563;                 /* Cinza escuro */
-}
-
-/* Wrapper do item de menu suspenso */
-.menu-usuarios-wrapper {
-  position: relative;                          /* Referência para o submenu */
-}
-
-/* Texto visível do menu de usuários */
-.menu-usuarios {
-  padding: 8px;
-  color: #5B21B6;
-  font-weight: 500;
-  cursor: pointer;                             /* Cursor de clique */
-}
-
-/* Submenu inicialmente invisível */
-.submenu-usuarios {
-  display: none;                               /* Oculto por padrão */
-  position: absolute;
-  top: 100%;
+/* Submenu suspenso */
+.submenu {
+  position: absolute;         /* Sobreposição ao item pai */
+  top: 100%;                  /* Posiciona abaixo do item pai */
   left: 0;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 8px 0;
-  z-index: 1000;
-  min-width: 150px;
+  background-color: #fff;     /* Fundo branco */
+  border: 1px solid #ccc;     /* Borda cinza clara */
+  padding: 0.5rem;            /* Espaçamento interno */
+  z-index: 1000;              /* Sobrepõe outros elementos */
+  width: 150px;               /* Largura do menu */
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.2); /* Sombra leve */
 }
 
-/* Exibe submenu ao passar o mouse no wrapper */
-.menu-usuarios-wrapper:hover .submenu-usuarios {
-  display: block;
+/* Itens individuais do submenu */
+.submenu div {
+  padding: 0.5rem;
+  cursor: pointer;
 }
 
-/* Links dentro do submenu */
-.submenu-usuarios a {
-  display: block;
-  padding: 8px 16px;
-  color: #5B21B6;
-  text-decoration: none;
+/* Cor de fundo ao passar o mouse sobre submenu */
+.submenu div:hover {
+  background-color: #f3e5f5;  /* Roxo claro */
 }
 
-/* Hover nos links */
-.submenu-usuarios a:hover {
-  background-color: #ede9fe;
+/* Conteúdo principal do sistema */
+.home-content {
+  flex: 1;                    /* Ocupa o espaço restante */
+  padding: 2rem;              /* Espaçamento interno */
+  overflow-y: auto;           /* Scroll apenas vertical */
+}
+
+/* Rodapé fixo na base */
+.home-footer {
+  background-color: #4a148c;  /* Mesmo roxo do cabeçalho */
+  color: white;               /* Texto branco */
+  text-align: center;         /* Centralizado */
+  padding: 0.5rem;            /* Espaçamento vertical */
+}
+
+/* Estiliza o botão hamburguer (☰) */
+.hamburguer-button {
+  display: none;                 /* Esconde por padrão (telas grandes) */
+  background: none;              /* Remove plano de fundo */
+  border: none;                  /* Remove borda */
+  color: white;                  /* Cor branca (contraste com roxo) */
+  font-size: 2rem;               /* Tamanho do símbolo */
+  cursor: pointer;              /* Cursor tipo botão */
+  margin-left: 1rem;             /* Espaço após o título */
+}
+
+/* Estiliza o botão "Sair" exibido no cabeçalho */
+.sair-button {
+  background-color: #d32f2f;     /* Fundo vermelho */
+  color: white;                  /* Texto branco */
+  border: none;                  /* Remove borda */
+  padding: 0.5rem 1rem;          /* Espaçamento interno */
+  font-size: 0.9rem;             /* Tamanho da fonte */
+  margin-left: 1rem;             /* Espaço à esquerda */
+  cursor: pointer;               /* Cursor tipo botão */
+  border-radius: 4px;            /* Bordas levemente arredondadas */
+}
+
+/* Estilo ao passar o mouse sobre o botão "Sair" */
+.sair-button:hover {
+  background-color: #b71c1c;     /* Vermelho mais escuro */
+}
+
+/* RESPONSIVIDADE – Mobile First */
+@media (max-width: 768px) {
+  .hamburguer-button {
+    display: inline-block;       /* Exibe o botão em telas pequenas */
+  }
+
+  .home-header {
+    display: flex;               /* Exibe header como linha */
+    justify-content: space-between; /* Separa título e botões */
+    align-items: center;         /* Alinha verticalmente */
+  }
+
+  .home-body {
+    flex-direction: column;      /* Muda de linha para coluna */
+  }
+
+  .home-sidebar {
+    width: 100%;                 /* Sidebar ocupa largura total */
+    padding: 0.5rem;             /* Reduz padding */
+    border-bottom: 1px solid #ccc; /* Adiciona separador */
+    box-shadow: none;            /* Remove sombra lateral */
+  }
+
+  .submenu {
+    position: relative;          /* Menu flui com layout */
+    width: 100%;                 /* Ocupa toda largura do pai */
+    border: none;                /* Remove borda externa */
+    box-shadow: none;            /* Remove sombra */
+    background-color: #f3e5f5;   /* Fundo claro */
+    padding: 0;                  /* Remove espaçamento extra */
+  }
+
+  .submenu div {
+    padding: 0.75rem;            /* Aumenta espaço clicável */
+    border-top: 1px solid #ddd;  /* Separa visualmente */
+  }
+
+  .home-content {
+    padding: 1rem;               /* Reduz padding interno */
+  }
+
+  .home-header h1 {
+    font-size: 1.25rem;          /* Reduz tamanho do título */
+  }
+
+  .home-footer {
+    font-size: 0.85rem;          /* Texto menor no rodapé */
+  }
 }

@@ -1,31 +1,32 @@
-// frontend/src/App.tsx
+// Importa bibliotecas do React e do roteador
+import React from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Login from './components/Login';
-import Home from './pages/Home/Home';
-import CadastrarUsuario from './pages/Usuarios/CadastrarUsuario';
-import ConsultarUsuario from './pages/Usuarios/ConsultarUsuario';
+// Importa páginas
+import Login from './components/Login'
+import Home from './pages/Home/Home'
+import CadastrarUsuario from './pages/Usuarios/CadastrarUsuario'
+import ConsultarUsuario from './pages/Usuarios/ConsultarUsuario'
 
-const isAutenticado = () => {
-  const usuarioLogado = localStorage.getItem('usuarioLogado');
-  return !!usuarioLogado;
-};
-
-const RotaPrivada = ({ children }: { children: JSX.Element }) => {
-  return isAutenticado() ? children : <Navigate to="/login" replace />;
-};
-
+// Componente principal da aplicação
 const App: React.FC = () => {
   return (
     <Routes>
+      {/* Redireciona a raiz para a tela de login */}
       <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/home" element={<RotaPrivada><Home /></RotaPrivada>} />
-      <Route path="/usuarios/cadastrar" element={<RotaPrivada><CadastrarUsuario /></RotaPrivada>} />
-      <Route path="/usuarios/consultar" element={<RotaPrivada><ConsultarUsuario /></RotaPrivada>} />
-    </Routes>
-  );
-};
 
-export default App;
+      {/* Tela de login (layout travado) */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Página principal Home */}
+      <Route path="/home" element={<Home />} />
+
+      {/* Rotas protegidas embutidas dentro da Home */}
+      <Route path="/usuarios/cadastrar" element={<Home />} />
+      <Route path="/usuarios/consultar" element={<Home />} />
+    </Routes>
+  )
+}
+
+// Exporta o componente App
+export default App

@@ -1,49 +1,39 @@
-# backend/app/main.py
-
-# Importa a biblioteca FastAPI
+# Importa o FastAPI principal
 from fastapi import FastAPI
 
-# Importa o middleware CORS para permitir acesso do frontend
+# Importa o middleware CORS
 from fastapi.middleware.cors import CORSMiddleware
 
-# Importa a biblioteca para carregar variáveis de ambiente
-from dotenv import load_dotenv
-
-# Importa o módulo OS para ler as variáveis do sistema
-import os
-
-# Importa a biblioteca asyncpg para conexão assíncrona com o banco de dados PostgreSQL
-import asyncpg
-
-# Importa o roteador de login
+# Importa o roteador da rota de login padrão
 from app.routes import login
 
-# Carrega as variáveis definidas no arquivo .env
-load_dotenv()
+# Importa o roteador da rota de autenticação com Google
+from app.routes import auth_google_route
 
-# Cria uma instância do app FastAPI
+# Cria a instância da aplicação FastAPI
 app = FastAPI()
 
-# Define as origens permitidas para requisições (libera tudo neste caso)
+# Configura as origens permitidas (ajustar para produção conforme necessário)
+origins = [
+    "http://localhost:5173",  # Frontend em ambiente local
+]
+
+# Adiciona o middleware CORS para permitir acesso entre domínios
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],             # Libera requisições de qualquer origem
-    allow_credentials=True,
-    allow_methods=["*"],             # Libera todos os métodos (GET, POST, etc)
-    allow_headers=["*"],             # Libera todos os cabeçalhos
+    allow_origins=origins,          # Lista de origens permitidas
+    allow_credentials=True,         # Permite envio de cookies e headers
+    allow_methods=["*"],            # Permite todos os métodos (GET, POST, etc.)
+    allow_headers=["*"],            # Permite todos os headers
 )
 
-# Evento disparado ao iniciar a aplicação (cria pool de conexão com o banco)
-@app.on_event("startup")
-async def startup():
-    app.state.db = await asyncpg.create_pool(
-        dsn=os.getenv("DATABASE_URL")  # Usa a variável de ambiente DATABASE_URL
-    )
-
-# Evento disparado ao encerrar a aplicação (fecha o pool)
-@app.on_event("shutdown")
-async def shutdown():
-    await app.state.db.close()
-
-# Registra o roteador de login na aplicação
+# Inclui o roteador padrão de login tradicional
 app.include_router(login.router)
+
+# Inclui o roteador responsável pela rota /google-login
+app.include_router(auth_google_route.router)
+
+# Endpoint raiz opcional para teste
+@app.get("/")
+def read_root():
+    return {"message": "API do Portal do Professor funcionando"}

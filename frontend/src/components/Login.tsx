@@ -1,98 +1,147 @@
-// frontend/src/components/Login.tsx
+// Importa os hooks necessários do React
+import React, { useState, useEffect } from "react";
 
-import React, { useState } from 'react';
-import '../styles/Login.css';
-import ErrorPopup from './ErrorPopup';
-import { GoogleLogin } from '@react-oauth/google';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+// Importa o hook de navegação do React Router
+import { useNavigate } from "react-router-dom";
 
+// Importa o arquivo CSS da tela de login
+import "../styles/Login.css";
+
+// Componente funcional Login
 const Login: React.FC = () => {
-  const [usuario, setUsuario] = useState('');
-  const [senha, setSenha] = useState('');
-  const [erro, setErro] = useState(false);
-  const [mensagemErro, setMensagemErro] = useState('');
+  // Estado do campo de usuário
+  const [username, setUsername] = useState("");
+
+  // Estado do campo de senha
+  const [password, setPassword] = useState("");
+
+  // Controle de exibição do popup de erro
+  const [showPopup, setShowPopup] = useState(false);
+
+  // Contador regressivo do popup de erro
+  const [countdown, setCountdown] = useState(5);
+
+  // Estado do checkbox "Continuar conectado"
+  const [keepConnected, setKeepConnected] = useState(false);
+
+  // Hook de navegação
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!usuario.trim() || !senha.trim()) {
-      setMensagemErro('SEU USUÁRIO E/OU SENHA ESTÃO INCORRETOS, TENTE NOVAMENTE');
-      setErro(true);
-      return;
-    }
-
-    alert(`Login realizado!\nUsuário: ${usuario}`);
-  };
-
-  const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
-    if (!credentialResponse.credential) {
-      setMensagemErro('Token do Google não recebido');
-      setErro(true);
-      return;
-    }
+  // Envia dados para o backend ao submeter o formulário
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault(); // Previne comportamento padrão
 
     try {
-      await axios.post('http://localhost:8000/auth/google', {
-        token: credentialResponse.credential,
+      const response = await fetch("http://localhost:8000/login", {
+        method: "POST", // Método POST
+        headers: {
+          "Content-Type": "application/json", // Tipo do conteúdo
+        },
+        body: JSON.stringify({
+          usuario: username,
+          senha: password,
+        }),
       });
-      navigate('/home');
-    } catch {
-      setMensagemErro('Falha na autenticação com Google');
-      setErro(true);
+
+      // Se falhar, exibe o popup
+      if (!response.ok) {
+        setShowPopup(true);
+        setCountdown(5);
+        return;
+      }
+
+      // Se sucesso, redireciona para a tela Home
+      navigate("/home");
+    } catch (error) {
+      // Exibe erro
+      console.error("Erro ao fazer login:", error);
+      setShowPopup(true);
+      setCountdown(5);
     }
   };
 
-  const handleGoogleError = () => {
-    setMensagemErro('Falha na autenticação com Google');
-    setErro(true);
+  // Redireciona para o login do Google
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:8000/google-login";
   };
 
-  const fecharPopup = () => setErro(false);
+  // Controla o temporizador do popup
+  useEffect(() => {
+    if (showPopup && countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
 
+      return () => clearInterval(timer);
+    }
+
+    if (countdown === 0) {
+      setShowPopup(false);
+      window.location.reload();
+    }
+  }, [showPopup, countdown]);
+
+  // Renderiza o conteúdo da tela
   return (
-    <div className="login-wrapper">
-      <div className="login-background">
-        <div className="login-container">
-          <form className="login-box" onSubmit={handleSubmit} autoComplete="off">
+    <div className="login-container">
+      <form className="login-form" onSubmit={handleLogin}>
+        {/* Título */}
+        <h2>Portal do Professor</h2>
+
+        {/* Campo usuário */}
+        <input
+          type="text"
+          placeholder="Usuário"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+
+        {/* Campo senha */}
+        <input
+          type="password"
+          placeholder="Senha"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        {/* Botão de login */}
+        <button type="submit">Entrar</button>
+
+        {/* Checkbox e texto alinhados */}
+        <div className="keep-connected">
+          <label className="keep-connected-label">
             <input
-              type="text"
-              className="login-input"
-              placeholder="Usuário"
-              value={usuario}
-              onChange={e => setUsuario(e.target.value)}
-              autoComplete="username"
-              required
+              type="checkbox"
+              checked={keepConnected}
+              onChange={(e) => setKeepConnected(e.target.checked)}
             />
-            <input
-              type="password"
-              className="login-input"
-              placeholder="Senha"
-              value={senha}
-              onChange={e => setSenha(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
-            <button type="submit" className="login-button">
-              Entrar
-            </button>
-            <div className="login-google-wrapper">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                useOneTap
-                auto_select
-                clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as unknown as string}
-              />
-            </div>
-          </form>
+            <span>Continuar conectado</span>
+          </label>
         </div>
-      </div>
-      {erro && (
-        <ErrorPopup mensagem={mensagemErro} onClose={fecharPopup} />
+
+        {/* Botão do Google funcional */}
+        <button type="button" className="google-button" onClick={handleGoogleLogin}>
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google logo"
+          />
+          <span>Fazer Login com o Google</span>
+        </button>
+      </form>
+
+      {/* Popup de erro com botão e contador */}
+      {showPopup && (
+        <div className="popup-erro">
+          <p>SEU USUÁRIO E/OU SENHA ESTÃO INCORRETAS, TENTE NOVAMENTE</p>
+          <button onClick={() => window.location.reload()}>Fechar</button>
+          <span className="contador">{countdown} segundos</span>
+        </div>
       )}
     </div>
   );
 };
 
+// Exporta o componente Login
 export default Login;
