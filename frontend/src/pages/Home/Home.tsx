@@ -1,135 +1,181 @@
-// Importa bibliotecas essenciais do React
-import React, { useState, useEffect } from 'react'
+// Importa o React para construir componentes
+import React, { useEffect, useState, useCallback } from 'react'
 
-// Importa o hook de navegação entre rotas
-import { useNavigate } from 'react-router-dom'
+// Importa utilitários de rota para navegar e ler a URL atual
+import { useNavigate, useLocation } from 'react-router-dom'
 
-// Importa o CSS da Home
+// Importa o CSS dedicado da Home (sem estilos inline)
 import '../../styles/Home.css'
 
 // Define o componente funcional da Home
 const Home: React.FC = () => {
-  // Controla a exibição do submenu de "Usuários"
-  const [menuAberto, setMenuAberto] = useState(false)
+  // Controla a visibilidade do menu lateral (drawer) em telas pequenas
+  const [drawerAberto, setDrawerAberto] = useState(false)
+  // Controla a abertura do submenu "Usuários"
+  const [submenuUsuariosAberto, setSubmenuUsuariosAberto] = useState(false)
 
-  // Controla a exibição do menu lateral (hambúrguer)
-  const [menuVisivel, setMenuVisivel] = useState(true)
-
-  // Hook para navegação
+  // Hook de navegação
   const navigate = useNavigate()
+  // Hook para observar alterações na URL (carregar conteúdo no corpo)
+  const location = useLocation()
 
-  // Verifica se há sessão ativa ao carregar a página
+  // Verifica sessão ao montar a Home
   useEffect(() => {
-    // Tenta ler o token de autenticação persistido no localStorage (quando 'Continuar conectado' estiver marcado)
+    // Lê o token persistido no localStorage (continuar conectado)
     const tokenLocal = localStorage.getItem('auth_token')
-    // Tenta ler o token de autenticação persistido no sessionStorage (sessão atual)
+    // Lê o token persistido no sessionStorage (sessão atual)
     const tokenSession = sessionStorage.getItem('auth_token')
-    // Se não houver token em nenhum lugar, redireciona para a tela de login
+    // Se não houver token, redireciona para login
     if (!tokenLocal && !tokenSession) {
       navigate('/login')
     }
-  }, [navigate]) // Executa apenas na montagem do componente
+  }, [navigate])
 
-  // Alterna exibição do submenu
-  const toggleMenu = () => {
-    setMenuAberto(!menuAberto)
-  }
+  // Fecha o drawer ao navegar entre telas no mobile
+  useEffect(() => {
+    // Fecha o menu lateral quando a rota muda (melhor UX no mobile)
+    setDrawerAberto(false)
+  }, [location.pathname])
 
-  // Navega para a tela de cadastro
-  const irParaCadastrar = () => {
-    navigate('/usuarios/cadastrar')
-    setMenuAberto(false)
-  }
-
-  // Navega para a tela de consulta
-  const irParaConsultar = () => {
-    navigate('/usuarios/consultar')
-    setMenuAberto(false)
-  }
-
-  // Executa o logout ao clicar no botão "Sair"
-  const sair = () => {
-    // Remove o token persistido no localStorage
+  // Função para logout seguro
+  const handleLogout = useCallback(() => {
+    // Remove o token do localStorage
     try { localStorage.removeItem('auth_token') } catch {}
-    // Remove o token persistido no sessionStorage
+    // Remove o token do sessionStorage
     try { sessionStorage.removeItem('auth_token') } catch {}
-    // Remove eventual chave antiga usada por versões anteriores
+    // Remove chave antiga usada em versões anteriores (legado)
     try { localStorage.removeItem('usuarioLogado') } catch {}
-    // Redireciona para a tela de login
+    // Redireciona para login
     navigate('/login')
+  }, [navigate])
+
+  // Renderiza dinamicamente o conteúdo dentro do corpo da Home
+  const renderConteudo = () => {
+    // Rota de cadastro de usuários
+    if (location.pathname === '/usuarios/cadastrar') {
+      // Importa o componente sob demanda (evita quebra de estrutura)
+      const CadastrarUsuario = require('../Usuarios/CadastrarUsuario').default
+      // Retorna o conteúdo da página inserido na área principal
+      return <CadastrarUsuario />
+    }
+    // Rota de consulta de usuários
+    if (location.pathname === '/usuarios/consultar') {
+      const ConsultarUsuario = require('../Usuarios/ConsultarUsuario').default
+      return <ConsultarUsuario />
+    }
+    // Conteúdo padrão da Home
+    return (
+      <section className="home-welcome">
+        <h2>Bem‑vindo ao Portal do Professor</h2>
+        <p>Use o menu lateral para acessar as funcionalidades.</p>
+      </section>
+    )
   }
 
   // Retorna o layout completo da Home
   return (
-    <div className="home-container">
-      {/* Cabeçalho fixo no topo */}
-      <header className="home-header">
-        <h1>Portal do Professor</h1>
+    <div className="home-root">
+      {/* Cabeçalho fixo com título e ações */}
+      <header className="home-header" role="banner" aria-label="Cabeçalho do sistema">
+        <div className="header-left">
+          {/* Botão hambúrguer visível em telas pequenas */}
+          <button
+            className="icon-button"
+            aria-label="Abrir menu"
+            aria-expanded={drawerAberto}
+            onClick={() => setDrawerAberto(!drawerAberto)}
+          >
+            {/* Ícone de menu (hambúrguer) usando caracteres — sem libs extras */}
+            <span className="icon-lines" />
+          </button>
 
-        {/* Botão hamburguer visível apenas em telas pequenas */}
-        <button
-          className="hamburguer-button"
-          onClick={() => setMenuVisivel(!menuVisivel)}
-        >
-          ☰
-        </button>
+          {/* Título do sistema */}
+          <h1 className="app-title">Portal do Professor</h1>
+        </div>
 
-        {/* Botão de logout "Sair" sempre visível quando logado */}
-        <button
-          className="sair-button"
-          onClick={sair}
-        >
-          Sair
-        </button>
+        <div className="header-right">
+          {/* Botão sair sempre visível quando autenticado */}
+          <button className="btn-sair" onClick={handleLogout}>
+            Sair
+          </button>
+        </div>
       </header>
 
-      {/* Corpo principal com menu lateral e conteúdo */}
-      <div className="home-body">
-        {/* Menu lateral visível apenas se o estado permitir */}
-        {menuVisivel && (
-          <aside className="home-sidebar">
+      {/* Container do layout com barra lateral + conteúdo */}
+      <div className="home-layout">
+        {/* Backdrop para quando o drawer estiver aberto em telas pequenas */}
+        {drawerAberto && <div className="backdrop" onClick={() => setDrawerAberto(false)} />}
+
+        {/* Menu lateral (fixo no desktop, drawer no mobile) */}
+        <aside
+          className={`sidebar ${drawerAberto ? 'sidebar--open' : ''}`}
+          role="navigation"
+          aria-label="Menu lateral"
+        >
+          {/* Seção de navegação principal */}
+          <nav className="nav">
+            {/* Item com submenu: Usuários */}
             <div
-              className="menu-item"
-              onMouseEnter={toggleMenu}
-              onMouseLeave={toggleMenu}
+              className="nav-item"
+              onMouseEnter={() => setSubmenuUsuariosAberto(true)}
+              onMouseLeave={() => setSubmenuUsuariosAberto(false)}
             >
-              Usuários
-              {/* Submenu suspenso */}
-              {menuAberto && (
-                <div className="submenu">
-                  <div onClick={irParaCadastrar}>Cadastrar</div>
-                  <div onClick={irParaConsultar}>Consultar</div>
-                </div>
-              )}
+              <button
+                className="nav-link"
+                onClick={() => setSubmenuUsuariosAberto(!submenuUsuariosAberto)}
+                aria-haspopup="true"
+                aria-expanded={submenuUsuariosAberto}
+              >
+                Usuários
+                <span className={`caret ${submenuUsuariosAberto ? 'caret--up' : 'caret--down'}`} />
+              </button>
+
+              {/* Submenu suspenso/expansível */}
+              <div className={`submenu ${submenuUsuariosAberto ? 'submenu--open' : ''}`}>
+                <button
+                  className="submenu-link"
+                  onClick={() => navigate('/usuarios/cadastrar')}
+                >
+                  Cadastrar
+                </button>
+                <button
+                  className="submenu-link"
+                  onClick={() => navigate('/usuarios/consultar')}
+                >
+                  Consultar
+                </button>
+              </div>
             </div>
-          </aside>
-        )}
 
-        {/* Conteúdo principal que carrega as páginas dentro da Home */}
-        <main className="home-content">
-          {(() => {
-            if (window.location.pathname === '/usuarios/cadastrar') {
-              const CadastrarUsuario = require('../Usuarios/CadastrarUsuario').default
-              return <CadastrarUsuario />
-            }
+            {/* Exemplo de futuro módulo — mantém escalável sem alterar layout aprovado */}
+            <div className="nav-item">
+              <button
+                className="nav-link"
+                onClick={() => alert('Módulo “Turmas” em desenvolvimento.')}
+              >
+                Turmas
+              </button>
+            </div>
 
-            if (window.location.pathname === '/usuarios/consultar') {
-              const ConsultarUsuario = require('../Usuarios/ConsultarUsuario').default
-              return <ConsultarUsuario />
-            }
+            <div className="nav-item">
+              <button
+                className="nav-link"
+                onClick={() => alert('Módulo “Relatórios” em desenvolvimento.')}
+              >
+                Relatórios
+              </button>
+            </div>
+          </nav>
+        </aside>
 
-            return (
-              <>
-                <h2>Bem-vindo ao sistema</h2>
-                <p>Selecione uma opção no menu para continuar.</p>
-              </>
-            )
-          })()}
+        {/* Área de conteúdo onde as páginas carregam dentro da Home */}
+        <main className="home-content" role="main" aria-live="polite">
+          {renderConteudo()}
         </main>
       </div>
 
-      {/* Rodapé fixo no fim da página */}
-      <footer className="home-footer">
+      {/* Rodapé fixo enxuto */}
+      <footer className="home-footer" role="contentinfo">
         <span>© {new Date().getFullYear()} Portal do Professor</span>
       </footer>
     </div>
