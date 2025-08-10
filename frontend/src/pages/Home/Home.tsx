@@ -20,11 +20,12 @@ const Home: React.FC = () => {
 
   // Verifica se há sessão ativa ao carregar a página
   useEffect(() => {
-    // Tenta obter o item 'usuarioLogado' do localStorage
-    const sessao = localStorage.getItem('usuarioLogado')
-
-    // Se não houver sessão, redireciona para a tela de login
-    if (!sessao) {
+    // Tenta ler o token de autenticação persistido no localStorage (quando 'Continuar conectado' estiver marcado)
+    const tokenLocal = localStorage.getItem('auth_token')
+    // Tenta ler o token de autenticação persistido no sessionStorage (sessão atual)
+    const tokenSession = sessionStorage.getItem('auth_token')
+    // Se não houver token em nenhum lugar, redireciona para a tela de login
+    if (!tokenLocal && !tokenSession) {
       navigate('/login')
     }
   }, [navigate]) // Executa apenas na montagem do componente
@@ -48,9 +49,12 @@ const Home: React.FC = () => {
 
   // Executa o logout ao clicar no botão "Sair"
   const sair = () => {
-    // Remove o item 'usuarioLogado' do localStorage
-    localStorage.removeItem('usuarioLogado')
-
+    // Remove o token persistido no localStorage
+    try { localStorage.removeItem('auth_token') } catch {}
+    // Remove o token persistido no sessionStorage
+    try { sessionStorage.removeItem('auth_token') } catch {}
+    // Remove eventual chave antiga usada por versões anteriores
+    try { localStorage.removeItem('usuarioLogado') } catch {}
     // Redireciona para a tela de login
     navigate('/login')
   }
@@ -101,7 +105,7 @@ const Home: React.FC = () => {
           </aside>
         )}
 
-        {/* Conteúdo principal com carregamento condicional */}
+        {/* Conteúdo principal que carrega as páginas dentro da Home */}
         <main className="home-content">
           {(() => {
             if (window.location.pathname === '/usuarios/cadastrar') {
@@ -117,16 +121,16 @@ const Home: React.FC = () => {
             return (
               <>
                 <h2>Bem-vindo ao sistema</h2>
-                <p>Selecione uma opção no menu para começar.</p>
+                <p>Selecione uma opção no menu para continuar.</p>
               </>
             )
           })()}
         </main>
       </div>
 
-      {/* Rodapé fixo no fim da tela */}
+      {/* Rodapé fixo no fim da página */}
       <footer className="home-footer">
-        <p>&copy; 2025 Portal do Professor</p>
+        <span>© {new Date().getFullYear()} Portal do Professor</span>
       </footer>
     </div>
   )
