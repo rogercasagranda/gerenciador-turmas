@@ -14,7 +14,7 @@ Base = declarative_base()
 
 # ✅ Define o modelo oficial de usuário
 class Usuarios(Base):
-    # ✅ Nome real da tabela no banco (em plural)
+    # Define o nome real da tabela no banco (em plural)
     __tablename__ = "usuarios"
 
     # ID do usuário (chave primária)
@@ -26,14 +26,32 @@ class Usuarios(Base):
     # E-mail único (usado no login)
     email = Column(String(120), nullable=False, unique=True)
 
-    # Hash da senha (bcrypt)
-    senha_hash = Column(String(256), nullable=False)
+    # Hash da senha (bcrypt) – permite nulo quando login for apenas Google
+    senha_hash = Column(String(256), nullable=True)
 
-    # Perfil (ex: ADMIN, PROFESSOR, etc)
+    # Perfil (ex: ADMIN, PROFESSOR, DIREÇÃO, etc)
     tipo_perfil = Column(String(30), nullable=False)
 
     # Ativo ou não (booleano)
     ativo = Column(Boolean, nullable=False, default=True)
 
+    # DDI do telefone (ex: 55)
+    ddi = Column(String(5), nullable=False, default="55")
+
+    # DDD do telefone (ex: 54)
+    ddd = Column(String(5), nullable=False, default="54")
+
+    # Número de celular
+    numero_celular = Column(String(20), nullable=False)
+
+    # ID do Google (login via OAuth) – opcional
+    google_id = Column(String(255), nullable=True)
+
+    # Flag de usuário master
+    is_master = Column(Boolean, nullable=False, default=False)
+
     # Timestamp de criação do usuário
     criado_em = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Timestamp de atualização do usuário
+    atualizado_em = Column(DateTime, nullable=True, default=None)

@@ -1,47 +1,100 @@
-/* Container principal da tela de consulta */
-.consulta-container {
-  padding: 20px;
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+/* Define contêiner da tela de consulta */
+.consulta-wrapper { /* Delimita a área do conteúdo */
+  display: flex; /* Ativa layout flexível vertical */
+  flex-direction: column; /* Organiza elementos em coluna */
+  gap: 12px; /* Define espaçamento entre blocos */
 }
 
-/* Título centralizado e com cor institucional */
-.consulta-container h2 {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #5e17eb;
+/* Barra superior com título e busca */
+.consulta-topo { /* Agrupa o cabeçalho da consulta */
+  display: flex; /* Define layout em linha */
+  align-items: center; /* Centraliza verticalmente */
+  justify-content: space-between; /* Separa título do campo de busca */
+  gap: 12px; /* Cria espaçamento interno */
 }
 
-/* Estilo para mensagens de erro */
-.consulta-container .erro {
-  color: red;
-  text-align: center;
-  font-size: 14px;
-  margin-bottom: 12px;
+/* Título da página */
+.consulta-titulo { /* Estiliza o cabeçalho da seção */
+  font-size: 24px; /* Ajusta tamanho da fonte */
 }
 
-/* Estilo da tabela */
-.consulta-container table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+/* Campo de busca */
+.buscador { /* Estilo do input de pesquisa */
+  flex: 1; /* Faz o buscador expandir conforme o espaço */
+  max-width: 380px; /* Limita a largura máxima */
+  padding: 10px 12px; /* Define espaçamento interno */
+  border: 1px solid #e5e7eb; /* Delimita com borda suave */
+  border-radius: 10px; /* Arredonda cantos */
+  outline: none; /* Remove contorno padrão */
+}
+.buscador:focus { /* Estilo ao focar */
+  border-color: #c4b5fd; /* Aplica roxo claro à borda */
+  box-shadow: 0 0 0 3px rgba(196,181,253,.35); /* Aplica brilho leve */
 }
 
-/* Cabeçalho da tabela com cor de fundo */
-.consulta-container thead {
-  background-color: #f0ebfa;
+/* Contêiner com rolagem horizontal para tabelas largas */
+.tabela-container { /* Permite navegação em telas menores */
+  overflow-x: auto; /* Adiciona rolagem horizontal se necessário */
+  border: 1px solid #f1f5f9; /* Delimita a área da tabela */
+  border-radius: 10px; /* Arredonda cantos do contêiner */
+  background: #fff; /* Mantém fundo branco */
 }
 
-/* Células com bordas e padding */
-.consulta-container th,
-.consulta-container td {
-  padding: 12px;
-  border: 1px solid #ddd;
-  text-align: left;
+/* Tabela de dados */
+.tabela { /* Estiliza a tabela de usuários */
+  width: 100%; /* Ocupa toda a largura disponível */
+  border-collapse: collapse; /* Remove espaçamentos internos */
+  min-width: 640px; /* Evita quebra excessiva em telas estreitas */
 }
 
-/* Alternância de linhas da tabela */
-.consulta-container tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
+/* Cabeçalho da tabela */
+.tabela thead th { /* Aplica estilo às colunas do cabeçalho */
+  text-align: left; /* Alinha textos à esquerda */
+  background: #f8fafc; /* Define fundo claro */
+  color: #111827; /* Usa texto escuro */
+  padding: 12px; /* Define espaço interno */
+  font-weight: 700; /* Realça o cabeçalho */
+  border-bottom: 1px solid #e5e7eb; /* Delimita separação visual */
+}
+
+/* Linhas do corpo */
+.tabela tbody td { /* Estilo de células de dados */
+  padding: 10px 12px; /* Define espaçamento interno */
+  border-bottom: 1px solid #f3f4f6; /* Delimita linhas com borda leve */
+}
+
+/* Linha de estado vazio */
+.vazio { /* Estilo para mensagem quando não há itens */
+  text-align: center; /* Centraliza conteúdo da célula */
+  color: #6b7280; /* Utiliza tom neutro */
+  padding: 20px; /* Aumenta espaço para legibilidade */
+}
+
+/* Aviso de erro */
+.alerta { /* Base visual dos alertas */
+  padding: 10px 12px; /* Define espaçamento interno */
+  border-radius: 10px; /* Arredonda cantos */
+  font-size: 14px; /* Ajusta tipografia */
+}
+.alerta.erro { /* Estilo do alerta de erro */
+  background: #fee2e2; /* Fundo suavemente avermelhado */
+  color: #7f1d1d; /* Texto vermelho escuro */
+  border: 1px solid #fecaca; /* Borda leve */
+}
+
+/* Indicador de carregamento */
+.carregando { /* Exibe status enquanto busca dados */
+  font-size: 14px; /* Ajusta tipografia */
+  color: #6b7280; /* Usa tom neutro */
+}
+
+/* Responsividade */
+@media (max-width: 700px) { /* Aplica ajustes para telas menores */
+  .consulta-topo { /* Reorganiza topo */
+    flex-direction: column; /* Empilha título e busca */
+    align-items: stretch; /* Faz o input ocupar toda a largura */
+  }
+  .buscador { /* Ajusta input de busca */
+    max-width: 100%; /* Remove limite em telas pequenas */
+  }
 }

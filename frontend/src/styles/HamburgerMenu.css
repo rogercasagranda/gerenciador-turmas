@@ -1,0 +1,119 @@
+/* Reseta estilo base do botão para evitar heranças inesperadas */
+.hamburger-btn {
+  /* Remove borda padrão do botão */
+  border: none; /* Remove borda nativa */
+  /* Remove background padrão */
+  background: transparent; /* Define fundo transparente */
+  /* Define cursor como mãozinha para indicar interatividade */
+  cursor: pointer; /* Indica elemento clicável */
+  /* Define posição acima do conteúdo para ficar sempre clicável */
+  z-index: 1002; /* Garante botão acima do overlay e do conteúdo */
+  /* Define espaçamento interno confortável */
+  padding: 12px; /* Ajusta área clicável do botão */
+  /* Remove contorno visual agressivo (focus será controlado) */
+  outline: none; /* Remove outline padrão */
+  /* Oculta por padrão em telas grandes (será visível no mobile) */
+  display: none; /* Esconde botão em desktop por padrão */
+}
+
+/* Define container invisível para posição/área do ícone */
+.hamburger-box {
+  /* Define tamanho do "touch target" para acessibilidade */
+  width: 28px; /* Define largura do ícone */
+  height: 20px; /* Define altura do ícone */
+  display: inline-block; /* Mantém box para posicionamento */
+  position: relative; /* Permite posicionar linhas internamente */
+}
+
+/* Define linhas do ícone (três barras) */
+.hamburger-line {
+  /* Posiciona linhas sobrepostas na caixa */
+  position: absolute; /* Permite posicionamento absoluto */
+  left: 0; /* Alinha à esquerda da caixa */
+  right: 0; /* Ocupa toda a largura da caixa */
+  height: 3px; /* Define espessura das barras */
+  border-radius: 2px; /* Arredonda pontas para estética */
+  background: #2d004d; /* Define cor das barras compatível com tema roxo */
+  transition: transform 200ms ease, opacity 200ms ease; /* Anima transformações e opacidade */
+}
+
+/* Define posição de cada linha */
+.hamburger-line.top {
+  top: 0; /* Posiciona linha superior */
+}
+.hamburger-line.middle {
+  top: 50%; /* Posiciona linha do meio */
+  transform: translateY(-50%); /* Centraliza verticalmente */
+}
+.hamburger-line.bottom {
+  bottom: 0; /* Posiciona linha inferior */
+}
+
+/* Estado ativo (anima em "X") */
+.hamburger-btn.is-active .hamburger-line.top {
+  transform: translateY(9px) rotate(45deg); /* Move e rotaciona linha superior */
+}
+.hamburger-btn.is-active .hamburger-line.middle {
+  opacity: 0; /* Oculta linha do meio para formar o X */
+}
+.hamburger-btn.is-active .hamburger-line.bottom {
+  transform: translateY(-9px) rotate(-45deg); /* Move e rotaciona linha inferior */
+}
+
+/* Overlay escurecido do fundo quando o drawer abre */
+.hamburger-overlay {
+  position: fixed; /* Mantém overlay fixo na tela */
+  inset: 0; /* Ocupa toda a área da janela */
+  background: rgba(0, 0, 0, 0.45); /* Define fundo semitransparente */
+  z-index: 1000; /* Fica abaixo do botão e acima do conteúdo */
+}
+
+/* Drawer lateral (menu) em modo fechado */
+.hamburger-drawer {
+  position: fixed; /* Mantém drawer fixo em relação à janela */
+  top: 0; /* Alinha ao topo */
+  bottom: 0; /* Estica até a base */
+  left: 0; /* Alinha à esquerda da tela */
+  width: 84%; /* Define largura do drawer em mobile */
+  max-width: 320px; /* Define largura máxima para consistência */
+  background: #ffffff; /* Define fundo branco para conteúdo */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); /* Adiciona sombra para elevação */
+  transform: translateX(-110%); /* Esconde fora da tela quando fechado */
+  transition: transform 240ms ease; /* Anima abertura/fechamento suave */
+  z-index: 1001; /* Fica acima do overlay e abaixo do botão */
+  display: flex; /* Ativa flexbox para conteúdo interno */
+  flex-direction: column; /* Organiza conteúdo em coluna */
+}
+
+/* Drawer em modo aberto */
+.hamburger-drawer.open {
+  transform: translateX(0); /* Traz o drawer para dentro da tela */
+}
+
+/* Área interna do drawer para receber conteúdo injetado */
+.drawer-content {
+  overflow-y: auto; /* Permite rolagem interna quando conteúdo excede altura */
+  height: 100%; /* Ocupa 100% da altura disponível */
+  padding: 16px; /* Define espaçamento interno */
+}
+
+/* Impede a rolagem do body quando o drawer está aberto (melhor UX) */
+.no-scroll {
+  overflow: hidden; /* Bloqueia rolagem do fundo */
+}
+
+/* Exibe o botão apenas em telas menores e mantém oculto no desktop */
+@media (max-width: 1024px) {
+  .hamburger-btn {
+    display: inline-flex; /* Exibe botão no mobile/tablet */
+    align-items: center; /* Centraliza verticalmente o ícone */
+    justify-content: center; /* Centraliza horizontalmente o ícone */
+  }
+}
+
+/* Garantia: em telas grandes, drawer sempre fechado visualmente (sem interferir no layout fixo aprovado) */
+@media (min-width: 1025px) {
+  .hamburger-drawer {
+    display: none; /* Esconde drawer no desktop para não concorrer com sidebar fixa */
+  }
+}

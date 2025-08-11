@@ -1,4 +1,3 @@
-# backend/main.py
 # ======================================================
 # Importa módulos padrão e terceiros
 # ======================================================
@@ -12,21 +11,21 @@ from psycopg2 import Error as PsycopgError    # Importa a classe de erro especí
 # ======================================================
 # JWT: criação de token de acesso
 # ======================================================
-from datetime import datetime, timedelta
-from jose import jwt
+from datetime import datetime, timedelta     # Importa utilitários de data e tempo
+from jose import jwt                         # Importa biblioteca JOSE para geração de JWT
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")  # Define chave secreta do JWT
+ALGORITHM = "HS256"                                             # Define algoritmo de assinatura
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))  # Define expiração padrão
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     # Cria payload com expiração
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
+    to_encode = data.copy()                                                     # Copia dados de entrada
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))  # Calcula expiração
+    to_encode.update({"exp": expire})                                           # Insere expiração no payload
     # Gera o token JWT
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)        # Codifica o token
+    return encoded_jwt                                                          # Retorna o token
 
 # ======================================================
 # Importa FastAPI e utilidades
@@ -42,11 +41,16 @@ from dotenv import load_dotenv                 # Importa load_dotenv para carreg
 from pydantic import BaseModel, Field, ConfigDict  # Importa BaseModel, Field e ConfigDict para validação flexível
 
 # ======================================================
-# Importa camada de acesso a dados
+# Importa camada de acesso a dados (AJUSTE DE IMPORTS PARA EXECUTAR PELA RAIZ)
 # ======================================================
-from database import get_db                    # Importa função get_db para sessão do ORM
-from models.usuarios import Usuarios           # Importa o modelo Usuarios para consultas
-import bcrypt                                  # Importa bcrypt para validação de senha
+from backend.database import get_db                    # Importa função get_db via pacote absoluto
+from backend.models.usuarios import Usuarios           # Importa o modelo Usuarios via pacote absoluto
+import bcrypt                                          # Importa bcrypt para validação de senha
+
+# ======================================================
+# IMPORTA ROTAS (MERGE) — adiciona router de usuários
+# ======================================================
+from backend.routes.usuarios import router as usuarios_router   # Importa router de /usuarios
 
 # ======================================================
 # Configura logger da aplicação
@@ -75,6 +79,11 @@ app.add_middleware(                                  # Adiciona middleware de CO
     allow_methods=["*"],                             # Libera todos os métodos HTTP
     allow_headers=["*"],                             # Libera todos os headers
 )
+
+# ======================================================
+# Registra routers (MERGE) — mantém existentes e soma /usuarios
+# ======================================================
+app.include_router(usuarios_router)                  # Registra rotas de usuários (/usuarios GET/POST)
 
 # ======================================================
 # Loga variáveis públicas do OAuth (sem expor segredos)
@@ -156,10 +165,9 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # --------------------------------------------------
     # Sucesso
     # --------------------------------------------------
-    logger.info(f"✅ Login realizado com sucesso para: {email}")
-    # Gera JWT com subject = e-mail
-    token = create_access_token({"sub": email})
-    return {"message": "Login realizado com sucesso", "token": token, "email": email}
+    logger.info(f"✅ Login realizado com sucesso para: {email}")       # Registra sucesso
+    token = create_access_token({"sub": email})                        # Gera JWT com subject = e-mail
+    return {"message": "Login realizado com sucesso", "token": token, "email": email}  # Retorna token
 
 # ======================================================
 # (As rotas /google-login e /google-callback permanecem como no seu código aprovado)
@@ -168,10 +176,10 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
 # 🔓 Google login
 @app.get("/google-login")
 def google_login():
-    client_id = os.getenv("GOOGLE_CLIENT_ID")
-    redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
-    scope = "openid%20email%20profile"
-    google_oauth_url = (
+    client_id = os.getenv("GOOGLE_CLIENT_ID")                          # Lê client_id do .env
+    redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")                    # Lê redirect_uri do .env
+    scope = "openid%20email%20profile"                                 # Define escopos solicitados
+    google_oauth_url = (                                               # Monta URL de autorização
         f"https://accounts.google.com/o/oauth2/v2/auth"
         f"?client_id={client_id}"
         f"&response_type=code"
@@ -180,22 +188,22 @@ def google_login():
         f"&access_type=offline"
         f"&prompt=consent"
     )
-    return RedirectResponse(google_oauth_url)
+    return RedirectResponse(google_oauth_url)                          # Redireciona para Google
 
 # 🔁 Google callback
 @app.get("/google-callback")
 def google_callback(request: Request):
     try:
-        code = request.query_params.get("code")
-        if not code:
-            raise HTTPException(status_code=400, detail="Código de autorização ausente")
+        code = request.query_params.get("code")                        # Lê código de autorização
+        if not code:                                                   # Valida presença do código
+            raise HTTPException(status_code=400, detail="Código de autorização ausente")  # Retorna 400
 
-        client_id = os.getenv("GOOGLE_CLIENT_ID")
-        client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
-        redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
+        client_id = os.getenv("GOOGLE_CLIENT_ID")                      # Lê client_id do .env
+        client_secret = os.getenv("GOOGLE_CLIENT_SECRET")              # Lê client_secret do .env
+        redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")                # Lê redirect_uri do .env
 
-        token_url = "https://oauth2.googleapis.com/token"
-        token_data = {
+        token_url = "https://oauth2.googleapis.com/token"              # Define endpoint de token
+        token_data = {                                                 # Monta payload de troca de código
             "code": code,
             "client_id": client_id,
             "client_secret": client_secret,
@@ -203,69 +211,65 @@ def google_callback(request: Request):
             "grant_type": "authorization_code",
         }
 
-        token_response = requests.post(token_url, data=token_data, timeout=10)
-        if token_response.status_code != 200:
-            logger.error(f"❌ Erro ao obter token: {token_response.text}")
-            raise HTTPException(status_code=400, detail="Falha ao obter token de acesso")
+        token_response = requests.post(token_url, data=token_data, timeout=10)  # Solicita token ao Google
+        if token_response.status_code != 200:                                   # Valida resposta
+            logger.error(f"❌ Erro ao obter token: {token_response.text}")      # Registra erro
+            raise HTTPException(status_code=400, detail="Falha ao obter token de acesso")  # Retorna 400
 
-        access_token = token_response.json().get("access_token")
-        if not access_token:
-            raise HTTPException(status_code=400, detail="Token de acesso ausente")
+        access_token = token_response.json().get("access_token")      # Extrai access_token
+        if not access_token:                                          # Valida presença
+            raise HTTPException(status_code=400, detail="Token de acesso ausente")  # Retorna 400
 
-        user_info_url = "https://www.googleapis.com/oauth2/v1/userinfo"
-        headers = {"Authorization": f"Bearer {access_token}"}
-        user_info_response = requests.get(user_info_url, headers=headers, timeout=10)
-        if user_info_response.status_code != 200:
-            logger.error(f"❌ Erro ao obter dados do usuário: {user_info_response.text}")
-            raise HTTPException(status_code=400, detail="Erro ao obter dados do usuário")
+        user_info_url = "https://www.googleapis.com/oauth2/v1/userinfo"  # Define endpoint de userinfo
+        headers = {"Authorization": f"Bearer {access_token}"}            # Monta header de autorização
+        user_info_response = requests.get(user_info_url, headers=headers, timeout=10)  # Consulta dados do usuário
+        if user_info_response.status_code != 200:                        # Valida resposta
+            logger.error(f"❌ Erro ao obter dados do usuário: {user_info_response.text}")  # Registra erro
+            raise HTTPException(status_code=400, detail="Erro ao obter dados do usuário")  # Retorna 400
 
-        user_data = user_info_response.json()
-        user_email = user_data.get("email")
-        if not user_email:
-            raise HTTPException(status_code=400, detail="Email não encontrado na resposta do Google")
+        user_data = user_info_response.json()                # Converte resposta para dicionário
+        user_email = user_data.get("email")                  # Extrai e-mail do usuário
+        if not user_email:                                   # Valida presença do e-mail
+            raise HTTPException(status_code=400, detail="Email não encontrado na resposta do Google")  # Retorna 400
 
-        conn = None
-        cur = None
+        conn = None                                          # Inicializa conexão
+        cur = None                                           # Inicializa cursor
         try:
-            database_url = os.getenv("DATABASE_URL")
-            conn = psycopg2.connect(dsn=database_url)
-            cur = conn.cursor()
-            cur.execute("SELECT id_usuario FROM usuarios WHERE email = %s", (user_email,))
-            result = cur.fetchone()
+            database_url = os.getenv("DATABASE_URL")         # Lê URL do banco
+            conn = psycopg2.connect(dsn=database_url)        # Abre conexão
+            cur = conn.cursor()                              # Abre cursor
+            cur.execute("SELECT id_usuario FROM usuarios WHERE email = %s", (user_email,))  # Consulta pré-cadastro
+            result = cur.fetchone()                          # Lê resultado
 
-            if not result:
-                logger.warning(f"⛔ Usuário não pré-cadastrado (GOOGLE): {user_email}")
-                from fastapi.responses import RedirectResponse
-                frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-                # Redireciona de volta ao frontend para a tela de login com sinalizador de erro
-                return RedirectResponse(url=f"{frontend_url}/login?err=USER_NOT_FOUND", status_code=302)
+            if not result:                                   # Verifica se usuário não existe
+                logger.warning(f"⛔ Usuário não pré-cadastrado (GOOGLE): {user_email}")  # Registra ausência
+                from fastapi.responses import RedirectResponse                            # Importa RedirectResponse
+                frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")        # Define URL do front
+                return RedirectResponse(url=f"{frontend_url}/login?err=USER_NOT_FOUND", status_code=302)  # Redireciona
 
+            logger.info(f"✅ Usuário autorizado: {user_email}")    # Registra sucesso
+            token = create_access_token({"sub": user_email})       # Gera JWT
+            from fastapi.responses import RedirectResponse         # Importa RedirectResponse
+            frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")  # Define URL do front
+            return RedirectResponse(url=f"{frontend_url}/login?token={token}", status_code=302)  # Redireciona com token
 
-            logger.info(f"✅ Usuário autorizado: {user_email}")
-            # Cria o JWT e redireciona para o frontend com o token
-            token = create_access_token({"sub": user_email})
-            from fastapi.responses import RedirectResponse
-            frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-            # Evita logar token
-            return RedirectResponse(url=f"{frontend_url}/login?token={token}", status_code=302)
-
-        except PsycopgError as db_err:
-            logger.error(f"❌ Erro ao consultar banco de dados: {db_err}")
-            raise HTTPException(status_code=500, detail="Erro ao acessar banco de dados")
+        except PsycopgError as db_err:                       # Captura erro de banco
+            logger.error(f"❌ Erro ao consultar banco de dados: {db_err}")  # Registra erro
+            raise HTTPException(status_code=500, detail="Erro ao acessar banco de dados")  # Retorna 500
         finally:
-            if cur is not None:
+            if cur is not None:                              # Verifica cursor aberto
                 try:
-                    cur.close()
+                    cur.close()                              # Fecha cursor
                 except Exception:
-                    logger.warning("⚠️ Falha ao fechar cursor do banco")
-            if conn is not None:
+                    logger.warning("⚠️ Falha ao fechar cursor do banco")   # Registra aviso
+            if conn is not None:                             # Verifica conexão aberta
                 try:
-                    conn.close()
+                    conn.close()                             # Fecha conexão
                 except Exception:
-                    logger.warning("⚠️ Falha ao fechar conexão com o banco")
+                    logger.warning("⚠️ Falha ao fechar conexão com o banco")  # Registra aviso
 
-    except HTTPException:
-        raise
-    except Exception:
-        logger.exception("❌ Erro inesperado na callback do Google")
-        raise HTTPException(status_code=500, detail="Erro interno no servidor")
+    except HTTPException:                                    # Mantém HTTPException original
+        raise                                                # Propaga exceção
+    except Exception:                                        # Captura exceções não previstas
+        logger.exception("❌ Erro inesperado na callback do Google")  # Registra stacktrace
+        raise HTTPException(status_code=500, detail="Erro interno no servidor")  # Retorna 500

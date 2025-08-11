@@ -1,86 +1,138 @@
-/* Define fonte padrão */
-body {
-  font-family: 'Inter', sans-serif;               /* Aplica fonte moderna */
-  background-color: #f5f5f5;                       /* Fundo cinza claro */
-  margin: 0;                                       /* Remove margem padrão */
-  padding: 0;                                      /* Remove padding padrão */
-  min-height: 100vh;                               /* Garante altura mínima */
+/* Define escopo da página de cadastro */
+.cadastro-wrapper { /* Cria contêiner principal do formulário */
+  max-width: 920px; /* Limita largura para leitura confortável */
+  margin: 0 auto;   /* Centraliza horizontalmente dentro da home-content */
 }
 
-/* Centraliza o formulário na área visível sem quebrar o layout */
-.cadastro-container {
-  display: flex;                                   /* Ativa flexbox */
-  justify-content: center;                         /* Centraliza horizontalmente */
-  align-items: flex-start;                         /* Alinha no topo */
-  padding: 40px 0;                                  /* Espaço superior e inferior */
-  width: 100%;                                     /* Ocupa toda a largura */
-  height: auto;                                    /* Altura fluida */
+/* Estiliza o título da seção */
+.cadastro-titulo { /* Realça o cabeçalho da página */
+  font-size: 24px;  /* Ajusta o tamanho do texto */
+  margin-bottom: 16px; /* Cria espaço abaixo do título */
 }
 
-/* Estiliza o formulário */
-.cadastro-form {
-  background-color: #ffffff;                       /* Fundo branco */
-  padding: 40px;                                   /* Espaçamento interno */
-  border-radius: 12px;                             /* Cantos arredondados */
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);         /* Sombra suave */
-  width: 100%;                                     /* Largura total */
-  max-width: 420px;                                /* Limite máximo de largura */
-  display: flex;                                   /* Flexbox interno */
-  flex-direction: column;                          /* Coluna */
+/* Define layout base do formulário */
+.cadastro-form { /* Contextualiza os campos do formulário */
+  display: flex; /* Ativa layout flexível */
+  flex-direction: column; /* Empilha campos verticalmente */
+  gap: 14px; /* Define espaçamento entre seções do formulário */
 }
 
-/* Título centralizado */
-.cadastro-form h2 {
-  text-align: center;                              /* Centraliza texto */
-  margin-bottom: 24px;                             /* Espaço inferior */
-  color: #5e17eb;                                  /* Roxo institucional */
+/* Define agrupamento horizontal quando necessário */
+.linha { /* Representa uma linha com múltiplas colunas */
+  display: grid; /* Usa grid para colunas */
+  gap: 12px; /* Espaçamento entre colunas */
 }
 
-/* Estiliza os labels */
-.cadastro-form label {
-  font-weight: 600;                                /* Negrito */
-  font-size: 14px;                                 /* Tamanho padrão */
-  margin-bottom: 4px;                              /* Espaço inferior */
-  color: #333;                                     /* Cor escura */
+/* Duas colunas iguais */
+.linha.dois { /* Ajusta para duas colunas 1:1 */
+  grid-template-columns: 1fr 1fr; /* Define duas colunas proporcionais */
 }
 
-/* Inputs e selects */
-.cadastro-form input,
-.cadastro-form select {
-  padding: 10px;                                   /* Espaçamento interno */
-  margin-bottom: 16px;                             /* Espaço entre elementos */
-  border-radius: 8px;                              /* Arredondado */
-  border: 1px solid #ccc;                          /* Borda cinza */
-  font-size: 14px;                                 /* Texto padrão */
+/* Três colunas (perfil, ddi, ddd) */
+.linha.tres { /* Ajusta para três colunas equilibradas */
+  grid-template-columns: 1.2fr 0.5fr 0.5fr; /* Distribui larguras */
 }
 
-/* Botão de envio */
-.cadastro-form button {
-  background-color: #5e17eb;                       /* Roxo institucional */
-  color: #fff;                                     /* Texto branco */
-  font-weight: 600;                                /* Negrito */
-  border: none;                                    /* Sem borda */
-  border-radius: 8px;                              /* Arredondado */
-  padding: 12px;                                   /* Espaçamento interno */
-  cursor: pointer;                                 /* Cursor de clique */
-  font-size: 16px;                                 /* Tamanho grande */
-  transition: background 0.3s ease;                /* Animação no hover */
+/* Campo individual com rótulo e entrada */
+.campo { /* Agrupa label e input/select */
+  display: flex; /* Ativa layout flexível vertical */
+  flex-direction: column; /* Posiciona rótulo acima da entrada */
+  gap: 6px; /* Espaçamento entre rótulo e campo */
 }
 
-/* Hover no botão */
-.cadastro-form button:hover {
-  background-color: #4a0fca;                       /* Roxo escuro no hover */
+/* Versão curta para DDI e DDD */
+.campo.curto { /* Reduz a largura visual dos campos numéricos */
+  min-width: 90px; /* Garante largura mínima consistente */
 }
 
-/* Checkbox alinhado */
-.cadastro-form input[type="checkbox"] {
-  margin-right: 8px;                               /* Espaço ao lado */
+/* Rótulos dos campos */
+.rotulo { /* Define estilo do texto do label */
+  font-size: 14px; /* Ajusta o tamanho do rótulo */
+  color: #374151;  /* Usa tom escuro suave para legibilidade */
 }
 
-/* Estilo de erro */
-.erro {
-  color: red;                                      /* Texto vermelho */
-  font-size: 14px;                                 /* Texto pequeno */
-  text-align: center;                              /* Centralizado */
-  margin-bottom: 12px;                             /* Espaço inferior */
+/* Entradas de texto, password, select e tel */
+.entrada { /* Define estilo base dos inputs e selects */
+  padding: 10px 12px; /* Aplica espaçamento interno */
+  border: 1px solid #e5e7eb; /* Define borda suave */
+  border-radius: 10px; /* Arredonda cantos */
+  background: #ffffff; /* Mantém fundo branco */
+  outline: none; /* Remove contorno padrão do navegador */
+}
+.entrada:focus { /* Estilo ao focar o campo */
+  border-color: #c4b5fd; /* Deixa a borda em roxo claro */
+  box-shadow: 0 0 0 3px rgba(196,181,253,.35); /* Adiciona glow suave */
+}
+
+/* Container dos botões de ação */
+.acoes { /* Agrupa botões de navegação e submit */
+  display: flex; /* Usa layout em linha */
+  justify-content: flex-end; /* Alinha botões à direita */
+  gap: 10px; /* Espaçamento entre botões */
+  margin-top: 8px; /* Afasta do último campo */
+}
+
+/* Botão base */
+.btn { /* Estilo padrão de botões */
+  border: none; /* Remove borda padrão */
+  border-radius: 10px; /* Arredonda cantos */
+  padding: 10px 14px; /* Define espaçamento interno */
+  font-weight: 600; /* Realça o texto */
+  cursor: pointer; /* Indica interatividade */
+}
+
+/* Botão primário roxo */
+.btn.primario { /* Define o botão de ação principal */
+  background: #53139c; /* Usa roxo da identidade */
+  color: #fff; /* Define texto branco */
+}
+.btn.primario:hover { /* Realce ao passar o mouse */
+  filter: brightness(.95); /* Escurece levemente */
+}
+
+/* Botão secundário neutro */
+.btn.secundario { /* Define um botão de apoio */
+  background: #eef2ff; /* Usa tom claro azulado */
+  color: #1f2937; /* Define texto escuro */
+  border: 1px solid #e5e7eb; /* Delimita com borda leve */
+}
+.btn.secundario:hover { /* Realce de hover */
+  background: #e0e7ff; /* Intensifica o tom claro */
+}
+
+/* Alertas de feedback */
+.alerta { /* Base visual dos avisos */
+  padding: 10px 12px; /* Define espaçamento interno */
+  border-radius: 10px; /* Arredonda cantos */
+  font-size: 14px; /* Ajusta tipografia */
+}
+
+/* Alerta de erro */
+.alerta.erro { /* Estilo quando ocorre falha */
+  background: #fee2e2; /* Fundo avermelhado leve */
+  color: #7f1d1d; /* Texto vermelho escuro */
+  border: 1px solid #fecaca; /* Borda suave */
+}
+
+/* Alerta de sucesso */
+.alerta.sucesso { /* Estilo quando ocorre êxito */
+  background: #dcfce7; /* Fundo esverdeado leve */
+  color: #14532d; /* Texto verde escuro */
+  border: 1px solid #bbf7d0; /* Borda suave */
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 700px) { /* Aplica até 700px de largura */
+  .linha.dois { /* Ajusta a linha dupla */
+    grid-template-columns: 1fr; /* Converte para uma coluna */
+  }
+  .linha.tres { /* Ajusta a linha tripla */
+    grid-template-columns: 1fr; /* Converte para uma coluna empilhada */
+  }
+  .acoes { /* Ajusta botões no mobile */
+    justify-content: stretch; /* Ocupa toda a largura disponível */
+  }
+  .btn { /* Ajusta largura dos botões */
+    width: 100%; /* Faz botões ocuparem a linha */
+  }
 }

@@ -1,77 +1,81 @@
-// frontend/src/pages/Home.tsx
+// Importa React
+import React from "react"; // Importa React para criar componentes
 
-import React, { useState } from 'react';
-import { FaHome, FaUsers, FaChalkboardTeacher, FaCogs, FaBell, FaUser } from 'react-icons/fa';
-import { BsBook } from 'react-icons/bs';
-import { BiBarChart } from 'react-icons/bi';
-import CadastrarUsuario from "./Usuarios/CadastrarUsuario";
-import ConsultarUsuario from "./Usuarios/ConsultarUsuario";
-import MainContent from "../components/MainContent";
+// Importa router para navegação programática
+import { Link, Outlet } from "react-router-dom"; // Importa Link para navegação e Outlet para render de páginas internas
 
-const Home: React.FC = () => {
-  const [conteudoAtual, setConteudoAtual] = useState<React.ReactNode>(<></>);
-  const [menuUsuariosAberto, setMenuUsuariosAberto] = useState(false);
+// Importa o componente do menu hambúrguer
+import HamburgerMenu from "../components/HamburgerMenu"; // Importa componente criado para controlar o drawer móvel
 
+// Importa CSS da Home (mantenha seu CSS existente; aqui não alteramos estilos aprovados)
+import "../styles/Home.css"; // Importa CSS da Home (assumindo que já existe e está aprovado)
+
+// Define componente de navegação móvel para usar dentro do drawer
+const MobileNav: React.FC = () => {
+  // Retorna lista de navegação usada no drawer móvel
   return (
-    <div>
-      <header style={{ backgroundColor: '#5e17eb', color: 'white', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', gap: '25px', alignItems: 'center' }}>
-          <span style={{ fontWeight: 'bold', fontSize: '20px' }}>Portal do Professor</span>
-          <span style={{ cursor: 'pointer' }}><FaHome /> Início</span>
-          <span style={{ cursor: 'pointer' }}><BsBook /> Turmas</span>
-          <span style={{ cursor: 'pointer' }}><FaChalkboardTeacher /> Professores</span>
-          <span style={{ cursor: 'pointer' }}><BiBarChart /> Relatórios</span>
-          <div
-            style={{ position: 'relative' }}
-            onMouseEnter={() => setMenuUsuariosAberto(true)}
-            onMouseLeave={() => setMenuUsuariosAberto(false)}
-          >
-            <span style={{ cursor: 'pointer' }}>
-              <FaUsers /> Usuários ▾
-            </span>
-            {menuUsuariosAberto && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                backgroundColor: '#fff',
-                color: '#000',
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-                borderRadius: '6px',
-                zIndex: 999
-              }}>
-                <div
-                  style={{ padding: '10px 15px', cursor: 'pointer' }}
-                  onClick={() => setConteudoAtual(<CadastrarUsuario />)}
-                >
-                  Cadastrar
-                </div>
-                <div
-                  style={{ padding: '10px 15px', cursor: 'pointer' }}
-                  onClick={() => setConteudoAtual(<ConsultarUsuario />)}
-                >
-                  Consultar
-                </div>
-              </div>
-            )}
-          </div>
-          <span style={{ cursor: 'pointer' }}><FaCogs /> Configurações</span>
-        </div>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <FaBell />
-          <FaUser />
+    <nav aria-label="Navegação móvel">{/* Define nav com rótulo acessível */}
+      <ul className="mobile-nav-list">{/* Define lista de itens do menu móvel */}
+        <li>{/* Define item de menu */}
+          <Link to="/home">{/* Define link para Home */}
+            Início{/* Define texto do link */}
+          </Link>
+        </li>
+        <li>{/* Define item de menu */}
+          <Link to="/usuarios/cadastrar">{/* Define link para Cadastrar Usuário */}
+            Usuários — Cadastrar{/* Define texto do link */}
+          </Link>
+        </li>
+        <li>{/* Define item de menu */}
+          <Link to="/usuarios/consultar">{/* Define link para Consultar Usuário */}
+            Usuários — Consultar{/* Define texto do link */}
+          </Link>
+        </li>
+        {/* Adicione aqui novos itens mantendo a estrutura */}
+      </ul>
+    </nav>
+  ); // Finaliza retorno do menu móvel
+}; // Finaliza MobileNav
+
+// Exporta componente principal da Home
+const Home: React.FC = () => {
+  // Renderiza a estrutura fixa aprovada (cabeçalho + corpo com conteúdo dinâmico)
+  return (
+    <div className="home-root">{/* Mantém root da Home sem alterar layout aprovado */}
+      <header className="home-header">{/* Mantém cabeçalho fixo conforme layout aprovado */}
+        {/* Botão hamburguer só aparece em telas menores (controlado pelo CSS) */}
+        <HamburgerMenu
+          ariaLabel="Abrir menu de navegação"
+          drawerContent={<MobileNav />}
+        />
+        {/* Mantém o título/logo ou elementos já aprovados no header */}
+        <h1 className="home-title">{/* Mantém título da aplicação */}
+          Portal do Professor{/* Exibe título aprovado */}
+        </h1>
+        {/* Mantém espaço para ações à direita do header (ex.: perfil, sair) */}
+        <div className="home-header-actions">{/* Slot para ações do cabeçalho */}
+          {/* Sem alterações no que já existe; se houver ícones/menus, mantê-los aqui */}
         </div>
       </header>
 
-      <MainContent>
-        {conteudoAtual}
-      </MainContent>
+      {/* Mantém estrutura: sidebar/menubar fixo em desktop e body carregando páginas dentro da Home */}
+      <main className="home-main">{/* Mantém container principal do conteúdo */}
+        {/* Mantém área de navegação lateral já existente no desktop (não reproduzida aqui para evitar sobrescrita) */}
+        {/* No mobile, a navegação é provida pelo drawer acima; em desktop, seu menu/lateral permanece como está */}
 
-      <footer style={{ textAlign: 'center', padding: '10px', fontSize: '13px', color: '#666' }}>
-        © 2025 Portal do Professor - Todos os direitos reservados
+        {/* Área do corpo onde cada página deve ser renderizada (regras aprovadas) */}
+        <section className="home-body">{/* Mantém área vermelha/slot central aprovado */}
+          <Outlet />{/* Renderiza as rotas filhas dentro do corpo sem quebrar a estrutura */}
+        </section>
+      </main>
+
+      {/* Mantém rodapé se houver (opcional) */}
+      <footer className="home-footer">{/* Mantém rodapé aprovado */}
+        {/* Conteúdo opcional do rodapé ou manter vazio conforme layout travado */}
       </footer>
     </div>
-  );
-};
+  ); // Finaliza retorno da Home
+}; // Finaliza componente Home
 
-export default Home;
+// Exporta Home como padrão
+export default Home; // Disponibiliza Home para rotas

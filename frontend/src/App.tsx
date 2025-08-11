@@ -5,8 +5,6 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 // Importa páginas
 import Login from './components/Login'
 import Home from './pages/Home/Home'
-import CadastrarUsuario from './pages/Usuarios/CadastrarUsuario'
-import ConsultarUsuario from './pages/Usuarios/ConsultarUsuario'
 
 // Componente principal da aplicação
 const App: React.FC = () => {
@@ -21,9 +19,11 @@ const App: React.FC = () => {
       {/* Página principal Home */}
       <Route path="/home" element={<Home />} />
 
-      {/* Rotas protegidas embutidas dentro da Home */}
-      <Route path="/usuarios/cadastrar" element={<Home />} />
-      <Route path="/usuarios/consultar" element={<Home />} />
+      {/* Garante que qualquer rota de Usuários monte a Home e carregue o conteúdo dentro dela */}
+      <Route path="/usuarios/*" element={<Home />} />
+
+      {/* Fallback opcional para rotas desconhecidas */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )
 }
