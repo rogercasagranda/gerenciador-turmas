@@ -1,100 +1,51 @@
-/* Define contêiner da tela de consulta */
-.consulta-wrapper { /* Delimita a área do conteúdo */
-  display: flex; /* Ativa layout flexível vertical */
-  flex-direction: column; /* Organiza elementos em coluna */
-  gap: 12px; /* Define espaçamento entre blocos */
+/* ===== Consultar Usuários (respeita layout aprovado) ===== */
+:root {
+  --pp-purple-700: #53139c;
+  --pp-purple-50: #f9f5ff;
+  --pp-border: #e5e7eb;
+  --pp-text: #1f2937;
+  --pp-muted: #6b7280;
 }
 
-/* Barra superior com título e busca */
-.consulta-topo { /* Agrupa o cabeçalho da consulta */
-  display: flex; /* Define layout em linha */
-  align-items: center; /* Centraliza verticalmente */
-  justify-content: space-between; /* Separa título do campo de busca */
-  gap: 12px; /* Cria espaçamento interno */
-}
+.consulta-wrapper { max-width: 1024px; margin: 0 auto; padding: 12px 8px; }
+.consulta-topo { display:flex; align-items:center; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
+.consulta-titulo { font-size: 24px; font-weight: 700; color: var(--pp-text); }
 
-/* Título da página */
-.consulta-titulo { /* Estiliza o cabeçalho da seção */
-  font-size: 24px; /* Ajusta tamanho da fonte */
-}
+/* Botões (mantém linguagem do projeto) */
+.btn { padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+.btn.primario { background: #4a148c; color: #fff; border: none; }
+.btn.primario:hover { background: #6a1b9a; }
+.btn.secundario { background: #eef2ff; color: #312e81; border: 1px solid #e5e7eb; }
+.btn.secundario:hover { background: #e0e7ff; }
 
-/* Campo de busca */
-.buscador { /* Estilo do input de pesquisa */
-  flex: 1; /* Faz o buscador expandir conforme o espaço */
-  max-width: 380px; /* Limita a largura máxima */
-  padding: 10px 12px; /* Define espaçamento interno */
-  border: 1px solid #e5e7eb; /* Delimita com borda suave */
-  border-radius: 10px; /* Arredonda cantos */
-  outline: none; /* Remove contorno padrão */
-}
-.buscador:focus { /* Estilo ao focar */
-  border-color: #c4b5fd; /* Aplica roxo claro à borda */
-  box-shadow: 0 0 0 3px rgba(196,181,253,.35); /* Aplica brilho leve */
-}
+/* Campo de filtro */
+#filtro.entrada { width: 320px; max-width: 100%; }
 
-/* Contêiner com rolagem horizontal para tabelas largas */
-.tabela-container { /* Permite navegação em telas menores */
-  overflow-x: auto; /* Adiciona rolagem horizontal se necessário */
-  border: 1px solid #f1f5f9; /* Delimita a área da tabela */
-  border-radius: 10px; /* Arredonda cantos do contêiner */
-  background: #fff; /* Mantém fundo branco */
-}
+/* Tabela responsiva e legível */
+.tabela-container { overflow-x: auto; }
+.tabela { width: 100%; border-collapse: collapse; }
+.tabela th { text-align: left; font-weight: 700; line-height: 1.35; color: var(--pp-text); padding: 9px 10px; border-bottom: 2px solid var(--pp-border); }
+.tabela td { padding: 9px 10px; border-bottom: 1px solid var(--pp-border); vertical-align: middle; line-height: 1.35; }
+.tabela tbody tr:nth-child(even) { background: var(--pp-purple-50); }
+.tabela tbody tr:hover { background: #f3e8ff; }
 
-/* Tabela de dados */
-.tabela { /* Estiliza a tabela de usuários */
-  width: 100%; /* Ocupa toda a largura disponível */
-  border-collapse: collapse; /* Remove espaçamentos internos */
-  min-width: 640px; /* Evita quebra excessiva em telas estreitas */
-}
+.sem-registros { text-align: center; color: var(--pp-muted); padding: 16px; }
 
-/* Cabeçalho da tabela */
-.tabela thead th { /* Aplica estilo às colunas do cabeçalho */
-  text-align: left; /* Alinha textos à esquerda */
-  background: #f8fafc; /* Define fundo claro */
-  color: #111827; /* Usa texto escuro */
-  padding: 12px; /* Define espaço interno */
-  font-weight: 700; /* Realça o cabeçalho */
-  border-bottom: 1px solid #e5e7eb; /* Delimita separação visual */
-}
+/* Estados */
+.carregando { color: var(--pp-muted); padding: 8px 0; }
+.alerta { padding: 10px 12px; border-radius: 10px; font-size: 14px; }
+.alerta.erro { background: #fee2e2; color: #7f1d1d; border: 1px solid #fecaca; }
 
-/* Linhas do corpo */
-.tabela tbody td { /* Estilo de células de dados */
-  padding: 10px 12px; /* Define espaçamento interno */
-  border-bottom: 1px solid #f3f4f6; /* Delimita linhas com borda leve */
+/* Responsivo */
+@media (max-width: 720px) {
+  .consulta-topo { flex-direction: column; align-items: flex-start; }
+  #filtro.entrada { width: 100%; }
 }
+.tabela th:last-child, .tabela td:last-child { text-align: right; }
 
-/* Linha de estado vazio */
-.vazio { /* Estilo para mensagem quando não há itens */
-  text-align: center; /* Centraliza conteúdo da célula */
-  color: #6b7280; /* Utiliza tom neutro */
-  padding: 20px; /* Aumenta espaço para legibilidade */
-}
-
-/* Aviso de erro */
-.alerta { /* Base visual dos alertas */
-  padding: 10px 12px; /* Define espaçamento interno */
-  border-radius: 10px; /* Arredonda cantos */
-  font-size: 14px; /* Ajusta tipografia */
-}
-.alerta.erro { /* Estilo do alerta de erro */
-  background: #fee2e2; /* Fundo suavemente avermelhado */
-  color: #7f1d1d; /* Texto vermelho escuro */
-  border: 1px solid #fecaca; /* Borda leve */
-}
-
-/* Indicador de carregamento */
-.carregando { /* Exibe status enquanto busca dados */
-  font-size: 14px; /* Ajusta tipografia */
-  color: #6b7280; /* Usa tom neutro */
-}
-
-/* Responsividade */
-@media (max-width: 700px) { /* Aplica ajustes para telas menores */
-  .consulta-topo { /* Reorganiza topo */
-    flex-direction: column; /* Empilha título e busca */
-    align-items: stretch; /* Faz o input ocupar toda a largura */
-  }
-  .buscador { /* Ajusta input de busca */
-    max-width: 100%; /* Remove limite em telas pequenas */
-  }
-}
+.ellipsis { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.col-nome { width: 28%; }
+.col-email { width: 36%; }
+.col-perfil { width: 16%; }
+.col-celular { width: 16%; }
+.col-acoes { width: 4%; }

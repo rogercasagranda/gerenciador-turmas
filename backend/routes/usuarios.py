@@ -1,64 +1,78 @@
-# Importa o APIRouter para definir rotas modulares
-from fastapi import APIRouter, Depends, HTTPException, status
-# Importa a sessão do SQLAlchemy via dependência
+# backend/routes/usuarios.py
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
-# Importa utilitário de acesso ao banco
-from backend.database import get_db  # Ajusta o caminho se seu main importa como "from database import get_db"
-# Importa o modelo de usuários já existente
-from backend.models.usuarios import Usuarios as UsuariosModel  # Ajusta o caminho se necessário
-# Importa tipagem do Pydantic para I/O
-from pydantic import BaseModel, EmailStr, Field
-# Importa bcrypt para gerar hash seguro
-import bcrypt
+from pydantic import BaseModel, EmailStr
+from jose import jwt, JWTError
+import os, bcrypt
 
-# Cria o roteador de usuários
-router = APIRouter(tags=["Usuarios"])
+from backend.database import get_db
+from backend.models.usuarios import Usuarios as UsuariosModel
 
-# Define schema de saída (evita expor hash)
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
+ALGORITHM  = "HS256"
+
+router = APIRouter(prefix="", tags=["Usuarios"])
+
 class UsuarioOut(BaseModel):
-    id_usuario: int = Field(..., description="Identificador do usuário")
+    id_usuario: int
     nome: str
     email: EmailStr
     tipo_perfil: str | None = None
     ddi: str | None = None
     ddd: str | None = None
     numero_celular: str | None = None
-
+    is_master: bool | None = None
     class Config:
         from_attributes = True
 
-# Define schema de criação
 class UsuarioCreate(BaseModel):
     nome: str
     email: EmailStr
-    senha: str = Field(..., min_length=6)
     tipo_perfil: str | None = None
     ddi: str | None = None
     ddd: str | None = None
     numero_celular: str
 
-# Lista usuários
+class UsuarioUpdate(BaseModel):
+    nome: str | None = None
+    tipo_perfil: str | None = None
+    ddi: str | None = None
+    ddd: str | None = None
+    numero_celular: str | None = None
+
+def email_from_request(request: Request) -> str:
+    auth = request.headers.get("Authorization", "")
+    if not auth.lower().startswith("bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token ausente.")
+    token = auth.split(" ", 1)[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        sub = payload.get("sub")
+        if not sub:
+            raise HTTPException(status_code=401, detail="Token inválido.")
+        return str(sub)
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido.")
+
 @router.get("/usuarios", response_model=list[UsuarioOut])
 def listar_usuarios(db: Session = Depends(get_db)):
-    # Executa query em todos os registros
-    result = db.query(UsuariosModel).all()
-    # Retorna lista convertida para o schema de saída
-    return result
+    return db.query(UsuariosModel).all()
 
-# Cria usuário
+@router.get("/usuarios/{id_usuario}", response_model=UsuarioOut)
+def obter_usuario(id_usuario: int, db: Session = Depends(get_db)):
+    user = db.query(UsuariosModel).filter(UsuariosModel.id_usuario == id_usuario).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    return user
+
 @router.post("/usuarios", status_code=status.HTTP_201_CREATED, response_model=UsuarioOut)
 def criar_usuario(payload: UsuarioCreate, db: Session = Depends(get_db)):
-    # Verifica existência por e-mail para evitar duplicidade
-    ja_existe = db.query(UsuariosModel).filter(UsuariosModel.email == payload.email).first()
-    if ja_existe:
-        # Retorna conflito quando e-mail já cadastrado
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="E-mail já cadastrado.")
+    if db.query(UsuariosModel).filter(UsuariosModel.email == payload.email).first():
+        raise HTTPException(status_code=409, detail="E-mail já cadastrado.")
 
-    # Gera hash seguro com bcrypt
     salt = bcrypt.gensalt(rounds=12)
-    senha_hash = bcrypt.hashpw(payload.senha.encode("utf-8"), salt).decode("utf-8")
+    senha_hash = bcrypt.hashpw(os.urandom(16).hex().encode("utf-8"), salt).decode("utf-8")
 
-    # Monta a entidade do modelo
     novo = UsuariosModel(
         nome=payload.nome,
         email=payload.email,
@@ -70,11 +84,29 @@ def criar_usuario(payload: UsuarioCreate, db: Session = Depends(get_db)):
         google_id=None,
         is_master=False,
     )
-
-    # Persiste no banco
     db.add(novo)
     db.commit()
     db.refresh(novo)
-
-    # Retorna o registro criado sem expor hash
     return novo
+
+@router.put("/usuarios/{id_usuario}", response_model=UsuarioOut)
+def atualizar_usuario(id_usuario: int, payload: UsuarioUpdate, db: Session = Depends(get_db)):
+    user = db.query(UsuariosModel).filter(UsuariosModel.id_usuario == id_usuario).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    if payload.nome is not None:            user.nome = payload.nome
+    if payload.tipo_perfil is not None:     user.tipo_perfil = payload.tipo_perfil
+    if payload.ddi is not None:             user.ddi = payload.ddi
+    if payload.ddd is not None:             user.ddd = payload.ddd
+    if payload.numero_celular is not None:  user.numero_celular = payload.numero_celular
+    db.commit()
+    db.refresh(user)
+    return user
+
+@router.get("/usuarios/me", response_model=UsuarioOut)
+def meu_perfil(request: Request, db: Session = Depends(get_db)):
+    email = email_from_request(request)  # 401 se Ausente/Inválido (evita 422)
+    user = db.query(UsuariosModel).filter(UsuariosModel.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    return user

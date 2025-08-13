@@ -1,0 +1,58 @@
+/* ========================================================================
+   LAYOUT CONGELADO — TELA: CONSULTAR USUÁRIOS
+   Atenção: NÃO ALTERE este arquivo sem aprovação. Qualquer mudança visual
+   deve ser feita em um novo arquivo de estilos e nunca aqui.
+   Versão travada: v1 (line-height 1.35, padding 9px 10px, colunas, ellipsis)
+   ======================================================================== */
+
+/* ===== Consultar Usuários (respeita layout aprovado) ===== */
+:root {
+  --pp-purple-700: #53139c;
+  --pp-purple-50: #f9f5ff;
+  --pp-border: #e5e7eb;
+  --pp-text: #1f2937;
+  --pp-muted: #6b7280;
+}
+
+.consulta-wrapper { max-width: 1024px; margin: 0 auto; padding: 12px 8px; }
+.consulta-topo { display:flex; align-items:center; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
+.consulta-titulo { font-size: 24px; font-weight: 700; color: var(--pp-text); }
+
+/* Botões (mantém linguagem do projeto) */
+.btn { padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+.btn.primario { background: #4a148c; color: #fff; border: none; }
+.btn.primario:hover { background: #6a1b9a; }
+.btn.secundario { background: #eef2ff; color: #312e81; border: 1px solid #e5e7eb; }
+.btn.secundario:hover { background: #e0e7ff; }
+
+/* Campo de filtro */
+#filtro.entrada { width: 320px; max-width: 100%; }
+
+/* Tabela responsiva e legível */
+.tabela-container { overflow-x: auto; }
+.tabela { width: 100%; border-collapse: collapse; }
+.tabela th { text-align: left; font-weight: 700; line-height: 1.35; color: var(--pp-text); padding: 9px 10px; border-bottom: 2px solid var(--pp-border); }
+.tabela td { padding: 9px 10px; border-bottom: 1px solid var(--pp-border); vertical-align: middle; line-height: 1.35; }
+.tabela tbody tr:nth-child(even) { background: var(--pp-purple-50); }
+.tabela tbody tr:hover { background: #f3e8ff; }
+
+.sem-registros { text-align: center; color: var(--pp-muted); padding: 16px; }
+
+/* Estados */
+.carregando { color: var(--pp-muted); padding: 8px 0; }
+.alerta { padding: 10px 12px; border-radius: 10px; font-size: 14px; }
+.alerta.erro { background: #fee2e2; color: #7f1d1d; border: 1px solid #fecaca; }
+
+/* Responsivo */
+@media (max-width: 720px) {
+  .consulta-topo { flex-direction: column; align-items: flex-start; }
+  #filtro.entrada { width: 100%; }
+}
+.tabela th:last-child, .tabela td:last-child { text-align: right; }
+
+.ellipsis { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.col-nome { width: 28%; }
+.col-email { width: 36%; }
+.col-perfil { width: 16%; }
+.col-celular { width: 16%; }
+.col-acoes { width: 4%; }

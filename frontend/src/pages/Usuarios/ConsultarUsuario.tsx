@@ -1,132 +1,208 @@
-// Importa React e hooks necessários
-import React, { useEffect, useMemo, useState } from 'react'
-// Importa axios para comunicação HTTP
-import axios from 'axios'
-// Importa o CSS dedicado desta tela
 import '../../styles/ConsultarUsuario.css'
+import '../../styles/ConsultarUsuario.lock.css'
+// Importa React e hooks
+import React, { useEffect, useMemo, useState } from 'react'
+// Importa HTTP client
+import axios from 'axios'
+// Importa navegação
+import { useNavigate } from 'react-router-dom'
 
-// Define o tipo mínimo do usuário para exibição
-type Usuario = { // Declara o shape usado na tabela
-  id: number // Identificador do usuário
-  nome: string // Nome do usuário
-  email: string // E-mail do usuário
-  tipo_perfil: string // Perfil do usuário
-  ddi: string // DDI do telefone
-  ddd: string // DDD do telefone
-  numero_celular: string // Número do celular
+// Define tipo do usuário retornado pela API
+type Usuario = {
+  id_usuario: number
+  nome: string
+  email: string
+  tipo_perfil?: string | null
+  ddi?: string | null
+  ddd?: string | null
+  numero_celular?: string | null
+  is_master?: boolean | null
 }
 
-// Define o componente funcional de consulta
+// Define tipo do próprio perfil (resposta de /usuarios/me)
+type MeuPerfil = {
+  tipo_perfil?: string
+  is_master?: boolean
+}
+
+// Define perfis com permissão para consultar/editar
+const PERFIS_PERMITIDOS = new Set([
+  'master',
+  'diretor',
+  'diretora',
+  'secretaria',
+  'coordenadora',
+])
+
+// Componente principal
 const ConsultarUsuario: React.FC = () => {
-  // Define estado para a lista de usuários
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]) // Armazena os itens da tabela
-  // Define estado de loading
-  const [carregando, setCarregando] = useState<boolean>(false) // Indica carregamento
-  // Define estado de erro
-  const [erro, setErro] = useState<string>('') // Guarda mensagens de erro
-  // Define estado do filtro de busca
-  const [busca, setBusca] = useState<string>('') // Controla texto do filtro
+  // Estados de dados
+  const [lista, setLista] = useState<Usuario[]>([])
+  const [filtro, setFiltro] = useState<string>('')
+  const [carregando, setCarregando] = useState<boolean>(false)
+  const [erro, setErro] = useState<string>('')
 
-  // Define a base da API via variável de ambiente (ou fallback)
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000' // Define endpoint base
+  // Navegação
+  const navigate = useNavigate()
 
-  // Busca usuários ao montar o componente
+  // Base da API
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+  // Função utilitária: monta headers de autenticação
+  const getAuthHeaders = () => {
+    const token =
+      localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+    return token ? { Authorization: `Bearer ${token}` } : null
+  }
+
+  // Guarda de rota por perfil + carga inicial
   useEffect(() => {
-    // Inicia o carregamento
-    setCarregando(true) // Ativa indicador de carregamento
-    // Limpa erro prévio
-    setErro('') // Reseta mensagem de erro
+  const carregar = async () => {
+    try {
+      const headers = getAuthHeaders()
+      if (!headers) { navigate('/login'); return }
 
-    // Prepara headers com token, se houver
-    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') // Lê token da sessão
-    const headers: Record<string, string> = {} // Inicializa objeto vazio
-    if (token) headers['Authorization'] = `Bearer ${token}` // Inclui token no header
+      // Valida perfil (tolerante a 422/500; só 401 derruba sessão)
+      try {
+        const m = await axios.get<MeuPerfil>(`${API_BASE}/usuarios/me`, { headers })
+        const p = (m.data.tipo_perfil || '').toLowerCase()
+        const autorizado = m.data.is_master || PERFIS_PERMITIDOS.has(p)
+        if (!autorizado) { navigate('/home'); return }
+      } catch (e:any) {
+        if (e?.response?.status === 401) { navigate('/login'); return }
+      }
 
-    // Executa requisição GET
-    axios.get<Usuario[]>(`${API_BASE}/usuarios`, { headers }) // Chama endpoint de listagem
-      .then((res) => { // Trata sucesso
-        setUsuarios(res.data || []) // Grava a lista retornada
-      })
-      .catch((err) => { // Trata erro
-        const msg = err?.response?.data?.detail || 'Falha ao carregar usuários.' // Extrai detalhe
-        setErro(msg) // Exibe mensagem ao usuário
-      })
-      .finally(() => { // Finaliza a operação
-        setCarregando(false) // Desativa indicador de carregamento
-      })
-  }, [API_BASE]) // Executa apenas na montagem
+      setCarregando(true)
+      let r;
+      try {
+        r = await axios.get<Usuario[]>(`${API_BASE}/usuarios`, { headers })
+      } catch (err:any) {
+        const alt = API_BASE.includes('127.0.0.1') ? API_BASE.replace('127.0.0.1','localhost') : API_BASE.replace('localhost','127.0.0.1')
+        r = await axios.get<Usuario[]>(`${alt}/usuarios`, { headers })
+      }
+      setLista(r.data || [])
+      setErro('')
+    } catch (e: any) {
+      if (e?.response?.status === 401) {
+        navigate('/login')
+      } else {
+        setErro('Falha ao carregar usuários.')
+      }
+    } finally {
+      setCarregando(false)
+    }
+  }
+  carregar()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [API_BASE])
 
-  // Calcula lista filtrada conforme o termo de busca
-  const usuariosFiltrados = useMemo(() => {
-    // Normaliza termo de busca
-    const q = busca.trim().toLowerCase() // Converte para minúsculas
-    // Retorna toda a lista quando não há filtro
-    if (!q) return usuarios // Evita processamento desnecessário
-    // Aplica filtro por nome, e-mail ou perfil
-    return usuarios.filter((u) => { // Aplica a função de filtro
-      return ( // Retorna verdadeiro quando houver match
-        u.nome.toLowerCase().includes(q) || // Confere nome
-        u.email.toLowerCase().includes(q) || // Confere e-mail
-        (u.tipo_perfil || '').toLowerCase().includes(q) // Confere perfil
-      ) // Fecha condição de filtro
-    }) // Fecha filter
-  }, [busca, usuarios]) // Recalcula quando busca ou lista mudam
+  // Lista filtrada (nome, email ou perfil)
+  const filtrada = useMemo(() => {
+    const term = filtro.trim().toLowerCase()
+    if (!term) return lista
+    return lista.filter((u) => {
+      const nome = (u.nome || '').toLowerCase()
+      const email = (u.email || '').toLowerCase()
+      const perfil = (u.tipo_perfil || '').toLowerCase()
+      return (
+        nome.includes(term) || email.includes(term) || perfil.includes(term)
+      )
+    })
+  }, [filtro, lista])
 
-  // Renderiza a interface da tela de consulta
+  // Ação: ir para editar
+  const editar = (id: number) => {
+    navigate(`/usuarios/cadastrar?id=${id}`)
+  }
+
+  // Renderização
   return (
-    <div className="consulta-wrapper">{/* Cria contêiner principal */}
-      <div className="consulta-topo">{/* Agrupa título e buscador */}
-        <h2 className="consulta-titulo">{/* Exibe título da página */}
-          Consultar Usuários{/* Texto do título */}
-        </h2>
-        <input
-          className="buscador" // Aplica estilo do campo de busca
-          type="search" // Define tipo de pesquisa
-          placeholder="Buscar por nome, e-mail ou perfil..." // Dica de busca
-          value={busca} // Liga ao estado controlado
-          onChange={(e) => setBusca(e.target.value)} // Atualiza termo
-        />{/* Fecha input */}
-      </div>{/* Fecha barra superior */}
+    <div className="consulta-wrapper">
+      {/* Cabeçalho da página */}
+      <div className="consulta-topo">
+        <h2 className="consulta-titulo">Consultar Usuários</h2>
+        <div className="consulta-acoes">
+          <button
+            className="btn primario"
+            onClick={() => navigate('/usuarios/cadastrar')}
+          >
+            Cadastrar novo
+          </button>
+        </div>
+      </div>
 
-      {/* Exibe erro quando existir */}
-      {erro && <div className="alerta erro">{erro}</div>}{/* Mostra alerta de erro */}
+      {/* Filtro de busca */}
+      <div className="linha">
+        <div className="campo">
+          <label className="rotulo" htmlFor="filtro">
+            Buscar por nome, e-mail ou perfil
+          </label>
+          <input
+            id="filtro"
+            className="entrada"
+            type="text"
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            placeholder="Digite para filtrar…"
+          />
+        </div>
+      </div>
 
-      {/* Exibe indicador de carregamento quando ativo */}
-      {carregando && <div className="carregando">Carregando...</div>}{/* Mostra loading */}
+      {/* Mensagens */}
+      {erro && <div className="alerta erro">{erro}</div>}
+      {carregando && <div className="carregando">Carregando…</div>}
 
-      {/* Renderiza tabela apenas quando não está carregando */}
+      {/* Tabela */}
       {!carregando && (
-        <div className="tabela-container">{/* Cria contêiner com rolagem horizontal */}
-          <table className="tabela">{/* Declara tabela estilizada */}
-            <thead>{/* Declara cabeçalho da tabela */}
-              <tr>{/* Declara linha de cabeçalho */}
-                <th>Nome</th>{/* Coluna de nome */}
-                <th>E-mail</th>{/* Coluna de e-mail */}
-                <th>Perfil</th>{/* Coluna de perfil */}
-                <th>Telefone</th>{/* Coluna de telefone */}
-              </tr>{/* Fecha linha */}
-            </thead>{/* Fecha cabeçalho */}
-            <tbody>{/* Declara corpo da tabela */}
-              {usuariosFiltrados.map((u) => ( // Itera sobre a lista filtrada
-                <tr key={u.id}>{/* Cria linha única por usuário */}
-                  <td>{u.nome}</td>{/* Exibe nome */}
-                  <td>{u.email}</td>{/* Exibe e-mail */}
-                  <td>{u.tipo_perfil}</td>{/* Exibe perfil */}
-                  <td>{`+${u.ddi} (${u.ddd}) ${u.numero_celular}`}</td>{/* Formata telefone */}
-                </tr> // Fecha linha da tabela
-              ))}{/* Encerra map */}
-              {usuariosFiltrados.length === 0 && ( // Verifica lista vazia
-                <tr>{/* Cria linha única para mensagem */}
-                  <td colSpan={4} className="vazio">Nenhum usuário encontrado.</td>{/* Mensagem de vazio */}
-                </tr> // Fecha linha
-              )}{/* Encerra condição */}
-            </tbody>{/* Fecha corpo */}
-          </table>{/* Fecha tabela */}
-        </div> // Fecha contêiner
-      )}{/* Encerra renderização condicional */}
-    </div> // Fecha wrapper
+        <div className="tabela-container">
+          <table className="tabela">
+            <thead>
+              <tr>
+                <th className="col-nome">Nome</th>
+                <th className="col-email">E-mail</th>
+                <th className="col-perfil">Perfil</th>
+                <th className="col-celular">Celular</th>
+                <th className="col-acoes">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtrada.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="sem-registros">
+                    Nenhum usuário encontrado.
+                  </td>
+                </tr>
+              ) : (
+                filtrada.map((u) => (
+                  <tr key={u.id_usuario}>
+                    <td><span className="ellipsis" title={u.nome || ''}>{u.nome}</span></td>
+                    <td><span className="ellipsis" title={u.email || ''}>{u.email}</span></td>
+                    <td>{(u.tipo_perfil || '').toUpperCase()}</td>
+                    <td>
+                      {(u.ddi || '')}
+                      {u.ddi ? ' ' : ''}
+                      {(u.ddd || '')}
+                      {u.ddd ? ' ' : ''}
+                      {(u.numero_celular || '')}
+                    </td>
+                    <td>
+                      <button
+                        className="btn secundario"
+                        onClick={() => editar(u.id_usuario)}
+                      >
+                        Editar
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   )
 }
 
-// Exporta o componente para uso na Home
+// Exporta componente
 export default ConsultarUsuario

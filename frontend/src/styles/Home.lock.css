@@ -1,0 +1,273 @@
+/* ========================================================================
+   LAYOUT CONGELADO — TELA: HOME
+   Atenção: NÃO ALTERE este arquivo sem aprovação. Qualquer mudança visual
+   deve ser feita em um novo arquivo de estilos e nunca aqui.
+   Versão travada: v1 (snapshot atual)
+   ======================================================================== */
+/* Define variáveis de cores para manter consistência visual */
+:root { /* Declara o escopo global das variáveis */
+  --pp-purple-900: #3d0070; /* Define roxo escuro do cabeçalho */
+  --pp-purple-700: #53139c; /* Define roxo intermediário para destaques */
+  --pp-purple-100: #efe6ff; /* Define roxo claro para fundo do menu lateral */
+  --pp-surface: #ffffff;    /* Define cor do conteúdo principal */
+  --pp-text: #1a1a1a;       /* Define cor padrão do texto */
+  --pp-muted: #6b7280;      /* Define cor de textos auxiliares */
+  --pp-danger: #e53e3e;     /* Define cor para o botão sair */
+  --pp-shadow: rgba(0,0,0,0.1); /* Define cor da sombra padrão */
+}
+
+/* Zera margens e aplica fonte padrão */
+* { /* Seleciona todos os elementos */
+  box-sizing: border-box; /* Garante cálculo de largura/altura previsível */
+  margin: 0;              /* Remove margens padrão do navegador */
+  padding: 0;             /* Remove espaçamentos padrão do navegador */
+}
+
+/* Define tipografia base e cor de fundo geral */
+body { /* Aplica ao corpo do documento */
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; /* Define pilha de fontes moderna */
+  color: var(--pp-text);       /* Define cor padrão do texto usando variável */
+  background: var(--pp-surface); /* Define cor do fundo da página */
+}
+
+/* Container raiz da Home */
+.home-root { /* Delimita a área total da home */
+  display: flex;                /* Define layout flexível vertical */
+  flex-direction: column;       /* Organiza cabeçalho, corpo e rodapé em coluna */
+  min-height: 100vh;            /* Garante altura mínima de tela cheia */
+}
+
+/* Cabeçalho fixo */
+.home-header { /* Estiliza a barra superior */
+  position: sticky;             /* Mantém o cabeçalho visível ao rolar */
+  top: 0;                       /* Ancoragem no topo da página */
+  z-index: 50;                  /* Garante sobreposição sobre o conteúdo */
+  background: linear-gradient(90deg, var(--pp-purple-900), var(--pp-purple-700)); /* Aplica degradê roxo */
+  color: #fff;                  /* Define texto branco para contraste */
+  display: flex;                /* Define layout em linha para título e ações */
+  align-items: center;          /* Centraliza verticalmente os itens */
+  justify-content: space-between; /* Separa título do botão sair */
+  padding: 14px 20px;           /* Define espaçamento interno */
+  box-shadow: 0 2px 10px var(--pp-shadow); /* Aplica sombra sutil */
+}
+
+/* Agrupa ícone e título no lado esquerdo do cabeçalho */
+.header-left { /* Cria um grupo à esquerda */
+  display: flex;                 /* Define layout em linha */
+  align-items: center;           /* Alinha verticalmente os itens */
+  gap: 12px;                     /* Define espaço entre ícone e título */
+}
+
+/* Título do aplicativo */
+.app-title { /* Define aparência do texto do título */
+  font-size: 20px;               /* Ajusta tamanho para boa leitura */
+  font-weight: 700;              /* Define negrito forte */
+  letter-spacing: 0.2px;         /* Ajusta espaçamento entre letras */
+}
+
+/* Agrupa botões à direita do cabeçalho */
+.header-right { /* Cria uma área para ações */
+  display: flex;                 /* Define layout em linha */
+  align-items: center;           /* Centraliza verticalmente os botões */
+  gap: 8px;                      /* Define espaçamento entre os botões */
+}
+
+/* Botão genérico de ícone (hambúrguer) */
+.icon-button { /* Estiliza botão sem bordas aparentes */
+  width: 40px;                   /* Define largura fixa */
+  height: 40px;                  /* Define altura fixa */
+  display: inline-flex;          /* Centraliza o conteúdo internamente */
+  align-items: center;           /* Alinha verticalmente o ícone */
+  justify-content: center;       /* Centraliza horizontalmente o ícone */
+  border: none;                  /* Remove borda padrão */
+  border-radius: 8px;            /* Arredonda levemente os cantos */
+  background: rgba(255,255,255,0.1); /* Aplica fundo translúcido */
+  cursor: pointer;               /* Indica elemento clicável */
+}
+
+/* Ícone de linhas (hambúrguer) */
+.icon-lines { /* Cria três linhas com CSS puro */
+  position: relative;            /* Permite posicionamento dos pseudo-elementos */
+  display: block;                /* Garante caixa de renderização */
+  width: 20px;                   /* Define largura do ícone */
+  height: 2px;                   /* Define espessura da linha central */
+  background: #fff;              /* Define cor branca para contraste */
+}
+.icon-lines::before,             /* Seleciona linha superior */
+.icon-lines::after {             /* Seleciona linha inferior */
+  content: "";                   /* Insere conteúdo vazio visual */
+  position: absolute;            /* Permite posicionamento relativo à linha central */
+  left: 0;                       /* Alinha à esquerda do ícone */
+  width: 20px;                   /* Define largura igual à linha central */
+  height: 2px;                   /* Define espessura igual à linha central */
+  background: #fff;              /* Define cor branca */
+}
+.icon-lines::before { top: -6px; } /* Posiciona a linha superior acima da central */
+.icon-lines::after  { top:  6px; } /* Posiciona a linha inferior abaixo da central */
+
+/* Botão Sair */
+.btn-sair { /* Define estilo do botão de sair */
+  background: var(--pp-danger);  /* Aplica cor de destaque vermelho */
+  color: #fff;                   /* Define texto branco */
+  border: none;                  /* Remove borda padrão */
+  padding: 10px 14px;            /* Define espaçamento interno */
+  border-radius: 10px;           /* Arredonda cantos */
+  font-weight: 600;              /* Destaca visualmente o texto */
+  cursor: pointer;               /* Indica elemento clicável */
+  transition: filter .2s ease;   /* Adiciona transição suave ao hover */
+}
+.btn-sair:hover { filter: brightness(0.95); } /* Escurece levemente ao passar o mouse */
+
+/* Estrutura do corpo: sidebar + conteúdo */
+.home-layout { /* Define contêiner principal do corpo */
+  display: grid;                 /* Usa grid para duas colunas */
+  grid-template-columns: 260px 1fr; /* Define largura da sidebar e do conteúdo */
+  gap: 0;                        /* Remove espaçamento entre colunas */
+  flex: 1;                       /* Ocupa todo o espaço vertical restante */
+  position: relative;            /* Define contexto ao backdrop */
+}
+
+/* Backdrop quando o drawer está aberto no mobile */
+.backdrop { /* Cria sobreposição translúcida */
+  position: fixed;               /* Cobre toda a tela */
+  inset: 0;                      /* Ancoragem a todos os lados */
+  background: rgba(0, 0, 0, 0.35); /* Define cor com transparência */
+  z-index: 20;                   /* Fica acima do conteúdo e abaixo da sidebar */
+}
+
+/* Sidebar/Drawer */
+.sidebar { /* Estiliza menu lateral */
+  background: var(--pp-purple-100); /* Aplica fundo roxo claro */
+  border-right: 1px solid #eae7ff; /* Delimita com borda sutil */
+  padding: 16px;                   /* Define espaçamento interno */
+  box-shadow: 2px 0 10px var(--pp-shadow); /* Aplica sombra lateral */
+  position: relative;              /* Contexto para submenu */
+  z-index: 30;                      /* Garante ficar acima do backdrop */
+}
+
+/* Navegação da sidebar */
+.nav { /* Agrupa os itens de menu */
+  display: flex;                   /* Define layout vertical */
+  flex-direction: column;          /* Organiza itens de cima para baixo */
+  gap: 8px;                        /* Define espaçamento entre itens */
+}
+
+/* Item de navegação */
+.nav-item { /* Container de um item e seu submenu */
+  position: relative;              /* Contexto para o dropdown */
+}
+
+/* Link principal do item */
+.nav-link { /* Estilo do botão do item do menu */
+  width: 100%;                     /* Ocupa toda a largura do container */
+  text-align: left;                /* Alinha texto à esquerda */
+  background: transparent;         /* Remove fundo padrão */
+  border: none;                    /* Remove borda padrão */
+  padding: 12px 12px;              /* Define espaçamento interno */
+  border-radius: 10px;             /* Arredonda cantos */
+  font-weight: 600;                /* Destaque de texto */
+  color: var(--pp-purple-900);     /* Usa tom roxo escuro para o texto */
+  cursor: pointer;                 /* Indica que é clicável */
+}
+.nav-link:hover { background: #e9defc; } /* Realça visual ao hover */
+
+/* Indicador de seta do submenu */
+.caret { /* Cria um ícone de seta leve com CSS */
+  margin-left: 8px;               /* Afasta a seta do texto */
+  border: solid var(--pp-purple-900); /* Define cor da seta */
+  border-width: 0 2px 2px 0;      /* Desenha dois lados do triângulo */
+  display: inline-block;          /* Garante caixa de exibição */
+  padding: 3px;                   /* Ajusta tamanho da seta */
+  transform: rotate(45deg);       /* Define orientação padrão (para baixo) */
+}
+.caret--up { transform: rotate(-135deg); } /* Altera orientação quando aberto */
+.caret--down { transform: rotate(45deg); } /* Mantém orientação quando fechado */
+
+/* Submenu oculto por padrão */
+.submenu { /* Área do dropdown/expansível */
+  display: none;                  /* Esconde conteúdo inicialmente */
+  margin-left: 6px;               /* Cria leve indentação à esquerda */
+  padding-left: 6px;              /* Ajusta espaçamento interno */
+  border-left: 2px solid #e1d7fb; /* Cria linha guia para hierarquia visual */
+  margin-top: 6px;                /* Define espaçamento superior */
+}
+
+/* Submenu visível quando aberto */
+.submenu--open { /* Torna o submenu visível */
+  display: flex;                  /* Define layout vertical */
+  flex-direction: column;         /* Organiza itens de cima para baixo */
+  gap: 6px;                       /* Define espaçamento entre os links */
+}
+
+/* Links internos do submenu */
+.submenu-link { /* Estiliza cada opção do submenu */
+  background: #ffffff;            /* Define fundo branco para contraste */
+  border: 1px solid #eee6ff;      /* Delimita com borda suave */
+  border-radius: 10px;            /* Arredonda cantos do botão */
+  padding: 10px 12px;             /* Define espaçamento interno */
+  text-align: left;               /* Alinha o texto à esquerda */
+  color: var(--pp-text);          /* Usa cor de texto padrão */
+  cursor: pointer;                /* Indica elemento clicável */
+  transition: background .15s ease; /* Transição suave para hover */
+}
+.submenu-link:hover { background: #f7f3ff; } /* Realça ao passar o mouse */
+
+/* Área principal do conteúdo */
+.home-content { /* Delimita a área onde páginas carregam */
+  background: var(--pp-surface);  /* Mantém fundo limpo */
+  padding: 22px;                  /* Aplica espaçamento interno */
+  min-height: calc(100vh - 64px - 44px); /* Garante altura visual entre header e footer */
+}
+
+/* Seção de boas-vindas padrão */
+.home-welcome { /* Bloco inicial quando nenhuma página está selecionada */
+  max-width: 920px;               /* Limita largura para melhor leitura */
+}
+.home-welcome h2 { /* Título da mensagem de boas-vindas */
+  font-size: 28px;                /* Define tamanho do título */
+  margin-bottom: 8px;             /* Espaço abaixo do título */
+}
+.home-welcome p { /* Texto auxiliar */
+  color: var(--pp-muted);         /* Define cor menos chamativa */
+}
+
+/* Rodapé fixo enxuto */
+.home-footer { /* Estiliza a faixa de rodapé */
+  background: var(--pp-purple-900); /* Repete a base do cabeçalho */
+  color: #fff;                    /* Define texto branco */
+  padding: 10px 16px;             /* Define espaçamento */
+  text-align: center;             /* Centraliza o conteúdo */
+}
+
+/* ===== Responsividade ===== */
+
+/* Quebra para tablets e celulares */
+@media (max-width: 1024px) { /* Aplica estilos até 1024px de largura */
+  .home-layout { /* Ajusta o grid para drawer */
+    grid-template-columns: 1fr; /* Remove a coluna fixa da sidebar */
+  }
+
+  .sidebar { /* Transforma a sidebar em drawer */
+    position: fixed;             /* Destaca acima do conteúdo */
+    top: 56px;                   /* Alinha logo abaixo do cabeçalho */
+    left: 0;                     /* Ancoragem à esquerda */
+    height: calc(100vh - 56px);  /* Ocupa a altura disponível */
+    width: 280px;                /* Define largura do drawer */
+    transform: translateX(-100%);/* Esconde fora da tela por padrão */
+    transition: transform .2s ease; /* Suaviza a animação de abertura */
+  }
+
+  .sidebar--open { /* Estado visível do drawer */
+    transform: translateX(0%);   /* Move a sidebar para dentro da tela */
+  }
+}
+
+/* Reduz ainda mais o cabeçalho em telas muito estreitas */
+@media (max-width: 420px) { /* Aplica estilos até 420px */
+  .app-title { /* Ajusta o tamanho do título */
+    font-size: 18px;             /* Reduz levemente para caber melhor */
+  }
+  .btn-sair { /* Ajusta o botão sair */
+    padding: 8px 10px;           /* Reduz espaçamento para caber no cabeçalho */
+  }
+}

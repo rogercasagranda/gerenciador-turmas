@@ -1,3 +1,5 @@
+import '../styles/Login.css'
+import '../styles/Login.lock.css'
 // Importa os hooks necessários do React
 import React, { useState, useEffect } from "react";
 

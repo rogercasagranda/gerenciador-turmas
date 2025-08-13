@@ -1,257 +1,184 @@
-// Importa o React para criar o componente
-import React, { useState } from 'react'
-// Importa o cliente HTTP para chamadas ao backend
+import React, { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
-// Importa o hook de navegação para redirecionamentos
-import { useNavigate } from 'react-router-dom'
-// Importa o CSS dedicado desta tela (sem inline style)
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import '../../styles/CadastrarUsuario.css'
 
-// Define o componente funcional de cadastro de usuário
+type MeuPerfil = { tipo_perfil?: string; is_master?: boolean }
+const PERFIS_PERMITIDOS = new Set(['master','diretor','diretora','secretaria','coordenadora'])
+
 const CadastrarUsuario: React.FC = () => {
-  // Define estado do campo nome
-  const [nome, setNome] = useState<string>('') // Controla o valor do nome
-  // Define estado do campo e-mail
-  const [email, setEmail] = useState<string>('') // Controla o valor do e-mail
-  // Define estado do campo senha
-  const [senha, setSenha] = useState<string>('') // Controla o valor da senha
-  // Define estado do campo confirmar senha
-  const [confirmarSenha, setConfirmarSenha] = useState<string>('') // Controla a confirmação de senha
-  // Define estado do select de perfil
-  const [perfil, setPerfil] = useState<string>('professor') // Define perfil padrão
-  // Define estado do campo DDI (obrigatório conforme regra anterior)
-  const [ddi, setDdi] = useState<string>('55') // Define o DDI com padrão Brasil
-  // Define estado do campo DDD (obrigatório conforme regra anterior)
-  const [ddd, setDdd] = useState<string>('54') // Define um DDD padrão
-  // Define estado do campo número de celular (obrigatório)
-  const [numeroCelular, setNumeroCelular] = useState<string>('') // Armazena o número do celular
-  // Define estado de feedback de erro
-  const [erro, setErro] = useState<string>('') // Guarda mensagem de erro para exibir ao usuário
-  // Define estado de feedback de sucesso
-  const [sucesso, setSucesso] = useState<string>('') // Guarda mensagem de sucesso
-  // Define estado de loading para bloquear múltiplos submits
-  const [enviando, setEnviando] = useState<boolean>(false) // Impede reenvio durante processamento
-  // Instancia o hook de navegação
-  const navigate = useNavigate() // Permite redirecionar para outras rotas internas
+  const [search] = useSearchParams()
+  const idEdicao = useMemo(() => {
+    const raw = search.get('id')
+    return raw ? Number(raw) : undefined
+  }, [search])
 
-  // Define a URL base da API usando variável de ambiente do Vite (ou fallback)
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000' // Determina endpoint do backend
+  const [nome, setNome] = useState('')
+  const [email, setEmail] = useState('')
 
-  // Define função de submissão do formulário
+  // Senha/Confirmar: visíveis, NÃO obrigatórios
+  const [senha, setSenha] = useState('')
+  const [confirmarSenha, setConfirmarSenha] = useState('')
+
+  const [perfil, setPerfil] = useState('professor')
+  const [ddi, setDdi] = useState('55')
+  const [ddd, setDdd] = useState('54')
+  const [numeroCelular, setNumeroCelular] = useState('')
+
+  const [erro, setErro] = useState('')
+  const [sucesso, setSucesso] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [carregandoEdicao, setCarregandoEdicao] = useState(false)
+
+  const navigate = useNavigate()
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+  const headers: Record<string, string> = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token])
+
+  // Guard: master/direção/secretaria
+  useEffect(() => {
+  const check = async () => {
+    try {
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+      if (!token) { navigate('/login'); return }
+      const r = await fetch(`${API_BASE}/usuarios/me`, { headers })
+      if (r.status === 401) { navigate('/login'); return }
+      if (!r.ok) { return } // tolera 422/5xx sem redirecionar
+      const m = (await r.json()) as MeuPerfil
+      const p = (m.tipo_perfil || '').toLowerCase()
+      const autorizado = m.is_master || PERFIS_PERMITIDOS.has(p)
+      if (!autorizado) { navigate('/home'); return }
+    } catch {
+      // tolera falhas de rede
+    }
+  }
+  check()
+}, [API_BASE, headers, navigate])
+
+  // Se entrou com ?id, carrega dados para editar
+  useEffect(() => {
+    if (!idEdicao) return
+    setCarregandoEdicao(true); setErro(''); setSucesso('')
+    axios.get(`${API_BASE}/usuarios/${idEdicao}`, { headers })
+      .then((res) => {
+        const u = res.data
+        setNome(u.nome)
+        setEmail(u.email)
+        setPerfil(u.tipo_perfil)
+        setDdi(u.ddi)
+        setDdd(u.ddd)
+        setNumeroCelular(u.numero_celular)
+      })
+      .catch((e) => setErro(e?.response?.data?.detail || 'Falha ao carregar usuário.'))
+      .finally(() => setCarregandoEdicao(false))
+  }, [API_BASE, headers, idEdicao])
+
   const handleSubmit = async (e: React.FormEvent) => {
-    // Previne o comportamento padrão do submit
-    e.preventDefault() // Evita recarregar a página
-    // Zera mensagens anteriores
-    setErro('') // Limpa erro anterior
-    setSucesso('') // Limpa sucesso anterior
+    e.preventDefault()
+    setErro(''); setSucesso('')
+    if (!nome.trim()) { setErro('O nome é obrigatório.'); return }
+    if (!email.trim()) { setErro('O e-mail é obrigatório.'); return }
+    if (!numeroCelular.trim()) { setErro('O número de celular é obrigatório.'); return }
 
-    // Valida se senha e confirmação são iguais
-    if (senha !== confirmarSenha) { // Compara ambos os campos
-      setErro('As senhas não coincidem.') // Informa erro ao usuário
-      return // Interrompe o fluxo de envio
-    }
-
-    // Valida campo obrigatório do celular
-    if (!numeroCelular.trim()) { // Checa se número foi informado
-      setErro('O número de celular é obrigatório.') // Informa erro específico
-      return // Interrompe o envio
-    }
-
-    // Prepara cabeçalhos com token, se existir
-    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') // Recupera token de sessão
-    const headers: Record<string, string> = {} // Inicializa objeto de headers
-    if (token) headers['Authorization'] = `Bearer ${token}` // Injeta token no header se presente
+    const jsonHeaders: Record<string, string> = { ...headers, 'Content-Type': 'application/json' }
 
     try {
-      // Marca estado de envio para bloquear botão
-      setEnviando(true) // Evita reenvio durante a chamada
-      // Envia os dados ao backend
-      const body = { // Monta o payload seguindo contrato atual
-        nome, // Transfere o nome informado
-        email, // Transfere o e-mail informado
-        senha, // Transfere a senha informada
-        tipo_perfil: perfil, // Mapeia o perfil para o backend
-        ddi, // Inclui DDI conforme regra
-        ddd, // Inclui DDD conforme regra
-        numero_celular: numeroCelular, // Inclui número de celular obrigatório
-      } // Fecha o objeto de payload
+      setEnviando(true)
+      const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
+      if (senha.trim()) body.senha = senha.trim() // senha é opcional
 
-      // Executa requisição POST para endpoint de usuários
-      await axios.post(`${API_BASE}/usuarios`, body, { headers }) // Chama a API de criação de usuário
+      if (idEdicao) {
+        await axios.put(`${API_BASE}/usuarios/${idEdicao}`, body, { headers: jsonHeaders })
+        setSucesso('Usuário atualizado com sucesso.')
+      } else {
+        await axios.post(`${API_BASE}/usuarios`, body, { headers: jsonHeaders })
+        setSucesso('Usuário cadastrado com sucesso.')
+        setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular(''); setSenha(''); setConfirmarSenha('')
+      }
 
-      // Exibe mensagem de sucesso
-      setSucesso('Usuário cadastrado com sucesso.') // Informa que cadastro ocorreu
-      // Limpa os campos do formulário
-      setNome('') // Limpa nome
-      setEmail('') // Limpa e-mail
-      setSenha('') // Limpa senha
-      setConfirmarSenha('') // Limpa confirmação de senha
-      setPerfil('professor') // Restaura perfil padrão
-      setDdi('55') // Restaura DDI padrão
-      setDdd('54') // Restaura DDD padrão
-      setNumeroCelular('') // Limpa celular
+      setTimeout(() => navigate('/usuarios/consultar'), 700)
     } catch (err: any) {
-      // Trata erro da API
-      const msg = err?.response?.data?.detail || 'Falha ao cadastrar usuário.' // Extrai detalhe se houver
-      setErro(msg) // Exibe a mensagem ao usuário
+      setErro(err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
     } finally {
-      // Libera o envio
-      setEnviando(false) // Restaura botão para novo envio
+      setEnviando(false)
     }
   }
 
-  // Define função para navegar à tela de consulta
-  const irParaConsulta = () => {
-    // Redireciona para rota de consulta de usuários
-    navigate('/usuarios/consultar') // Troca a rota dentro da Home
-  }
-
-  // Renderiza layout do formulário
   return (
-    <div className="cadastro-wrapper">{/* Cria contêiner da página */}
-      <h2 className="cadastro-titulo">{/* Define título da seção */}
-        Cadastrar Usuário{/* Exibe texto do título */}
-      </h2>
+    <div className="cadastro-wrapper">
+      <h2 className="cadastro-titulo">{idEdicao ? 'Alterar Usuário' : 'Cadastrar Usuário'}</h2>
 
-      {/* Exibe mensagem de erro, se houver */}
-      {erro && <div className="alerta erro">{erro}</div>}{/* Renderiza alerta de erro */}
+      {erro && <div className="alerta erro">{erro}</div>}
+      {sucesso && <div className="alerta sucesso">{sucesso}</div>}
+      {carregandoEdicao && <div>Carregando…</div>}
 
-      {/* Exibe mensagem de sucesso, se houver */}
-      {sucesso && <div className="alerta sucesso">{sucesso}</div>}{/* Renderiza alerta de sucesso */}
+      {!carregandoEdicao && (
+        <form className="cadastro-form" onSubmit={handleSubmit}>
+          <div className="campo">
+            <label className="rotulo" htmlFor="nome">Nome</label>
+            <input id="nome" className="entrada" type="text" value={nome} onChange={(e) => setNome(e.target.value)} required />
+          </div>
 
-      {/* Inicia o formulário controlado */}
-      <form className="cadastro-form" onSubmit={handleSubmit}>{/* Conecta submit ao handler */}
-        {/* Campo de nome */}
-        <div className="campo">
-          <label htmlFor="nome" className="rotulo">Nome</label>{/* Identifica o campo */}
-          <input
-            id="nome" // Define id para o input
-            type="text" // Define tipo de entrada
-            className="entrada" // Aplica classe de estilo
-            value={nome} // Liga ao estado controlado
-            onChange={(e) => setNome(e.target.value)} // Atualiza estado
-            required // Marca como obrigatório
-          />{/* Fecha o input */}
-        </div>{/* Fecha o bloco do campo */}
+          <div className="campo">
+            <label className="rotulo" htmlFor="email">E-mail</label>
+            <input id="email" className="entrada" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </div>
 
-        {/* Campo de e-mail */}
-        <div className="campo">
-          <label htmlFor="email" className="rotulo">E-mail</label>{/* Rótulo do e-mail */}
-          <input
-            id="email" // Identifica input
-            type="email" // Define tipo e-mail
-            className="entrada" // Aplica estilo
-            value={email} // Liga ao estado
-            onChange={(e) => setEmail(e.target.value)} // Atualiza estado
-            required // Torna obrigatório
-          />{/* Fecha input */}
-        </div>{/* Fecha bloco */}
+          {/* campos de senha opcionais */}
+          <div className="linha dois">
+            <div className="campo">
+              <label className="rotulo" htmlFor="senha">Senha</label>
+              <input id="senha" className="entrada" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} />
+            </div>
+            <div className="campo">
+              <label className="rotulo" htmlFor="confirmar">Confirmar senha</label>
+              <input id="confirmar" className="entrada" type="password" value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} />
+            </div>
+          </div>
 
-        {/* Linha com senha e confirmar senha */}
-        <div className="linha dois">{/* Cria linha com dois campos */}
-          <div className="campo">{/* Campo de senha */}
-            <label htmlFor="senha" className="rotulo">Senha</label>{/* Rótulo */}
-            <input
-              id="senha" // Id do campo
-              type="password" // Tipo senha
-              className="entrada" // Classe de estilo
-              value={senha} // Estado controlado
-              onChange={(e) => setSenha(e.target.value)} // Atualiza estado
-              required // Obrigatório
-            />{/* Fecha input */}
-          </div>{/* Fecha campo de senha */}
+          <div className="campo">
+            <label className="rotulo" htmlFor="perfil">Perfil</label>
+            <select id="perfil" className="entrada" value={perfil} onChange={(e) => setPerfil(e.target.value)}>
+              <option value="master">Master</option>
+              <option value="diretor">Diretor</option>
+              <option value="diretora">Diretora</option>
+              <option value="secretaria">Secretaria</option>
+              <option value="coordenadora">Coordenadora</option>
+              <option value="professor">Professor</option>
+              <option value="professora">Professora</option>
+              <option value="responsavel">Responsável</option>
+              <option value="aluno">Aluno</option>
+            </select>
+          </div>
 
-          <div className="campo">{/* Campo confirmar senha */}
-            <label htmlFor="confirmarSenha" className="rotulo">Confirmar senha</label>{/* Rótulo */}
-            <input
-              id="confirmarSenha" // Id do campo
-              type="password" // Tipo senha
-              className="entrada" // Classe de estilo
-              value={confirmarSenha} // Liga ao estado
-              onChange={(e) => setConfirmarSenha(e.target.value)} // Atualiza estado
-              required // Obrigatório
-            />{/* Fecha input */}
-          </div>{/* Fecha campo confirmar */}
-        </div>{/* Fecha linha dupla */}
+          {/* DDI + DDD + Número na mesma linha */}
+          <div className="linha tres-telefone">
+            <div className="campo curto">
+              <label className="rotulo" htmlFor="ddi">DDI</label>
+              <input id="ddi" className="entrada" type="text" value={ddi} onChange={(e) => setDdi(e.target.value)} />
+            </div>
+            <div className="campo curto">
+              <label className="rotulo" htmlFor="ddd">DDD</label>
+              <input id="ddd" className="entrada" type="text" value={ddd} onChange={(e) => setDdd(e.target.value)} />
+            </div>
+            <div className="campo">
+              <label className="rotulo" htmlFor="numero">Número de celular</label>
+              <input id="numero" className="entrada" type="tel" placeholder="Ex.: 991234567" value={numeroCelular} onChange={(e) => setNumeroCelular(e.target.value)} required />
+            </div>
+          </div>
 
-        {/* Linha com perfil e DDI/DDD */}
-        <div className="linha tres">{/* Cria linha com três colunas */}
-          <div className="campo">{/* Campo perfil */}
-            <label htmlFor="perfil" className="rotulo">Perfil</label>{/* Rótulo */}
-            <select
-              id="perfil" // Id do campo
-              className="entrada" // Classe de estilo
-              value={perfil} // Liga ao estado
-              onChange={(e) => setPerfil(e.target.value)} // Atualiza estado
-              required // Obrigatório
-            >{/* Abre select */}
-              <option value="professor">Professor</option>{/* Opção de professor */}
-              <option value="coordenador">Coordenador</option>{/* Opção de coordenador */}
-              <option value="direcao">Direção</option>{/* Opção de direção */}
-            </select>{/* Fecha select */}
-          </div>{/* Fecha campo */}
-
-          <div className="campo curto">{/* Campo DDI */}
-            <label htmlFor="ddi" className="rotulo">DDI</label>{/* Rótulo */}
-            <input
-              id="ddi" // Id do campo
-              type="text" // Tipo texto
-              className="entrada" // Classe de estilo
-              value={ddi} // Liga ao estado
-              onChange={(e) => setDdi(e.target.value)} // Atualiza estado
-              required // Obrigatório
-            />{/* Fecha input */}
-          </div>{/* Fecha campo */}
-
-          <div className="campo curto">{/* Campo DDD */}
-            <label htmlFor="ddd" className="rotulo">DDD</label>{/* Rótulo */}
-            <input
-              id="ddd" // Id do campo
-              type="text" // Tipo texto
-              className="entrada" // Classe de estilo
-              value={ddd} // Liga ao estado
-              onChange={(e) => setDdd(e.target.value)} // Atualiza estado
-              required // Obrigatório
-            />{/* Fecha input */}
-          </div>{/* Fecha campo */}
-        </div>{/* Fecha linha tripla */}
-
-        {/* Campo número de celular */}
-        <div className="campo">
-          <label htmlFor="numero" className="rotulo">Número de celular</label>{/* Rótulo */}
-          <input
-            id="numero" // Id do campo
-            type="tel" // Tipo telefone
-            className="entrada" // Classe de estilo
-            value={numeroCelular} // Liga ao estado
-            onChange={(e) => setNumeroCelular(e.target.value)} // Atualiza estado
-            placeholder="Ex.: 991234567" // Dica de preenchimento
-            required // Obrigatório conforme regra
-          />{/* Fecha input */}
-        </div>{/* Fecha bloco */}
-
-        {/* Linha de ações */}
-        <div className="acoes">{/* Container dos botões */}
-          <button
-            type="button" // Define tipo botão para não submeter
-            className="btn secundario" // Aplica estilo secundário
-            onClick={irParaConsulta} // Navega para consulta
-          >{/* Abre o botão */}
-            Consultar Usuários{/* Texto do botão */}
-          </button>{/* Fecha botão */}
-
-          <button
-            type="submit" // Define tipo submit
-            className="btn primario" // Aplica estilo primário
-            disabled={enviando} // Desabilita durante envio
-          >{/* Abre botão */}
-            {enviando ? 'Enviando...' : 'Cadastrar'}{/* Alterna texto pelo estado */}
-          </button>{/* Fecha botão */}
-        </div>{/* Fecha container de ações */}
-      </form>{/* Fecha formulário */}
-    </div> // Fecha contêiner da página
+          <div className="acoes">
+            <button type="button" className="btn secundario" onClick={() => navigate('/usuarios/consultar')}>
+              Consultar Usuários
+            </button>
+            <button type="submit" className="btn primario" disabled={enviando}>
+              {enviando ? (idEdicao ? 'Salvando…' : 'Enviando…') : (idEdicao ? 'Salvar alterações' : 'Cadastrar')}
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
   )
 }
 
-// Exporta o componente para uso na Home
 export default CadastrarUsuario
