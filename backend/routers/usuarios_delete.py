@@ -44,7 +44,13 @@ def log_perfil(request: Request):
 @router.delete("/{id_usuario}")
 def excluir_usuario(id_usuario: int, request: Request, db: Session = Depends(get_db)):
     claims = _claims(request)
-    me_id = int(claims.get("sub", 0))
+    # O token contém o e-mail em "sub" e o identificador numérico em "id_usuario".
+    # Converte o ID para inteiro e falha com 401 caso o valor seja ausente ou não numérico.
+    try:
+        me_id = int(claims.get("id_usuario"))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="ID do usuário inválido no token")
+
     my_role = _norm(claims.get("role") or claims.get("perfil") or claims.get("tipo_perfil"))
     if not my_role:
         raise HTTPException(status_code=403, detail="Perfil não encontrado no token")
