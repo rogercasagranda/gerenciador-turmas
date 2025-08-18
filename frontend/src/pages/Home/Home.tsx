@@ -11,7 +11,17 @@ const CadastrarUsuario = React.lazy(() => import('../Usuarios/CadastrarUsuario')
 const ConsultarUsuario  = React.lazy(() => import('../Usuarios/ConsultarUsuario'))
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'diretora', 'secretaria'])
+const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
+
+// Converte qualquer variação de perfil para nossa forma canônica
+const toCanonical = (perfil: string) => {
+  const p = (perfil || '').toLowerCase()
+  if (p.startsWith('diretor')) return 'diretor'
+  if (p.startsWith('coordenador')) return 'coordenador'
+  if (p.startsWith('professor')) return 'professor'
+  if (p === 'aluno' || p === 'aluna') return 'aluno'
+  return p
+}
 
 const Home: React.FC = () => {
   // Estado do drawer e submenu
@@ -37,7 +47,7 @@ const Home: React.FC = () => {
       })
       .then(data => {
         if (!data) return
-        const perfil = (data.tipo_perfil || '').toLowerCase()
+        const perfil = toCanonical(data.tipo_perfil)
         const autorizado = data.is_master || PERFIS_PERMITIDOS.has(perfil)
         setPodeUsuarios(Boolean(autorizado))
       })
