@@ -10,10 +10,14 @@ import '../../styles/Home.lock.css'
 const CadastrarUsuario = React.lazy(() => import('../Usuarios/CadastrarUsuario'))
 const ConsultarUsuario  = React.lazy(() => import('../Usuarios/ConsultarUsuario'))
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'diretora', 'secretaria'])
+
 const Home: React.FC = () => {
   // Estado do drawer e submenu
   const [drawerAberto, setDrawerAberto] = useState(false)
   const [submenuUsuariosAberto, setSubmenuUsuariosAberto] = useState(false)
+  const [podeUsuarios, setPodeUsuarios] = useState(false)
 
   // Roteamento
   const navigate = useNavigate()
@@ -23,7 +27,21 @@ const Home: React.FC = () => {
   useEffect(() => {
     const tokenLocal   = localStorage.getItem('auth_token')
     const tokenSession = sessionStorage.getItem('auth_token')
-    if (!tokenLocal && !tokenSession) navigate('/login')
+    const token = tokenLocal || tokenSession
+    if (!token) { navigate('/login'); return }
+
+    fetch(`${API_BASE}/usuarios/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => {
+        if (r.status === 401) { navigate('/login'); return null }
+        return r.ok ? r.json() : null
+      })
+      .then(data => {
+        if (!data) return
+        const perfil = (data.tipo_perfil || '').toLowerCase()
+        const autorizado = data.is_master || PERFIS_PERMITIDOS.has(perfil)
+        setPodeUsuarios(Boolean(autorizado))
+      })
+      .catch(() => {})
   }, [navigate])
 
   // Fecha drawer a cada navegação
@@ -40,11 +58,16 @@ const Home: React.FC = () => {
   // 🔧 Normaliza path (cobre BrowserRouter com basename e HashRouter)
   const getPath = () => (location.pathname + (location.hash || '')).toLowerCase()
 
+  useEffect(() => {
+    const path = getPath()
+    if (path.includes('/usuarios') && !podeUsuarios) navigate('/home')
+  }, [location.pathname, location.hash, podeUsuarios, navigate])
+
   // Renderiza conteúdo interno
   const renderConteudo = () => {
     const path = getPath()
 
-    if (path.includes('/usuarios/cadastrar')) {
+    if (path.includes('/usuarios/cadastrar') && podeUsuarios) {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <CadastrarUsuario />
@@ -52,7 +75,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/usuarios/consultar')) {
+    if (path.includes('/usuarios/consultar') && podeUsuarios) {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <ConsultarUsuario />
@@ -98,30 +121,32 @@ const Home: React.FC = () => {
           aria-label="Menu lateral"
         >
           <nav className="nav">
-            <div
-              className="nav-item"
-              onMouseEnter={() => setSubmenuUsuariosAberto(true)}
-              onMouseLeave={() => setSubmenuUsuariosAberto(false)}
-            >
-              <button
-                className="nav-link"
-                onClick={() => setSubmenuUsuariosAberto(!submenuUsuariosAberto)}
-                aria-haspopup="true"
-                aria-expanded={submenuUsuariosAberto}
+            {podeUsuarios && (
+              <div
+                className="nav-item"
+                onMouseEnter={() => setSubmenuUsuariosAberto(true)}
+                onMouseLeave={() => setSubmenuUsuariosAberto(false)}
               >
-                Usuários
-                <span className={`caret ${submenuUsuariosAberto ? 'caret--up' : 'caret--down'}`} />
-              </button>
+                <button
+                  className="nav-link"
+                  onClick={() => setSubmenuUsuariosAberto(!submenuUsuariosAberto)}
+                  aria-haspopup="true"
+                  aria-expanded={submenuUsuariosAberto}
+                >
+                  Usuários
+                  <span className={`caret ${submenuUsuariosAberto ? 'caret--up' : 'caret--down'}`} />
+                </button>
 
-              <div className={`submenu ${submenuUsuariosAberto ? 'submenu--open' : ''}`}>
-                <button className="submenu-link" onClick={() => navigate('/usuarios/cadastrar')}>
-                  Cadastrar
-                </button>
-                <button className="submenu-link" onClick={() => navigate('/usuarios/consultar')}>
-                  Consultar
-                </button>
+                <div className={`submenu ${submenuUsuariosAberto ? 'submenu--open' : ''}`}>
+                  <button className="submenu-link" onClick={() => navigate('/usuarios/cadastrar')}>
+                    Cadastrar
+                  </button>
+                  <button className="submenu-link" onClick={() => navigate('/usuarios/consultar')}>
+                    Consultar
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="nav-item">
               <button className="nav-link" onClick={() => alert('Módulo “Turmas” em desenvolvimento.')}>

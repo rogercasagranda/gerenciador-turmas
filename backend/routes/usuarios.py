@@ -10,6 +10,7 @@ from backend.models.usuarios import Usuarios as UsuariosModel
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
 ALGORITHM  = "HS256"
+ALLOWED_PERFIS = {"master", "diretor", "diretora", "secretaria"}
 
 router = APIRouter(prefix="", tags=["Usuarios"])
 
@@ -63,12 +64,22 @@ def token_data_from_request(request: Request) -> TokenData:
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido.")
 
+
+def require_perfil(request: Request) -> TokenData:
+    token_data = token_data_from_request(request)
+    perfil = (token_data.tipo_perfil or '').lower()
+    if perfil not in ALLOWED_PERFIS:
+        raise HTTPException(status_code=403, detail="Sem permissão para acessar usuários.")
+    return token_data
+
 @router.get("/usuarios", response_model=list[UsuarioOut])
-def listar_usuarios(db: Session = Depends(get_db)):
+def listar_usuarios(request: Request, db: Session = Depends(get_db)):
+    require_perfil(request)
     return db.query(UsuariosModel).all()
 
 @router.post("/usuarios", status_code=status.HTTP_201_CREATED, response_model=UsuarioOut)
-def criar_usuario(payload: UsuarioCreate, db: Session = Depends(get_db)):
+def criar_usuario(payload: UsuarioCreate, request: Request, db: Session = Depends(get_db)):
+    require_perfil(request)
     if db.query(UsuariosModel).filter(UsuariosModel.email == payload.email).first():
         raise HTTPException(status_code=409, detail="E-mail já cadastrado.")
 
@@ -92,7 +103,8 @@ def criar_usuario(payload: UsuarioCreate, db: Session = Depends(get_db)):
     return novo
 
 @router.put("/usuarios/{id_usuario}", response_model=UsuarioOut)
-def atualizar_usuario(id_usuario: int, payload: UsuarioUpdate, db: Session = Depends(get_db)):
+def atualizar_usuario(id_usuario: int, payload: UsuarioUpdate, request: Request, db: Session = Depends(get_db)):
+    require_perfil(request)
     user = db.query(UsuariosModel).filter(UsuariosModel.id_usuario == id_usuario).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
@@ -118,7 +130,8 @@ def meu_perfil(request: Request, db: Session = Depends(get_db)):
     return user
 
 @router.get("/usuarios/{id_usuario}", response_model=UsuarioOut)
-def obter_usuario(id_usuario: int, db: Session = Depends(get_db)):
+def obter_usuario(id_usuario: int, request: Request, db: Session = Depends(get_db)):
+    require_perfil(request)
     user = db.query(UsuariosModel).filter(UsuariosModel.id_usuario == id_usuario).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
