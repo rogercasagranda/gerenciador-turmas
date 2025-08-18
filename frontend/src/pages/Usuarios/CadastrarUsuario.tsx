@@ -148,12 +148,13 @@ const CadastrarUsuario: React.FC = () => {
     }
   }
 
-  // Lógica do botão Excluir (robusta ao erro do /me)
-  const alvoEhMaster = perfil === 'master'
-  const possoPeloPerfil = souMaster || meuPerfil === 'diretor'
-  const autoExclusao = (meuId !== undefined && idEdicao !== undefined && meuId === idEdicao)
-  const masterPorNaoMaster = alvoEhMaster && !souMaster
-  const podeExcluir = Boolean(idEdicao && possoPeloPerfil && !autoExclusao && !masterPorNaoMaster)
+  // Lógica do botão Excluir: apenas master/diretor e sem autoexclusão
+  const podeExcluir = Boolean(
+    idEdicao &&
+    (souMaster || meuPerfil === 'diretor') &&
+    meuId !== idEdicao &&
+    !(perfil === 'master' && !souMaster)
+  )
 
   const handleExcluir = async () => {
     if (!idEdicao) return

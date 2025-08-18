@@ -51,6 +51,7 @@ import bcrypt                                          # Importa bcrypt para val
 # IMPORTA ROTAS (MERGE) — adiciona router de usuários
 # ======================================================
 from backend.routes.usuarios import router as usuarios_router   # Importa router de /usuarios
+from backend.routers.usuarios_delete import router as usuarios_delete_router  # Importa rotas de exclusão de usuários
 
 # ======================================================
 # Configura logger da aplicação
@@ -84,6 +85,7 @@ app.add_middleware(                                  # Adiciona middleware de CO
 # Registra routers (MERGE) — mantém existentes e soma /usuarios
 # ======================================================
 app.include_router(usuarios_router)                  # Registra rotas de usuários (/usuarios GET/POST)
+app.include_router(usuarios_delete_router)           # Registra rota de exclusão e log de perfil
 
 # ======================================================
 # Loga variáveis públicas do OAuth (sem expor segredos)
