@@ -167,7 +167,9 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # --------------------------------------------------
     # Sucesso
     # --------------------------------------------------
-    logger.info(f"✅ Login realizado com sucesso para: {email}")       # Registra sucesso
+    logger.info(
+        f"✅ Login realizado com sucesso para: {email} (perfil: {usuario.tipo_perfil})"
+    )       # Registra sucesso com perfil do usuário
     # Gera JWT incluindo identificador e tipo de perfil do usuário
     token_payload = {
         "sub": email,
