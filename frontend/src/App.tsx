@@ -22,6 +22,9 @@ const App: React.FC = () => {
       {/* Garante que qualquer rota de Usuários monte a Home e carregue o conteúdo dentro dela */}
       <Route path="/usuarios/*" element={<Home />} />
 
+      {/* Rotas de configuração */}
+      <Route path="/config/*" element={<Home />} />
+
       {/* Fallback opcional para rotas desconhecidas */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

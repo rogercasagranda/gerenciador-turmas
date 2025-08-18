@@ -1,0 +1,19 @@
+.logs-wrapper {
+  padding: 1rem;
+}
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tabela th,
+.tabela td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
+}

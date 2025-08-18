@@ -9,6 +9,7 @@ import '../../styles/Home.lock.css'
 // Carrega páginas internas com import dinâmico
 const CadastrarUsuario = React.lazy(() => import('../Usuarios/CadastrarUsuario'))
 const ConsultarUsuario  = React.lazy(() => import('../Usuarios/ConsultarUsuario'))
+const Logs = React.lazy(() => import('../Logs/Logs'))
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
@@ -27,6 +28,7 @@ const Home: React.FC = () => {
   // Estado do drawer e submenu
   const [drawerAberto, setDrawerAberto] = useState(false)
   const [submenuUsuariosAberto, setSubmenuUsuariosAberto] = useState(false)
+  const [submenuConfigAberto, setSubmenuConfigAberto] = useState(false)
   const [podeUsuarios, setPodeUsuarios] = useState(false)
 
   // Roteamento
@@ -89,6 +91,14 @@ const Home: React.FC = () => {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <ConsultarUsuario />
+        </Suspense>
+      )
+    }
+
+    if (path.includes('/config/logs')) {
+      return (
+        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+          <Logs />
         </Suspense>
       )
     }
@@ -168,6 +178,27 @@ const Home: React.FC = () => {
               <button className="nav-link" onClick={() => alert('Módulo “Relatórios” em desenvolvimento.')}>
                 Relatórios
               </button>
+            </div>
+
+            <div
+              className="nav-item"
+              onMouseEnter={() => setSubmenuConfigAberto(true)}
+              onMouseLeave={() => setSubmenuConfigAberto(false)}
+            >
+              <button
+                className="nav-link"
+                onClick={() => setSubmenuConfigAberto(!submenuConfigAberto)}
+                aria-haspopup="true"
+                aria-expanded={submenuConfigAberto}
+              >
+                Configuração
+                <span className={`caret ${submenuConfigAberto ? 'caret--up' : 'caret--down'}`} />
+              </button>
+              <div className={`submenu ${submenuConfigAberto ? 'submenu--open' : ''}`}>
+                <button className="submenu-link" onClick={() => navigate('/config/logs')}>
+                  Verificar logs
+                </button>
+              </div>
             </div>
           </nav>
         </aside>

@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models.usuarios import Usuarios
+from backend.utils.audit import registrar_log
 import os
 import logging
 from jose import jwt, JWTError
@@ -86,4 +87,5 @@ def excluir_usuario(id_usuario: int, request: Request, db: Session = Depends(get
     db.delete(alvo)
     db.commit()
     logger.info("Usuário id=%s excluído por id=%s", id_usuario, me_id)
+    registrar_log(db, me_id, "DELETE", "usuarios", id_usuario, f"Excluiu usuário {id_usuario}")
     return JSONResponse({"message": "Usuário excluído com sucesso", "id_excluido": id_usuario})

@@ -52,6 +52,7 @@ import bcrypt                                          # Importa bcrypt para val
 # ======================================================
 from backend.routes.usuarios import router as usuarios_router   # Importa router de /usuarios
 from backend.routers.usuarios_delete import router as usuarios_delete_router  # Importa rotas de exclusão de usuários
+from backend.routes.logs import router as logs_router            # Importa rotas de logs de auditoria
 
 # ======================================================
 # Configura logger da aplicação
@@ -87,6 +88,7 @@ app.add_middleware(                                  # Adiciona middleware de CO
 # Inclui primeiro as rotas com caminhos estáticos para evitar conflito com /usuarios/{id}
 app.include_router(usuarios_delete_router)           # Registra rota de exclusão e log de perfil
 app.include_router(usuarios_router)                  # Registra rotas de usuários (/usuarios GET/POST)
+app.include_router(logs_router)                      # Registra rotas de logs de auditoria
 
 # ======================================================
 # Loga variáveis públicas do OAuth (sem expor segredos)
