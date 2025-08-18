@@ -7,6 +7,7 @@ import os, bcrypt
 
 from backend.database import get_db
 from backend.models.usuarios import Usuarios as UsuariosModel
+from backend.utils.audit import registrar_log
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
 ALGORITHM  = "HS256"
@@ -88,12 +89,14 @@ def require_perfil(request: Request) -> TokenData:
 
 @router.get("/usuarios", response_model=list[UsuarioOut])
 def listar_usuarios(request: Request, db: Session = Depends(get_db)):
-    require_perfil(request)
-    return db.query(UsuariosModel).all()
+    token_data = require_perfil(request)
+    logs = db.query(UsuariosModel).all()
+    registrar_log(db, token_data.id_usuario, "READ", "usuarios", descricao="Listou usuários")
+    return logs
 
 @router.post("/usuarios", status_code=status.HTTP_201_CREATED, response_model=UsuarioOut)
 def criar_usuario(payload: UsuarioCreate, request: Request, db: Session = Depends(get_db)):
-    require_perfil(request)
+    token_data = require_perfil(request)
     if db.query(UsuariosModel).filter(UsuariosModel.email == payload.email).first():
         raise HTTPException(status_code=409, detail="E-mail já cadastrado.")
 
@@ -114,11 +117,12 @@ def criar_usuario(payload: UsuarioCreate, request: Request, db: Session = Depend
     db.add(novo)
     db.commit()
     db.refresh(novo)
+    registrar_log(db, token_data.id_usuario, "CREATE", "usuarios", novo.id_usuario, f"Criou usuário {novo.email}")
     return novo
 
 @router.put("/usuarios/{id_usuario}", response_model=UsuarioOut)
 def atualizar_usuario(id_usuario: int, payload: UsuarioUpdate, request: Request, db: Session = Depends(get_db)):
-    require_perfil(request)
+    token_data = require_perfil(request)
     user = db.query(UsuariosModel).filter(UsuariosModel.id_usuario == id_usuario).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
@@ -129,6 +133,7 @@ def atualizar_usuario(id_usuario: int, payload: UsuarioUpdate, request: Request,
     if payload.numero_celular is not None:  user.numero_celular = payload.numero_celular
     db.commit()
     db.refresh(user)
+    registrar_log(db, token_data.id_usuario, "UPDATE", "usuarios", user.id_usuario, f"Atualizou usuário {user.email}")
     return user
 
 @router.get("/usuarios/me", response_model=UsuarioOut)
@@ -145,8 +150,9 @@ def meu_perfil(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/usuarios/{id_usuario}", response_model=UsuarioOut)
 def obter_usuario(id_usuario: int, request: Request, db: Session = Depends(get_db)):
-    require_perfil(request)
+    token_data = require_perfil(request)
     user = db.query(UsuariosModel).filter(UsuariosModel.id_usuario == id_usuario).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    registrar_log(db, token_data.id_usuario, "READ", "usuarios", id_usuario, f"Consultou usuário {id_usuario}")
     return user
