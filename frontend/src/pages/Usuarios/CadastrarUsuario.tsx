@@ -3,8 +3,37 @@ import axios from 'axios'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import '../../styles/CadastrarUsuario.css'
 
-type MeuPerfil = { tipo_perfil?: string; is_master?: boolean }
-const PERFIS_PERMITIDOS = new Set(['master','diretor','diretora','secretaria','coordenadora'])
+type MeuPerfil = { id_usuario?: number; tipo_perfil?: string; is_master?: boolean }
+
+// Canonical perfis para o select reduzido
+const PERFIS_SELECT = [
+  { value: 'master', label: 'Master' },
+  { value: 'diretor', label: 'Diretor(a)' },
+  { value: 'coordenador', label: 'Coordenador(a)' },
+  { value: 'secretaria', label: 'Secretaria' },
+  { value: 'professor', label: 'Professor(a)' },
+  { value: 'aluno', label: 'Aluno(a)' },
+  { value: 'responsavel', label: 'Responsável' },
+]
+
+// Normaliza qualquer variante para nosso canônico (diretora -> diretor, coordenadora -> coordenador, professora -> professor)
+function toCanonical(perfil: string): string {
+  const p = (perfil || '').toLowerCase()
+  if (p.startsWith('diretor')) return 'diretor'
+  if (p.startsWith('coordenador')) return 'coordenador'
+  if (p.startsWith('professor')) return 'professor'
+  if (p === 'aluno' || p === 'aluna') return 'aluno'
+  return p
+}
+
+// Fallback: decodifica o payload do JWT se /usuarios/me falhar (422 etc.)
+function getClaimsFromToken(): { sub?: string; role?: string; perfil?: string; tipo_perfil?: string } | null {
+  const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+  if (!token) return null
+  const parts = token.split('.')
+  if (parts.length !== 3) return null
+  try { return JSON.parse(atob(parts[1])) } catch { return null }
+}
 
 const CadastrarUsuario: React.FC = () => {
   const [search] = useSearchParams()
@@ -35,25 +64,40 @@ const CadastrarUsuario: React.FC = () => {
   const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
   const headers: Record<string, string> = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token])
 
-  // Guard: master/direção/secretaria
+  // >>> NOVO: dados do usuário logado (robusto)
+  const [meuId, setMeuId] = useState<number | undefined>(undefined)
+  const [meuPerfil, setMeuPerfil] = useState<string>('')
+  const [souMaster, setSouMaster] = useState<boolean>(false)
+
+  // Guard + perfil com fallback + LOG no backend
   useEffect(() => {
-  const check = async () => {
-    try {
-      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
-      if (!token) { navigate('/login'); return }
-      const r = await fetch(`${API_BASE}/usuarios/me`, { headers })
-      if (r.status === 401) { navigate('/login'); return }
-      if (!r.ok) { return } // tolera 422/5xx sem redirecionar
-      const m = (await r.json()) as MeuPerfil
-      const p = (m.tipo_perfil || '').toLowerCase()
-      const autorizado = m.is_master || PERFIS_PERMITIDOS.has(p)
-      if (!autorizado) { navigate('/home'); return }
-    } catch {
-      // tolera falhas de rede
+    const check = async () => {
+      try {
+        const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+        if (!token) { navigate('/login'); return }
+        // tenta /me
+        const r = await fetch(`${API_BASE}/usuarios/me`, { headers })
+        if (r.ok) {
+          const m = (await r.json()) as MeuPerfil
+          const p = toCanonical(m.tipo_perfil || '')
+          setMeuId(m.id_usuario)
+          setMeuPerfil(p)
+          setSouMaster(Boolean(m.is_master || p === 'master'))
+        } else {
+          // fallback: token payload
+          const claims = getClaimsFromToken()
+          const p = toCanonical((claims?.role || claims?.perfil || claims?.tipo_perfil || '').toString())
+          const id = claims?.sub ? Number(claims.sub) : undefined
+          setMeuId(id)
+          setMeuPerfil(p)
+          setSouMaster(p === 'master')
+        }
+        // Sempre registra no log do backend o perfil/id que acessou
+        try { await fetch(`${API_BASE}/usuarios/log-perfil`, { headers }) } catch {}
+      } catch {}
     }
-  }
-  check()
-}, [API_BASE, headers, navigate])
+    check()
+  }, [API_BASE, headers, navigate])
 
   // Se entrou com ?id, carrega dados para editar
   useEffect(() => {
@@ -64,7 +108,7 @@ const CadastrarUsuario: React.FC = () => {
         const u = res.data
         setNome(u.nome)
         setEmail(u.email)
-        setPerfil(u.tipo_perfil)
+        setPerfil(toCanonical(u.tipo_perfil))
         setDdi(u.ddi)
         setDdd(u.ddd)
         setNumeroCelular(u.numero_celular)
@@ -104,6 +148,28 @@ const CadastrarUsuario: React.FC = () => {
     }
   }
 
+  // Lógica do botão Excluir (robusta ao erro do /me)
+  const alvoEhMaster = perfil === 'master'
+  const possoPeloPerfil = souMaster || meuPerfil === 'diretor'
+  const autoExclusao = (meuId !== undefined && idEdicao !== undefined && meuId === idEdicao)
+  const masterPorNaoMaster = alvoEhMaster && !souMaster
+  const podeExcluir = Boolean(idEdicao && possoPeloPerfil && !autoExclusao && !masterPorNaoMaster)
+
+  const handleExcluir = async () => {
+    if (!idEdicao) return
+    const primeira = window.confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')
+    if (!primeira) return
+    const segunda = window.confirm('Confirme novamente: deseja realmente excluir?')
+    if (!segunda) return
+    try {
+      await axios.delete(`${API_BASE}/usuarios/${idEdicao}`, { headers })
+      alert('Usuário excluído com sucesso.')
+      navigate('/usuarios/consultar')
+    } catch (e:any) {
+      setErro(e?.response?.data?.detail || 'Falha ao excluir usuário.')
+    }
+  }
+
   return (
     <div className="cadastro-wrapper">
       <h2 className="cadastro-titulo">{idEdicao ? 'Alterar Usuário' : 'Cadastrar Usuário'}</h2>
@@ -138,16 +204,10 @@ const CadastrarUsuario: React.FC = () => {
 
           <div className="campo">
             <label className="rotulo" htmlFor="perfil">Perfil</label>
-            <select id="perfil" className="entrada" value={perfil} onChange={(e) => setPerfil(e.target.value)}>
-              <option value="master">Master</option>
-              <option value="diretor">Diretor</option>
-              <option value="diretora">Diretora</option>
-              <option value="secretaria">Secretaria</option>
-              <option value="coordenadora">Coordenadora</option>
-              <option value="professor">Professor</option>
-              <option value="professora">Professora</option>
-              <option value="responsavel">Responsável</option>
-              <option value="aluno">Aluno</option>
+            <select id="perfil" className="entrada" value={perfil} onChange={(e) => setPerfil(toCanonical(e.target.value))}>
+              {PERFIS_SELECT.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
             </select>
           </div>
 
@@ -174,6 +234,13 @@ const CadastrarUsuario: React.FC = () => {
             <button type="submit" className="btn primario" disabled={enviando}>
               {enviando ? (idEdicao ? 'Salvando…' : 'Enviando…') : (idEdicao ? 'Salvar alterações' : 'Cadastrar')}
             </button>
+
+            {/* NOVO: Botão Excluir usuário (robusto ao erro do /me) */}
+            {podeExcluir && (
+              <button type="button" className="btn perigo" onClick={handleExcluir} aria-label="Excluir usuário" title="Excluir usuário">
+                Excluir usuário
+              </button>
+            )}
           </div>
         </form>
       )}

@@ -1,0 +1,71 @@
+# backend/routers/usuarios_delete.py
+# v7 — inclui logs do perfil em acesso e rota utilitária /usuarios/log-perfil
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
+from backend.database import get_db
+from backend.models.usuarios import Usuarios
+import os
+import logging
+from jose import jwt, JWTError
+
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+
+logger = logging.getLogger("portal.professor")
+if not logger.handlers:
+    logging.basicConfig(level=logging.INFO)
+
+router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
+
+def _norm(x: str) -> str:
+    return (x or "").strip().upper()
+
+def _claims(request: Request) -> dict:
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token ausente ou inválido")
+    token = auth.split(" ", 1)[1].strip()
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
+@router.get("/log-perfil")
+def log_perfil(request: Request):
+    "Apenas decodifica o token, LOGA o perfil/ID e devolve."
+    claims = _claims(request)
+    perfil = (claims.get("role") or claims.get("perfil") or claims.get("tipo_perfil") or "").upper()
+    uid = claims.get("sub")
+    logger.info("Acesso de usuário id=%s perfil=%s", uid, perfil)
+    return {"id": uid, "perfil": perfil}
+
+@router.delete("/{id_usuario}")
+def excluir_usuario(id_usuario: int, request: Request, db: Session = Depends(get_db)):
+    claims = _claims(request)
+    me_id = int(claims.get("sub", 0))
+    my_role = _norm(claims.get("role") or claims.get("perfil") or claims.get("tipo_perfil"))
+    if not my_role:
+        raise HTTPException(status_code=403, detail="Perfil não encontrado no token")
+
+    alvo = db.query(Usuarios).filter(Usuarios.id_usuario == id_usuario).first()
+    if not alvo:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    alvo_role = _norm(alvo.tipo_perfil)
+
+    # LOG detalhado da tentativa
+    logger.info("Tentativa de exclusão: executor id=%s perfil=%s -> alvo id=%s perfil=%s", me_id, my_role, alvo.id_usuario, alvo_role)
+
+    if my_role not in {"MASTER", "DIRETOR", "DIRETORA"}:
+        raise HTTPException(status_code=403, detail="Sem permissão para excluir usuários")
+    if alvo_role == "MASTER" and my_role != "MASTER":
+        raise HTTPException(status_code=403, detail="Apenas MASTER pode excluir outro MASTER")
+    if me_id == alvo.id_usuario:
+        raise HTTPException(status_code=409, detail="Não é permitido excluir o próprio usuário")
+
+    db.delete(alvo)
+    db.commit()
+    logger.info("Usuário id=%s excluído por id=%s", id_usuario, me_id)
+    return JSONResponse({"message": "Usuário excluído com sucesso", "id_excluido": id_usuario})

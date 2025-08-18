@@ -1,0 +1,17 @@
+Patch v7 — Corrige sumiço do botão, adiciona LOG do perfil no backend e reduz as opções do perfil.
+
+Arquivos:
+- backend/routers/usuarios_delete.py
+- frontend/src/pages/Usuarios/CadastrarUsuario.tsx
+
+Mudanças:
+- FRONT: fallback ao JWT se /usuarios/me retornar 422; chama /usuarios/log-perfil para registrar perfil/id no log do servidor;
+        reduz opções do select para: Master, Diretor(a), Coordenador(a), Secretaria, Professor(a), Aluno(a), Responsável.
+- BACK: adiciona rota GET /usuarios/log-perfil (loga "id" e "perfil") e logs detalhados em DELETE.
+
+Aplicar:
+  unzip -o patch_v7_excluir_usuario_portal_professor.zip -d /seu/projeto
+  # Garanta include do router no backend/main.py:
+  #   from backend.routers.usuarios_delete import router as usuarios_delete_router
+  #   app.include_router(usuarios_delete_router)
+  # Reinicie backend e frontend.
