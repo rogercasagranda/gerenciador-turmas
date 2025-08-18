@@ -33,6 +33,8 @@
 .btn.primario:hover { background: #6a1b9a; }
 .btn.secundario { background: #eef2ff; color: #312e81; border: 1px solid var(--pp-border); }
 .btn.secundario:hover { background: #e0e7ff; }
+.btn.perigo { background: #dc2626; color: #fff; border: none; }
+.btn.perigo:hover { background: #b91c1c; }
 
 /* Estados e mensagens */
 .carregando { color: var(--pp-muted); }
