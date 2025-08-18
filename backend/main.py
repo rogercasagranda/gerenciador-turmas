@@ -255,7 +255,11 @@ def google_callback(request: Request):
             database_url = os.getenv("DATABASE_URL")         # Lê URL do banco
             conn = psycopg2.connect(dsn=database_url)        # Abre conexão
             cur = conn.cursor()                              # Abre cursor
-            cur.execute("SELECT id_usuario FROM usuarios WHERE email = %s", (user_email,))  # Consulta pré-cadastro
+            # Busca identificador e perfil do usuário pré-cadastrado
+            cur.execute(
+                "SELECT id_usuario, tipo_perfil FROM usuarios WHERE email = %s",
+                (user_email,),
+            )
             result = cur.fetchone()                          # Lê resultado
 
             if not result:                                   # Verifica se usuário não existe
@@ -265,10 +269,19 @@ def google_callback(request: Request):
                 return RedirectResponse(url=f"{frontend_url}/login?err=USER_NOT_FOUND", status_code=302)  # Redireciona
 
             logger.info(f"✅ Usuário autorizado: {user_email}")    # Registra sucesso
-            token = create_access_token({"sub": user_email})       # Gera JWT
+            id_usuario, tipo_perfil = result                     # Extrai dados do usuário
+            token_payload = {
+                "sub": user_email,
+                "id_usuario": id_usuario,
+                "tipo_perfil": tipo_perfil,
+            }
+            token = create_access_token(token_payload)           # Gera JWT completo
             from fastapi.responses import RedirectResponse         # Importa RedirectResponse
             frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")  # Define URL do front
-            return RedirectResponse(url=f"{frontend_url}/login?token={token}", status_code=302)  # Redireciona com token
+            return RedirectResponse(
+                url=f"{frontend_url}/login?token={token}",
+                status_code=302,
+            )  # Redireciona com token
 
         except PsycopgError as db_err:                       # Captura erro de banco
             logger.error(f"❌ Erro ao consultar banco de dados: {db_err}")  # Registra erro
