@@ -10,7 +10,20 @@ from backend.models.usuarios import Usuarios as UsuariosModel
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
 ALGORITHM  = "HS256"
-ALLOWED_PERFIS = {"master", "diretor", "diretora", "secretaria"}
+ALLOWED_PERFIS = {"master", "diretor", "secretaria"}
+
+
+def to_canonical(perfil: str | None) -> str:
+    p = (perfil or "").strip().lower()
+    if p.startswith("diretor"):
+        return "diretor"
+    if p.startswith("coordenador"):
+        return "coordenador"
+    if p.startswith("professor"):
+        return "professor"
+    if p in {"aluno", "aluna"}:
+        return "aluno"
+    return p
 
 router = APIRouter(prefix="", tags=["Usuarios"])
 
@@ -67,9 +80,10 @@ def token_data_from_request(request: Request) -> TokenData:
 
 def require_perfil(request: Request) -> TokenData:
     token_data = token_data_from_request(request)
-    perfil = (token_data.tipo_perfil or '').lower()
+    perfil = to_canonical(token_data.tipo_perfil)
     if perfil not in ALLOWED_PERFIS:
         raise HTTPException(status_code=403, detail="Sem permissão para acessar usuários.")
+    token_data.tipo_perfil = perfil
     return token_data
 
 @router.get("/usuarios", response_model=list[UsuarioOut])
@@ -90,7 +104,7 @@ def criar_usuario(payload: UsuarioCreate, request: Request, db: Session = Depend
         nome=payload.nome,
         email=payload.email,
         senha_hash=senha_hash,
-        tipo_perfil=payload.tipo_perfil,
+        tipo_perfil=to_canonical(payload.tipo_perfil),
         ddi=payload.ddi,
         ddd=payload.ddd,
         numero_celular=payload.numero_celular,
@@ -109,7 +123,7 @@ def atualizar_usuario(id_usuario: int, payload: UsuarioUpdate, request: Request,
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
     if payload.nome is not None:            user.nome = payload.nome
-    if payload.tipo_perfil is not None:     user.tipo_perfil = payload.tipo_perfil
+    if payload.tipo_perfil is not None:     user.tipo_perfil = to_canonical(payload.tipo_perfil)
     if payload.ddi is not None:             user.ddi = payload.ddi
     if payload.ddd is not None:             user.ddd = payload.ddd
     if payload.numero_celular is not None:  user.numero_celular = payload.numero_celular

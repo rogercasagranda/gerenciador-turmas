@@ -9,7 +9,6 @@ type MeuPerfil = { id_usuario?: number; tipo_perfil?: string; is_master?: boolea
 const PERFIS_PERMITIDOS = new Set([
   'master',
   'diretor',
-  'diretora',
   'secretaria',
 ])
 

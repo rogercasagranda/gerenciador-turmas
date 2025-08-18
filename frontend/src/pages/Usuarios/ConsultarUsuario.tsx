@@ -26,12 +26,17 @@ type MeuPerfil = {
 }
 
 // Define perfis com permissão para consultar/editar
-const PERFIS_PERMITIDOS = new Set([
-  'master',
-  'diretor',
-  'diretora',
-  'secretaria',
-])
+const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
+
+// Normaliza variações de perfil para a forma canônica
+const toCanonical = (perfil: string) => {
+  const p = (perfil || '').toLowerCase()
+  if (p.startsWith('diretor')) return 'diretor'
+  if (p.startsWith('coordenador')) return 'coordenador'
+  if (p.startsWith('professor')) return 'professor'
+  if (p === 'aluno' || p === 'aluna') return 'aluno'
+  return p
+}
 
 // Componente principal
 const ConsultarUsuario: React.FC = () => {
@@ -64,7 +69,7 @@ const ConsultarUsuario: React.FC = () => {
       // Valida perfil (tolerante a 422/500; só 401 derruba sessão)
       try {
         const m = await axios.get<MeuPerfil>(`${API_BASE}/usuarios/me`, { headers })
-        const p = (m.data.tipo_perfil || '').toLowerCase()
+        const p = toCanonical(m.data.tipo_perfil || '')
         const autorizado = m.data.is_master || PERFIS_PERMITIDOS.has(p)
         if (!autorizado) { navigate('/home'); return }
       } catch (e:any) {

@@ -15,6 +15,16 @@ type Usuario = {                                                          // Tip
   numero_celular: string                                                  // Número
 }
 
+// Converte variações (ex: diretora) para a forma canônica
+const toCanonical = (perfil: string) => {
+  const p = (perfil || '').toLowerCase()
+  if (p.startsWith('diretor')) return 'diretor'
+  if (p.startsWith('coordenador')) return 'coordenador'
+  if (p.startsWith('professor')) return 'professor'
+  if (p === 'aluno' || p === 'aluna') return 'aluno'
+  return p
+}
+
 const EditarUsuario: React.FC = () => {                                   // Define componente
   const [usuario, setUsuario] = useState<Usuario | null>(null)            // Estado do usuário
   const [erro, setErro] = useState<string>('')                            // Estado erro
@@ -32,7 +42,11 @@ const EditarUsuario: React.FC = () => {                                   // Def
     if (token) headers['Authorization'] = `Bearer ${token}`               // Injeta Bearer
 
     axios.get(`${API_BASE}/usuarios/${id}`, { headers })                  // GET /usuarios/{id}
-      .then((res) => setUsuario(res.data))                                // Guarda usuário
+      .then((res) => {
+        const u = res.data
+        u.tipo_perfil = toCanonical(u.tipo_perfil)
+        setUsuario(u)
+      })                                // Guarda usuário
       .catch((e) => {                                                     // Trata erro
         const msg = e?.response?.data?.detail || 'Falha ao carregar usuário.' // Extrai mensagem
         setErro(msg)                                                      // Define erro
@@ -105,14 +119,13 @@ const EditarUsuario: React.FC = () => {                                   // Def
               <select id="perfil" className="entrada"                    // Select
                 value={usuario.tipo_perfil} onChange={(e) => setUsuario({ ...usuario, tipo_perfil: e.target.value })} // Atualiza
               >
-                <option value="master">Master</option>                    {/* Opção master */}
-                <option value="diretora">Diretora</option>                {/* Opção diretora */}
-                <option value="diretor">Diretor</option>                  {/* Opção diretor */}
-                <option value="coordenadora">Coordenadora</option>        {/* Opção coordenadora */}
-                <option value="professora">Professora</option>            {/* Opção professora */}
-                <option value="secretaria">Secretaria</option>            {/* Opção secretaria */}
-                <option value="responsavel">Responsável</option>          {/* Opção responsável */}
-                <option value="aluno">Aluno</option>                      {/* Opção aluno */}
+                <option value="master">Master</option>
+                <option value="diretor">Diretor(a)</option>
+                <option value="coordenador">Coordenador(a)</option>
+                <option value="secretaria">Secretaria</option>
+                <option value="professor">Professor(a)</option>
+                <option value="aluno">Aluno(a)</option>
+                <option value="responsavel">Responsável</option>
               </select>
             </div>
 

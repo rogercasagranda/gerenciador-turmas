@@ -22,6 +22,18 @@ router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 def _norm(x: str) -> str:
     return (x or "").strip().upper()
 
+def _canon(x: str | None) -> str:
+    p = _norm(x)
+    if p.startswith("DIRETOR"):
+        return "DIRETOR"
+    if p.startswith("COORDENADOR"):
+        return "COORDENADOR"
+    if p.startswith("PROFESSOR"):
+        return "PROFESSOR"
+    if p in {"ALUNO", "ALUNA"}:
+        return "ALUNO"
+    return p
+
 def _claims(request: Request) -> dict:
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
@@ -36,7 +48,7 @@ def _claims(request: Request) -> dict:
 def log_perfil(request: Request):
     "Apenas decodifica o token, LOGA o perfil/ID e devolve."
     claims = _claims(request)
-    perfil = (claims.get("role") or claims.get("perfil") or claims.get("tipo_perfil") or "").upper()
+    perfil = _canon(claims.get("role") or claims.get("perfil") or claims.get("tipo_perfil"))
     uid = claims.get("sub")
     logger.info("Acesso de usuário id=%s perfil=%s", uid, perfil)
     return {"id": uid, "perfil": perfil}
@@ -51,7 +63,7 @@ def excluir_usuario(id_usuario: int, request: Request, db: Session = Depends(get
     except (TypeError, ValueError):
         raise HTTPException(status_code=401, detail="ID do usuário inválido no token")
 
-    my_role = _norm(claims.get("role") or claims.get("perfil") or claims.get("tipo_perfil"))
+    my_role = _canon(claims.get("role") or claims.get("perfil") or claims.get("tipo_perfil"))
     if not my_role:
         raise HTTPException(status_code=403, detail="Perfil não encontrado no token")
 
@@ -59,12 +71,12 @@ def excluir_usuario(id_usuario: int, request: Request, db: Session = Depends(get
     if not alvo:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
-    alvo_role = _norm(alvo.tipo_perfil)
+    alvo_role = _canon(alvo.tipo_perfil)
 
     # LOG detalhado da tentativa
     logger.info("Tentativa de exclusão: executor id=%s perfil=%s -> alvo id=%s perfil=%s", me_id, my_role, alvo.id_usuario, alvo_role)
 
-    if my_role not in {"MASTER", "DIRETOR", "DIRETORA"}:
+    if my_role not in {"MASTER", "DIRETOR"}:
         raise HTTPException(status_code=403, detail="Sem permissão para excluir usuários")
     if alvo_role == "MASTER" and my_role != "MASTER":
         raise HTTPException(status_code=403, detail="Apenas MASTER pode excluir outro MASTER")
