@@ -84,8 +84,9 @@ app.add_middleware(                                  # Adiciona middleware de CO
 # ======================================================
 # Registra routers (MERGE) — mantém existentes e soma /usuarios
 # ======================================================
-app.include_router(usuarios_router)                  # Registra rotas de usuários (/usuarios GET/POST)
+# Inclui primeiro as rotas com caminhos estáticos para evitar conflito com /usuarios/{id}
 app.include_router(usuarios_delete_router)           # Registra rota de exclusão e log de perfil
+app.include_router(usuarios_router)                  # Registra rotas de usuários (/usuarios GET/POST)
 
 # ======================================================
 # Loga variáveis públicas do OAuth (sem expor segredos)
