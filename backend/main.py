@@ -166,8 +166,20 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # Sucesso
     # --------------------------------------------------
     logger.info(f"✅ Login realizado com sucesso para: {email}")       # Registra sucesso
-    token = create_access_token({"sub": email})                        # Gera JWT com subject = e-mail
-    return {"message": "Login realizado com sucesso", "token": token, "email": email}  # Retorna token
+    # Gera JWT incluindo identificador e tipo de perfil do usuário
+    token_payload = {
+        "sub": email,
+        "id_usuario": usuario.id_usuario,
+        "tipo_perfil": usuario.tipo_perfil,
+    }
+    token = create_access_token(token_payload)
+    return {
+        "message": "Login realizado com sucesso",
+        "token": token,
+        "email": email,
+        "id_usuario": usuario.id_usuario,
+        "tipo_perfil": usuario.tipo_perfil,
+    }  # Retorna token e dados básicos do usuário
 
 # ======================================================
 # (As rotas /google-login e /google-callback permanecem como no seu código aprovado)
