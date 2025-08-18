@@ -67,13 +67,6 @@ def token_data_from_request(request: Request) -> TokenData:
 def listar_usuarios(db: Session = Depends(get_db)):
     return db.query(UsuariosModel).all()
 
-@router.get("/usuarios/{id_usuario}", response_model=UsuarioOut)
-def obter_usuario(id_usuario: int, db: Session = Depends(get_db)):
-    user = db.query(UsuariosModel).filter(UsuariosModel.id_usuario == id_usuario).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-    return user
-
 @router.post("/usuarios", status_code=status.HTTP_201_CREATED, response_model=UsuarioOut)
 def criar_usuario(payload: UsuarioCreate, db: Session = Depends(get_db)):
     if db.query(UsuariosModel).filter(UsuariosModel.email == payload.email).first():
@@ -120,6 +113,13 @@ def meu_perfil(request: Request, db: Session = Depends(get_db)):
         .filter(UsuariosModel.id_usuario == token_data.id_usuario)
         .first()
     )
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    return user
+
+@router.get("/usuarios/{id_usuario}", response_model=UsuarioOut)
+def obter_usuario(id_usuario: int, db: Session = Depends(get_db)):
+    user = db.query(UsuariosModel).filter(UsuariosModel.id_usuario == id_usuario).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
     return user
