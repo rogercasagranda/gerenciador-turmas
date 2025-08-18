@@ -5,6 +5,14 @@ import '../../styles/CadastrarUsuario.css'
 
 type MeuPerfil = { id_usuario?: number; tipo_perfil?: string; is_master?: boolean }
 
+// Perfis autorizados a acessar a página de usuários
+const PERFIS_PERMITIDOS = new Set([
+  'master',
+  'diretor',
+  'diretora',
+  'secretaria',
+])
+
 // Canonical perfis para o select reduzido
 const PERFIS_SELECT = [
   { value: 'master', label: 'Master' },
@@ -80,17 +88,23 @@ const CadastrarUsuario: React.FC = () => {
         if (r.ok) {
           const m = (await r.json()) as MeuPerfil
           const p = toCanonical(m.tipo_perfil || '')
+          const isMaster = Boolean(m.is_master || p === 'master')
+          const autorizado = isMaster || PERFIS_PERMITIDOS.has(p)
+          if (!autorizado) { navigate('/home'); return }
           setMeuId(m.id_usuario)
           setMeuPerfil(p)
-          setSouMaster(Boolean(m.is_master || p === 'master'))
+          setSouMaster(isMaster)
         } else {
           // fallback: token payload
           const claims = getClaimsFromToken()
           const p = toCanonical((claims?.role || claims?.perfil || claims?.tipo_perfil || '').toString())
           const id = claims?.sub ? Number(claims.sub) : undefined
+          const isMaster = p === 'master'
+          const autorizado = isMaster || PERFIS_PERMITIDOS.has(p)
+          if (!autorizado) { navigate('/home'); return }
           setMeuId(id)
           setMeuPerfil(p)
-          setSouMaster(p === 'master')
+          setSouMaster(isMaster)
         }
         // Sempre registra no log do backend o perfil/id que acessou
         try { await fetch(`${API_BASE}/usuarios/log-perfil`, { headers }) } catch {}

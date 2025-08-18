@@ -31,7 +31,6 @@ const PERFIS_PERMITIDOS = new Set([
   'diretor',
   'diretora',
   'secretaria',
-  'coordenadora',
 ])
 
 // Componente principal
