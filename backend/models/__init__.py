@@ -1,0 +1,16 @@
+# backend/models/__init__.py
+
+# Exporta Base e modelos
+from .base import Base  # noqa: F401
+from .ano_letivo import AnoLetivo  # noqa: F401
+from .turno import Turno  # noqa: F401
+from .turma import Turma  # noqa: F401
+from .horario import Horario  # noqa: F401
+from .disciplina import Disciplina  # noqa: F401
+from .turma_disciplina import TurmaDisciplina  # noqa: F401
+from .professor import Professor  # noqa: F401
+from .aluno import Aluno  # noqa: F401
+from .responsavel import Responsavel  # noqa: F401
+from .aluno_responsavel import AlunoResponsavel  # noqa: F401
+from .turma_aluno import TurmaAluno  # noqa: F401
+from .feriado import Feriado  # noqa: F401

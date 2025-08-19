@@ -1,12 +1,27 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+# backend/models/turma.py
 
-Base = declarative_base()
+# Importa Base compartilhada
+from .base import Base
 
+# Importa tipos de coluna
+from sqlalchemy import Column, Integer, String, ForeignKey
+
+# Modelo de turma
 class Turma(Base):
+    # Nome da tabela
     __tablename__ = "turma"
-    id_turma = Column(Integer, primary_key=True, autoincrement=True)
-    nome = Column(String(120), nullable=False)
-    descricao = Column(Text)
-    ano_letivo = Column(String(10), nullable=False)
-    id_diretor = Column(Integer, ForeignKey("usuario.id_usuario"), nullable=False)
+
+    # Identificador
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # Nome da turma
+    nome = Column(String(255), nullable=False)
+
+    # Referência ao ano letivo
+    ano_letivo_id = Column(Integer, ForeignKey("ano_letivo.id"), nullable=False)
+
+    # Referência ao turno
+    turno_id = Column(Integer, ForeignKey("turno.id"), nullable=False)
+
+    # Referência ao coordenador
+    coordenador_id = Column(Integer, ForeignKey("professor.id"), nullable=True)

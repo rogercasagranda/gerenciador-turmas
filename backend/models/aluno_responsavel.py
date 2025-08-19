@@ -1,11 +1,26 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey
+# backend/models/aluno_responsavel.py
 
-Base = declarative_base()
+# Importa Base compartilhada
+from .base import Base
 
+# Importa tipos de coluna
+from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint
+
+# Modelo de vínculo aluno-responsável
 class AlunoResponsavel(Base):
+    # Nome da tabela
     __tablename__ = "aluno_responsavel"
-    id_aluno_responsavel = Column(Integer, primary_key=True, autoincrement=True)
-    id_aluno = Column(Integer, ForeignKey("aluno.id_aluno"), nullable=False)
-    id_responsavel = Column(Integer, ForeignKey("responsavel.id_responsavel"), nullable=False)
-    tipo_vinculo = Column(String(40), nullable=False)
+
+    # Identificador
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # Referência ao aluno
+    aluno_id = Column(Integer, ForeignKey("aluno.id"), nullable=False)
+
+    # Referência ao responsável
+    responsavel_id = Column(Integer, ForeignKey("responsavel.id"), nullable=False)
+
+    # Restrição de unicidade
+    __table_args__ = (
+        UniqueConstraint("aluno_id", "responsavel_id", name="uq_aluno_responsavel"),
+    )
