@@ -19,6 +19,9 @@ const App: React.FC = () => {
       {/* Página principal Home */}
       <Route path="/home" element={<Home />} />
 
+      {/* Rotas de cadastro; montam a Home para exibir conteúdo interno */}
+      <Route path="/cadastro/*" element={<Home />} />
+
       {/* Garante que qualquer rota de Usuários monte a Home e carregue o conteúdo dentro dela */}
       <Route path="/usuarios/*" element={<Home />} />
 
