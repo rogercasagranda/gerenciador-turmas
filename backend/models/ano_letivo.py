@@ -9,6 +9,7 @@ from .base import Base
 from sqlalchemy import Column, Integer, Text, Date, CheckConstraint
 
 
+
 # Modelo de ano letivo
 class AnoLetivo(Base):
     # Nome da tabela
@@ -16,6 +17,7 @@ class AnoLetivo(Base):
 
     # Identificador
     id = Column(Integer, primary_key=True, autoincrement=True)
+
 
     # Descrição única do ano letivo
     descricao = Column(Text, nullable=False, unique=True)
@@ -27,6 +29,7 @@ class AnoLetivo(Base):
     data_fim = Column(Date, nullable=False)
 
     # Restrições de tabela
+
     __table_args__ = (
         CheckConstraint("data_inicio <= data_fim", name="ck_ano_letivo_datas"),
     )

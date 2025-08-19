@@ -11,6 +11,7 @@ from typing import Optional                                       # Importa Opti
 # Schemas para Ano Letivo com período único
 # ------------------------------------------------------
 class AnoLetivoBase(BaseModel):                                   # Classe base com campos comuns
+
     descricao: str = Field(..., min_length=3, description="Descrição do ano letivo")  # Descrição textual
     data_inicio: date = Field(..., description="Data inicial do período")             # Data de início
     data_fim: date = Field(..., description="Data final do período")                  # Data de término
@@ -24,8 +25,10 @@ class AnoLetivoBase(BaseModel):                                   # Classe base 
         return v                                                   # Retorna valor válido
 
 
+
 class AnoLetivoCreate(AnoLetivoBase):                             # Schema para criação
     pass                                                          # Nenhum campo adicional
+
 
 
 class AnoLetivoUpdate(BaseModel):                                 # Schema para atualização
@@ -46,6 +49,7 @@ class AnoLetivoOut(AnoLetivoBase):                                # Schema de re
     id: int                                                       # Identificador do ano letivo
 
     model_config = {"from_attributes": True}                     # Permite criação a partir do ORM
+
 
 # ------------------------------------------------------
 # Schemas para Turno
