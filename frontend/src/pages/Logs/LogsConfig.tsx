@@ -21,14 +21,31 @@ const LogsConfig: React.FC = () => {
     localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
 
   const carregar = () => {
-    axios
-      .get<ConfigItem[]>(`${API_BASE}/logs/config`, {
+    Promise.all([
+      axios.get<ConfigItem[]>(`${API_BASE}/logs/config`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      })
-      .then((r) => {
-        const global = r.data.find((c) => c.entidade === '__all__')
-        setGlobalEnabled(global ? global.habilitado : true)
-        setConfigs(r.data.filter((c) => c.entidade !== '__all__'))
+      }),
+      axios.get<string[]>(`${API_BASE}/logs/entidades`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }),
+    ])
+      .then(([configRes, telasRes]) => {
+        const cfgMap = new Map(
+          configRes.data.map((c) => [c.entidade, c.habilitado])
+        )
+        const todas = Array.from(
+          new Set([
+            ...telasRes.data,
+            ...configRes.data.map((c) => c.entidade),
+          ])
+        )
+        const global = cfgMap.get('__all__')
+        setGlobalEnabled(global ?? true)
+        setConfigs(
+          todas
+            .filter((t) => t !== '__all__')
+            .map((t) => ({ entidade: t, habilitado: cfgMap.get(t) ?? true }))
+        )
       })
       .catch(() => {
         setConfigs([])

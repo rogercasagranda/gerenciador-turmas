@@ -25,6 +25,17 @@ class LogConfigUpdate(BaseModel):
 router = APIRouter(prefix="", tags=["ConfigLogs"])
 
 
+@router.get("/logs/entidades", response_model=list[str])
+def listar_entidades(request: Request, db: Session = Depends(get_db)):
+    token = token_data_from_request(request)
+    perfil = to_canonical(token.tipo_perfil)
+    if perfil != "master":
+        raise HTTPException(status_code=403, detail="Sem permissão para listar telas")
+    telas_logs = [t[0] for t in db.query(LogAuditoria.entidade).distinct().all()]
+    telas_cfg = [t[0] for t in db.query(LogConfig.entidade).distinct().all()]
+    return list({*telas_logs, *telas_cfg})
+
+
 @router.get("/logs/config", response_model=list[LogConfigOut])
 def listar_config(request: Request, db: Session = Depends(get_db)):
     token = token_data_from_request(request)
