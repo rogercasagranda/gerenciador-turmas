@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session                                             #
 from sqlalchemy import and_                                                     # Importa operador lógico
 
 from backend.database import get_db                                            # Função de dependência do banco
-from backend.models.ano_letivo import AnoLetivo                                # Modelo AnoLetivo
 from backend.models.turno import Turno                                         # Modelo Turno
 from backend.models.turma import Turma                                         # Modelo Turma
 from backend.models.turma_aluno import TurmaAluno                              # Modelo TurmaAluno
@@ -22,8 +21,7 @@ from backend.models.horario import Horario                                     #
 from backend.models.feriado import Feriado                                     # Modelo Feriado
 
 from backend.schemas.turmas import (                                          # Importa schemas Pydantic
-    AnoLetivoCreate, AnoLetivoOut, AnoLetivoUpdate,
-    TurnoOut,
+    TurnoOut,                                                                 # Schema de saída de turno
     TurmaCreate, TurmaOut, TurmaUpdate,
     TurmaAlunoCreate, AlunoOut, TurmaDisciplinaCreate,
     DisciplinaCreate, DisciplinaOut, DisciplinaUpdate,
@@ -31,7 +29,6 @@ from backend.schemas.turmas import (                                          # 
     ResponsavelCreate, ResponsavelOut, ResponsavelUpdate,
     AlunoResponsavelCreate,
     HorarioCreate, HorarioOut, HorarioUpdate,
-    FeriadoCreate, FeriadoOut, FeriadoUpdate,
 )
 
 from backend.routes.usuarios import token_data_from_request, to_canonical       # Reutiliza validação de token
@@ -51,46 +48,6 @@ def require_role(request: Request, allowed: set[str]):                        # 
     if perfil not in allowed:                                                 # Verifica se permitido
         raise HTTPException(status_code=403, detail="Não autorizado")         # Lança 403 quando não autorizado
     return token                                                              # Retorna token para uso
-
-# ------------------------------------------------------
-# Rotas de Ano Letivo
-# ------------------------------------------------------
-@router.get("/ano-letivo", response_model=list[AnoLetivoOut])                 # Lista anos letivos
-def listar_anos(request: Request, db: Session = Depends(get_db)):
-    require_role(request, READ_COORD)                                         # Exige permissão de leitura ampliada
-    anos = db.query(AnoLetivo).all()                                          # Consulta todos os anos
-    return {"message": "Anos letivos listados", "data": anos}              # Retorna dados
-
-@router.post("/ano-letivo", response_model=AnoLetivoOut, status_code=status.HTTP_201_CREATED)
-def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(get_db)):
-    require_role(request, FULL_ACCESS)                                        # Exige permissão total
-    ano = AnoLetivo(**payload.dict())                                         # Cria instância do modelo
-    db.add(ano)                                                               # Adiciona à sessão
-    db.commit()                                                               # Persiste
-    db.refresh(ano)                                                           # Atualiza com ID
-    return {"message": "Ano letivo criado", "data": ano}                  # Retorna resposta
-
-@router.put("/ano-letivo/{ano_id}", response_model=AnoLetivoOut)             # Atualiza ano letivo
-def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: Session = Depends(get_db)):
-    require_role(request, FULL_ACCESS)                                        # Exige permissão total
-    ano = db.get(AnoLetivo, ano_id)                                           # Busca registro
-    if not ano:                                                               # Verifica existência
-        raise HTTPException(status_code=404, detail="Ano letivo não encontrado")
-    for field, value in payload.dict(exclude_unset=True).items():             # Atualiza campos enviados
-        setattr(ano, field, value)                                            # Define atributo
-    db.commit()                                                               # Persiste
-    db.refresh(ano)                                                           # Atualiza
-    return {"message": "Ano letivo atualizado", "data": ano}              # Retorna resposta
-
-@router.delete("/ano-letivo/{ano_id}")                                       # Exclui ano letivo
-def remover_ano(ano_id: int, request: Request, db: Session = Depends(get_db)):
-    require_role(request, FULL_ACCESS)                                        # Exige permissão total
-    ano = db.get(AnoLetivo, ano_id)                                           # Busca registro
-    if not ano:                                                               # Verifica existência
-        raise HTTPException(status_code=404, detail="Ano letivo não encontrado")
-    db.delete(ano)                                                            # Remove
-    db.commit()                                                               # Persiste
-    return {"message": "Ano letivo removido"}                               # Confirma remoção
 
 # ------------------------------------------------------
 # Rotas de Turno
@@ -407,45 +364,6 @@ def desvincular_responsavel(aluno_id: int, responsavel_id: int, request: Request
     db.commit()                                                               # Persiste
     return {"message": "Responsável desvinculado"}
 
-# ------------------------------------------------------
-# Rotas de Feriado (stub simplificado)
-# ------------------------------------------------------
-@router.get("/feriados", response_model=list[FeriadoOut])
-def listar_feriados(request: Request, db: Session = Depends(get_db)):
-    require_role(request, READ_COORD)                                         # Exige leitura ampliada
-    fer = db.query(Feriado).all()                                             # Consulta todos
-    return {"message": "Feriados listados", "data": fer}
-
-@router.post("/feriados", response_model=FeriadoOut, status_code=status.HTTP_201_CREATED)
-def criar_feriado(payload: FeriadoCreate, request: Request, db: Session = Depends(get_db)):
-    require_role(request, FULL_ACCESS)                                        # Exige permissão total
-    fer = Feriado(**payload.dict())                                           # Cria registro
-    db.add(fer)                                                               # Adiciona
-    db.commit()                                                               # Persiste
-    db.refresh(fer)                                                           # Atualiza
-    return {"message": "Feriado criado", "data": fer}
-
-@router.put("/feriados/{feriado_id}", response_model=FeriadoOut)
-def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request, db: Session = Depends(get_db)):
-    require_role(request, FULL_ACCESS)                                        # Exige permissão total
-    fer = db.get(Feriado, feriado_id)                                         # Busca feriado
-    if not fer:                                                               # Verifica existência
-        raise HTTPException(status_code=404, detail="Feriado não encontrado")
-    for field, value in payload.dict(exclude_unset=True).items():             # Atualiza campos
-        setattr(fer, field, value)                                            # Define atributo
-    db.commit()                                                               # Persiste
-    db.refresh(fer)                                                           # Atualiza
-    return {"message": "Feriado atualizado", "data": fer}
-
-@router.delete("/feriados/{feriado_id}")
-def remover_feriado(feriado_id: int, request: Request, db: Session = Depends(get_db)):
-    require_role(request, FULL_ACCESS)                                        # Exige permissão total
-    fer = db.get(Feriado, feriado_id)                                         # Busca feriado
-    if not fer:                                                               # Verifica existência
-        raise HTTPException(status_code=404, detail="Feriado não encontrado")
-    db.delete(fer)                                                            # Remove
-    db.commit()                                                               # Persiste
-    return {"message": "Feriado removido"}
 
 # ------------------------------------------------------
 # Rotas de horários por turma
