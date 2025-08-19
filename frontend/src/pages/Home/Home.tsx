@@ -239,6 +239,9 @@ const Home: React.FC = () => {
                 <span className={`caret ${submenuConfigAberto ? 'caret--up' : 'caret--down'}`} />
               </button>
               <div className={`submenu ${submenuConfigAberto ? 'submenu--open' : ''}`}>
+                <button className="submenu-link" onClick={() => navigate('/config/tema')}>
+                  Configurar Tema
+                </button>
                 {isMaster && (
                   <div
                     className="nav-item"
@@ -264,9 +267,6 @@ const Home: React.FC = () => {
                     </div>
                   </div>
                 )}
-                <button className="submenu-link" onClick={() => navigate('/config/tema')}>
-                  Configurar Tema
-                </button>
               </div>
             </div>
           </nav>
