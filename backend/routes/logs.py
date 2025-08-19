@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from backend.database import get_db
 from backend.models.logauditoria import LogAuditoria
-from backend.routes.usuarios import token_data_from_request, to_canonical, ALLOWED_PERFIS
+from backend.routes.usuarios import token_data_from_request, to_canonical
 
 
 class LogOut(BaseModel):
@@ -36,10 +36,10 @@ def listar_logs(
 ):
     token = token_data_from_request(request)
     perfil = to_canonical(token.tipo_perfil)
-    if perfil not in ALLOWED_PERFIS:
+    if perfil != "master":
         raise HTTPException(status_code=403, detail="Sem permissão para acessar logs")
 
-    query = db.query(LogAuditoria)
+    query = db.query(LogAuditoria).filter(LogAuditoria.acao != "READ")
     if data_inicio:
         query = query.filter(LogAuditoria.data_evento >= data_inicio)
     if data_fim:

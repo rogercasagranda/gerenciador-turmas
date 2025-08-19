@@ -30,6 +30,7 @@ const Home: React.FC = () => {
   const [submenuUsuariosAberto, setSubmenuUsuariosAberto] = useState(false)
   const [submenuConfigAberto, setSubmenuConfigAberto] = useState(false)
   const [podeUsuarios, setPodeUsuarios] = useState(false)
+  const [isMaster, setIsMaster] = useState(false)
 
   // Roteamento
   const navigate = useNavigate()
@@ -52,6 +53,7 @@ const Home: React.FC = () => {
         const perfil = toCanonical(data.tipo_perfil)
         const autorizado = data.is_master || PERFIS_PERMITIDOS.has(perfil)
         setPodeUsuarios(Boolean(autorizado))
+        setIsMaster(Boolean(data.is_master))
       })
       .catch(() => {})
   }, [navigate])
@@ -73,7 +75,8 @@ const Home: React.FC = () => {
   useEffect(() => {
     const path = getPath()
     if (path.includes('/usuarios') && !podeUsuarios) navigate('/home')
-  }, [location.pathname, location.hash, podeUsuarios, navigate])
+    if (path.includes('/config/logs') && !isMaster) navigate('/home')
+  }, [location.pathname, location.hash, podeUsuarios, isMaster, navigate])
 
   // Renderiza conteúdo interno
   const renderConteudo = () => {
@@ -96,6 +99,13 @@ const Home: React.FC = () => {
     }
 
     if (path.includes('/config/logs')) {
+      if (!isMaster) {
+        return (
+          <section className="home-welcome">
+            <h2>Sem permissão para acessar os logs</h2>
+          </section>
+        )
+      }
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <Logs />
@@ -180,26 +190,28 @@ const Home: React.FC = () => {
               </button>
             </div>
 
-            <div
-              className="nav-item"
-              onMouseEnter={() => setSubmenuConfigAberto(true)}
-              onMouseLeave={() => setSubmenuConfigAberto(false)}
-            >
-              <button
-                className="nav-link"
-                onClick={() => setSubmenuConfigAberto(!submenuConfigAberto)}
-                aria-haspopup="true"
-                aria-expanded={submenuConfigAberto}
+            {isMaster && (
+              <div
+                className="nav-item"
+                onMouseEnter={() => setSubmenuConfigAberto(true)}
+                onMouseLeave={() => setSubmenuConfigAberto(false)}
               >
-                Configuração
-                <span className={`caret ${submenuConfigAberto ? 'caret--up' : 'caret--down'}`} />
-              </button>
-              <div className={`submenu ${submenuConfigAberto ? 'submenu--open' : ''}`}>
-                <button className="submenu-link" onClick={() => navigate('/config/logs')}>
-                  Verificar logs
+                <button
+                  className="nav-link"
+                  onClick={() => setSubmenuConfigAberto(!submenuConfigAberto)}
+                  aria-haspopup="true"
+                  aria-expanded={submenuConfigAberto}
+                >
+                  Configuração
+                  <span className={`caret ${submenuConfigAberto ? 'caret--up' : 'caret--down'}`} />
                 </button>
+                <div className={`submenu ${submenuConfigAberto ? 'submenu--open' : ''}`}>
+                  <button className="submenu-link" onClick={() => navigate('/config/logs')}>
+                    Verificar logs
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </nav>
         </aside>
 
