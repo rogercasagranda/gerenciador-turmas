@@ -1,13 +1,17 @@
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from datetime import datetime
 
-Base = declarative_base()
+# Reuse the same declarative base as the Usuarios model so that the
+# metadata includes both tables and SQLAlchemy can resolve the foreign
+# key correctly.
+from backend.models.usuarios import Base
 
 class LogAuditoria(Base):
     __tablename__ = "logauditoria"
     id_log = Column(Integer, primary_key=True, autoincrement=True)
-    id_usuario = Column(Integer, ForeignKey("usuario.id_usuario"), nullable=False)
+    # Reference the "usuarios" table (plural) – the actual table name in the
+    # database – to avoid "NoReferencedTableError" during flush/commit.
+    id_usuario = Column(Integer, ForeignKey("usuarios.id_usuario"), nullable=False)
     acao = Column(String(50), nullable=False)
     entidade = Column(String(80), nullable=False)
     id_referencia = Column(Integer)
