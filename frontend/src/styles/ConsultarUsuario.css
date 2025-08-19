@@ -13,10 +13,10 @@
 
 /* Botões (mantém linguagem do projeto) */
 .btn { padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; }
-.btn.primario { background: #4a148c; color: #fff; border: none; }
-.btn.primario:hover { background: #6a1b9a; }
-.btn.secundario { background: #eef2ff; color: #312e81; border: 1px solid #e5e7eb; }
-.btn.secundario:hover { background: #e0e7ff; }
+.btn.primario { background: var(--pp-purple-700); color: #fff; border: none; }
+.btn.primario:hover { background: var(--pp-purple-900); }
+.btn.secundario { background: var(--pp-purple-100); color: var(--pp-purple-900); border: 1px solid var(--pp-border); }
+.btn.secundario:hover { background: var(--pp-purple-50); }
 
 /* Campo de filtro */
 #filtro.entrada { width: 320px; max-width: 100%; }

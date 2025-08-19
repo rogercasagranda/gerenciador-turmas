@@ -22,6 +22,8 @@ export function applyTheme(theme: ThemeName) {
   root.style.setProperty('--pp-purple-900', colors.dark)
   root.style.setProperty('--pp-purple-700', colors.mid)
   root.style.setProperty('--pp-purple-100', colors.light)
+  const danger = theme === 'vermelho' ? '#000000' : '#e53e3e'
+  root.style.setProperty('--pp-danger', danger)
   localStorage.setItem(getStorageKey(), theme)
 }
 
@@ -33,6 +35,8 @@ export function loadTheme(): ThemeName {
     root.style.setProperty('--pp-purple-900', colors.dark)
     root.style.setProperty('--pp-purple-700', colors.mid)
     root.style.setProperty('--pp-purple-100', colors.light)
+    const danger = saved === 'vermelho' ? '#000000' : '#e53e3e'
+    root.style.setProperty('--pp-danger', danger)
     return saved
   }
   return 'roxo'
