@@ -18,50 +18,43 @@ function headers(): HeadersInit {
   }
 }
 
-// Busca feriados nacionais por ano
-export async function getNacionais(ano: number): Promise<Feriado[]> {
-  const res = await fetch(`${API_BASE}/feriados/nacionais?ano=${ano}`, { headers: headers() })
-  if (!res.ok) throw new Error(String(res.status))
-  return res.json()
-}
-
 // Busca feriados associados a um ano letivo
-export async function getByAnoLetivo(id: number): Promise<Feriado[]> {
-  const res = await fetch(`${API_BASE}/feriados?anoLetivoId=${id}`, { headers: headers() })
+export async function getFeriados(anoLetivoId: number): Promise<Feriado[]> {
+  const res = await fetch(`${API_BASE}/feriados?anoLetivoId=${anoLetivoId}`, { headers: headers() })
   if (!res.ok) throw new Error(String(res.status))
   return res.json()
 }
 
-// Cria um feriado manual
-export async function create(data: { ano_letivo_id: number; data: string; descricao: string; origem: 'ESCOLA' | 'NACIONAL' }): Promise<Feriado> {
+// Cria um novo feriado
+export async function createFeriado(dto: { ano_letivo_id: number; data: string; descricao: string; origem: 'ESCOLA' }): Promise<Feriado> {
   const res = await fetch(`${API_BASE}/feriados`, {
     method: 'POST',
     headers: headers(),
-    body: JSON.stringify(data),
+    body: JSON.stringify(dto),
   })
   if (!res.ok) throw new Error(String(res.status))
   return res.json()
 }
 
 // Atualiza feriado existente
-export async function update(id: number, data: { data?: string; descricao?: string; origem?: 'ESCOLA' | 'NACIONAL' }): Promise<Feriado> {
+export async function updateFeriado(id: number, dto: { data?: string; descricao?: string }): Promise<Feriado> {
   const res = await fetch(`${API_BASE}/feriados/${id}`, {
     method: 'PUT',
     headers: headers(),
-    body: JSON.stringify(data),
+    body: JSON.stringify(dto),
   })
   if (!res.ok) throw new Error(String(res.status))
   return res.json()
 }
 
 // Remove feriado
-export async function remove(id: number): Promise<void> {
+export async function deleteFeriado(id: number): Promise<void> {
   const res = await fetch(`${API_BASE}/feriados/${id}`, { method: 'DELETE', headers: headers() })
   if (!res.ok) throw new Error(String(res.status))
 }
 
-// Importa todos os feriados nacionais
-export async function importarNacionais(payload: { ano_letivo_id: number; ano: number }): Promise<void> {
+// Importa feriados nacionais
+export async function importarNacionais(payload: { ano_letivo_id: number; anos: number[] }): Promise<void> {
   const res = await fetch(`${API_BASE}/feriados/importar-nacionais`, {
     method: 'POST',
     headers: headers(),
@@ -69,3 +62,13 @@ export async function importarNacionais(payload: { ano_letivo_id: number; ano: n
   })
   if (!res.ok) throw new Error(String(res.status))
 }
+
+// Opcional: obtém feriados nacionais de um ano específico
+export async function getNacionaisStub(ano: number): Promise<Feriado[]> {
+  const res = await fetch(`${API_BASE}/feriados/nacionais?ano=${ano}`, { headers: headers() })
+  if (!res.ok) throw new Error(String(res.status))
+  return res.json()
+}
+
+// Backwards compatibility exports (caso outros módulos ainda importem)
+export { getFeriados as getByAnoLetivo, createFeriado as create, updateFeriado as update, deleteFeriado as remove }
