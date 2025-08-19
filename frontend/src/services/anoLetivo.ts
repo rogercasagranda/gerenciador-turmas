@@ -1,16 +1,20 @@
-// Serviço para operações com anos letivos
-import { API_BASE } from './api'
-import { getAuthToken } from './api'
+// Serviço de acesso à API de Ano Letivo usando apenas
+// os campos { descricao, data_inicio, data_fim }
+// Cada função faz a chamada HTTP correspondente e lança
+// erro contendo o status em caso de falha.
 
-// Tipo de ano letivo retornado pela API
+import { API_BASE, getAuthToken } from './api'
+
+// Estrutura do ano letivo conforme API
 export interface AnoLetivo {
   id: number
-  ano: number
-  ativo?: boolean
+  descricao: string
+  data_inicio: string
+  data_fim: string
 }
 
-// Cabeçalhos padrão com token
-function headers(): HeadersInit {
+// Monta cabeçalho padrão com token de autenticação
+function buildHeaders(): HeadersInit {
   const token = getAuthToken()
   return {
     'Content-Type': 'application/json',
@@ -20,23 +24,27 @@ function headers(): HeadersInit {
 
 // Lista todos os anos letivos
 export async function getAnoLetivos(): Promise<AnoLetivo[]> {
-  const res = await fetch(`${API_BASE}/ano-letivo`, { headers: headers() })
+  const res = await fetch(`${API_BASE}/ano-letivo`, {
+    headers: buildHeaders(),
+  })
   if (!res.ok) throw new Error(String(res.status))
   return res.json()
 }
 
-// Tipo de período do ano letivo
-export interface Periodo {
-  id: number // identificador do período
-  data_inicio: string // data de início no formato ISO
-  data_fim: string // data de término no formato ISO
+// Obtém um ano letivo específico
+export async function getAnoLetivo(id: number): Promise<AnoLetivo> {
+  const res = await fetch(`${API_BASE}/ano-letivo/${id}`, {
+    headers: buildHeaders(),
+  })
+  if (!res.ok) throw new Error(String(res.status))
+  return res.json()
 }
 
 // Cria um novo ano letivo
-export async function createAnoLetivo(dto: { ano: number; ativo: boolean }): Promise<AnoLetivo> {
+export async function createAnoLetivo(dto: Omit<AnoLetivo, 'id'>): Promise<AnoLetivo> {
   const res = await fetch(`${API_BASE}/ano-letivo`, {
     method: 'POST',
-    headers: headers(),
+    headers: buildHeaders(),
     body: JSON.stringify(dto),
   })
   if (!res.ok) throw new Error(String(res.status))
@@ -44,10 +52,10 @@ export async function createAnoLetivo(dto: { ano: number; ativo: boolean }): Pro
 }
 
 // Atualiza um ano letivo existente
-export async function updateAnoLetivo(id: number, dto: { ano: number; ativo: boolean }): Promise<AnoLetivo> {
+export async function updateAnoLetivo(id: number, dto: Omit<AnoLetivo, 'id'>): Promise<AnoLetivo> {
   const res = await fetch(`${API_BASE}/ano-letivo/${id}`, {
     method: 'PUT',
-    headers: headers(),
+    headers: buildHeaders(),
     body: JSON.stringify(dto),
   })
   if (!res.ok) throw new Error(String(res.status))
@@ -58,47 +66,8 @@ export async function updateAnoLetivo(id: number, dto: { ano: number; ativo: boo
 export async function deleteAnoLetivo(id: number): Promise<void> {
   const res = await fetch(`${API_BASE}/ano-letivo/${id}`, {
     method: 'DELETE',
-    headers: headers(),
+    headers: buildHeaders(),
   })
   if (!res.ok) throw new Error(String(res.status))
 }
 
-// Lista períodos vinculados a um ano letivo
-export async function getPeriodos(anoLetivoId: number): Promise<Periodo[]> {
-  const res = await fetch(`${API_BASE}/ano-letivo/${anoLetivoId}/periodos`, {
-    headers: headers(),
-  })
-  if (!res.ok) throw new Error(String(res.status))
-  return res.json()
-}
-
-// Cria um período
-export async function createPeriodo(anoLetivoId: number, dto: { data_inicio: string; data_fim: string }): Promise<Periodo> {
-  const res = await fetch(`${API_BASE}/ano-letivo/${anoLetivoId}/periodos`, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify(dto),
-  })
-  if (!res.ok) throw new Error(String(res.status))
-  return res.json()
-}
-
-// Atualiza um período existente
-export async function updatePeriodo(id: number, dto: { data_inicio: string; data_fim: string }): Promise<Periodo> {
-  const res = await fetch(`${API_BASE}/periodos/${id}`, {
-    method: 'PUT',
-    headers: headers(),
-    body: JSON.stringify(dto),
-  })
-  if (!res.ok) throw new Error(String(res.status))
-  return res.json()
-}
-
-// Remove um período
-export async function deletePeriodo(id: number): Promise<void> {
-  const res = await fetch(`${API_BASE}/periodos/${id}`, {
-    method: 'DELETE',
-    headers: headers(),
-  })
-  if (!res.ok) throw new Error(String(res.status))
-}

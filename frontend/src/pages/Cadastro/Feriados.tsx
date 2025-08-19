@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import FormPage from '../../components/FormPage'
 import '../../styles/CadastrarUsuario.css'
 import '../../styles/Feriados.css'
-import { AnoLetivo, Periodo, getAnoLetivos, getPeriodos } from '../../services/anoLetivo'
+import { AnoLetivo, getAnoLetivos } from '../../services/anoLetivo'
 import {
   Feriado,
   getFeriados,
@@ -19,9 +19,10 @@ function formatar(data: string): string {
 }
 
 // Verifica se uma data cai em algum período
-function dentroDeAlgumPeriodo(data: string, periodos: Periodo[]): boolean {
+function dentroDeAnoLetivo(data: string, ano?: AnoLetivo): boolean {
+  if (!ano) return false
   const d = new Date(data)
-  return periodos.some(p => d >= new Date(p.data_inicio) && d <= new Date(p.data_fim))
+  return d >= new Date(ano.data_inicio) && d <= new Date(ano.data_fim)
 }
 
 // Remove duplicados pelo trio data/descricao/origem
@@ -39,8 +40,6 @@ const Feriados: React.FC = () => {
   const [anos, setAnos] = useState<AnoLetivo[]>([])
   // Ano letivo selecionado
   const [anoSelecionado, setAnoSelecionado] = useState<number | ''>('')
-  // Períodos do ano selecionado
-  const [periodos, setPeriodos] = useState<Periodo[]>([])
   // Lista de feriados
   const [feriados, setFeriados] = useState<Feriado[]>([])
   // Controle do formulário (novo/editar)
@@ -60,39 +59,37 @@ const Feriados: React.FC = () => {
     getAnoLetivos().then(setAnos).catch(() => setAnos([]))
   }, [])
 
-  // Carrega feriados e períodos ao selecionar ano
+  // Ano letivo atualmente selecionado
+  const anoAtual = useMemo(() => anos.find(a => a.id === Number(anoSelecionado)), [anos, anoSelecionado])
+
+  // Carrega feriados ao selecionar ano
   useEffect(() => {
     const carregar = async () => {
-      if (!anoSelecionado) { setPeriodos([]); setFeriados([]); return }
+      if (!anoSelecionado) { setFeriados([]); return }
       try {
-        const [p, f] = await Promise.all([
-          getPeriodos(Number(anoSelecionado)),
-          getFeriados(Number(anoSelecionado)),
-        ])
-        setPeriodos(p)
-        // Ordena por data crescente
+        const f = await getFeriados(Number(anoSelecionado))
         setFeriados(dedup(f).sort((a, b) => a.data.localeCompare(b.data)))
       } catch {
-        setPeriodos([]); setFeriados([])
+        setFeriados([])
       }
     }
     carregar()
   }, [anoSelecionado])
 
   // Label com períodos para exibir ao usuário
-  const labelPeriodos = useMemo(() => (
-    periodos.map(p => `${formatar(p.data_inicio)} - ${formatar(p.data_fim)}`).join('; ')
-  ), [periodos])
+  const labelPeriodos = useMemo(() => {
+    if (!anoAtual) return ''
+    return `${formatar(anoAtual.data_inicio)} - ${formatar(anoAtual.data_fim)}`
+  }, [anoAtual])
 
   // Anos civis cobertos pelos períodos (para importar nacionais)
   const anosCobertos = useMemo(() => {
+    if (!anoAtual) return [] as number[]
     const set = new Set<number>()
-    periodos.forEach(p => {
-      set.add(new Date(p.data_inicio).getFullYear())
-      set.add(new Date(p.data_fim).getFullYear())
-    })
+    set.add(new Date(anoAtual.data_inicio).getFullYear())
+    set.add(new Date(anoAtual.data_fim).getFullYear())
     return Array.from(set.values()).sort()
-  }, [periodos])
+  }, [anoAtual])
 
   // Abre formulário para novo feriado
   const abrirNovo = () => {
@@ -113,6 +110,7 @@ const Feriados: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!anoSelecionado) { setErro('Selecione um ano letivo.'); return }
+    if (!dentroDeAnoLetivo(data, anoAtual)) { setErro('Data fora do ano letivo.'); return }
     setErro(''); setSucesso('')
     try {
       if (editando) {
@@ -129,6 +127,7 @@ const Feriados: React.FC = () => {
       const msg = String(e.message)
       if (msg.includes('409')) setErro('Feriado já cadastrado.')
       else if (msg.includes('422')) setErro('Dados inválidos.')
+      else if (msg.includes('403')) setErro('Sem permissão.')
       else setErro('Falha ao salvar feriado.')
     }
   }
@@ -184,10 +183,10 @@ const Feriados: React.FC = () => {
           <select id="anoLetivo" className="entrada" value={anoSelecionado} onChange={e => setAnoSelecionado(e.target.value ? Number(e.target.value) : '')}>
             <option value="">Selecione</option>
             {anos.map(a => (
-              <option key={a.id} value={a.id}>{a.ano}</option>
+              <option key={a.id} value={a.id}>{a.descricao}</option>
             ))}
           </select>
-          {labelPeriodos && <span className="rotulo">Períodos: {labelPeriodos}</span>}
+          {labelPeriodos && <span className="rotulo">Período: {labelPeriodos}</span>}
         </div>
       </div>
 
@@ -216,7 +215,7 @@ const Feriados: React.FC = () => {
           </div>
           <div className="acoes">
             <button type="button" className="btn secundario" onClick={fecharForm}>Cancelar</button>
-            <button type="submit" className="btn primario" disabled={!data || !descricao.trim() || !dentroDeAlgumPeriodo(data, periodos)}>
+            <button type="submit" className="btn primario" disabled={!data || !descricao.trim() || !dentroDeAnoLetivo(data, anoAtual)}>
               {editando ? 'Salvar' : 'Cadastrar'}
             </button>
           </div>
