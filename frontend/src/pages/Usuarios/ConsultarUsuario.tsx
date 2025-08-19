@@ -1,5 +1,5 @@
-import '../../styles/ConsultarUsuario.css'
 import '../../styles/ConsultarUsuario.lock.css'
+import '../../styles/ConsultarUsuario.css'
 // Importa React e hooks
 import React, { useEffect, useMemo, useState } from 'react'
 // Importa HTTP client
