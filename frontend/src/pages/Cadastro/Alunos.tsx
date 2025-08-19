@@ -1,16 +1,13 @@
-// Importa a biblioteca React
 import React from 'react'
+import FormPage from '../../components/FormPage'
 
-// Componente para a página de cadastro de alunos
+// Tela padronizada utilizando FormPage
 const Alunos: React.FC = () => {
   return (
-    <section className="cadastro-page"> {/* Container principal */}
-      <h2>Cadastro de Alunos</h2> {/* Título da página */}
-      <p>Funcionalidade em desenvolvimento.</p> {/* Texto informativo */}
-    </section>
+    <FormPage title="Cadastro de Alunos">
+      <p>Funcionalidade em desenvolvimento.</p>
+    </FormPage>
   )
 }
 
-// Exporta o componente para uso externo
 export default Alunos
-

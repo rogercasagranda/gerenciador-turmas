@@ -50,3 +50,16 @@
   .acoes { justify-content: stretch; }
   .btn { width: 100%; }
 }
+
+/* Cabeçalho para ListPage */
+.cabecalho-lista { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+
+/* Abas utilizadas na tela de feriados */
+.tabs { display: flex; gap: 8px; margin: 12px 0; border-bottom: 1px solid var(--pp-border); }
+.tab { background: none; border: none; padding: 8px 12px; cursor: pointer; color: var(--pp-text); }
+.tab.ativo { border-bottom: 2px solid #4a148c; font-weight: 600; }
+
+/* Tabelas de feriados */
+.holiday-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.holiday-table th, .holiday-table td { border: 1px solid var(--pp-border); padding: 8px 10px; text-align: left; }
+.holiday-table th { background: var(--pp-purple-50); }
