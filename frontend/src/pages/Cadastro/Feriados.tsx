@@ -82,11 +82,10 @@ const Feriados: React.FC = () => {
     if (!anoSelecionado) { setErro('Selecione um ano letivo.'); return }
     if (!data) { setErro('A data é obrigatória.'); return }
     if (!descricao || descricao.trim().length < 3) { setErro('A descrição é obrigatória (mín. 3 caracteres).'); return }
-    if (data < anoSelecionado.data_inicio || data > anoSelecionado.data_fim) { setErro('Data fora do ano letivo.'); return }
     setErro(''); setSucesso('')
     try {
       setCarregando(true)
-      await createFeriado({ ano_letivo_id: anoSelecionado.id, data, descricao })
+      await createFeriado({ ano_letivo_id: anoSelecionado.id, data, descricao, origem: 'ESCOLA' })
       const atualizados = await getByAnoLetivo(anoSelecionado.id)
       setFeriados(atualizados)
       setSucesso('Feriado cadastrado.')
@@ -122,7 +121,7 @@ const Feriados: React.FC = () => {
           <select id="anoLetivo" className="entrada" value={anoSelecionado?.id || ''} onChange={handleAnoChange}>
             <option value="">Selecione</option>
             {anos.map(a => (
-              <option key={a.id} value={a.id}>{a.ano} ({a.data_inicio} - {a.data_fim})</option>
+              <option key={a.id} value={a.id}>{a.ano}</option>
             ))}
           </select>
         </div>

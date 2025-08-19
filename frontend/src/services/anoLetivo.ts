@@ -6,8 +6,6 @@ import { getAuthToken } from './api'
 export interface AnoLetivo {
   id: number
   ano: number
-  data_inicio: string
-  data_fim: string
   ativo?: boolean
 }
 

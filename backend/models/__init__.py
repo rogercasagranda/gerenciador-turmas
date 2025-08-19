@@ -14,3 +14,4 @@ from .responsavel import Responsavel  # noqa: F401
 from .aluno_responsavel import AlunoResponsavel  # noqa: F401
 from .turma_aluno import TurmaAluno  # noqa: F401
 from .feriado import Feriado  # noqa: F401
+from .ano_letivo_periodo import AnoLetivoPeriodo  # noqa: F401
