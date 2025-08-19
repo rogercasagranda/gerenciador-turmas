@@ -50,5 +50,11 @@ export default defineConfig({
       host: 'localhost',      // Corrige o destino do HMR
       port: 5173              // Garante que o HMR use a mesma porta do Vite
     }
+  },
+
+  // Configuração de testes com Vitest
+  test: {
+    environment: 'jsdom',
+    globals: true
   }
 })
