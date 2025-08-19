@@ -11,8 +11,11 @@ type ConfigItem = {
 
 const LogsConfig: React.FC = () => {
   const [configs, setConfigs] = useState<ConfigItem[]>([])
+  const [globalEnabled, setGlobalEnabled] = useState(true)
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
+  const [novaEntidade, setNovaEntidade] = useState('')
+  const [novaHabilitado, setNovaHabilitado] = useState(true)
 
   const token =
     localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
@@ -22,8 +25,15 @@ const LogsConfig: React.FC = () => {
       .get<ConfigItem[]>(`${API_BASE}/logs/config`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       })
-      .then((r) => setConfigs(r.data))
-      .catch(() => setConfigs([]))
+      .then((r) => {
+        const global = r.data.find((c) => c.entidade === '__all__')
+        setGlobalEnabled(global ? global.habilitado : true)
+        setConfigs(r.data.filter((c) => c.entidade !== '__all__'))
+      })
+      .catch(() => {
+        setConfigs([])
+        setGlobalEnabled(true)
+      })
   }
 
   useEffect(() => {
@@ -69,8 +79,14 @@ const LogsConfig: React.FC = () => {
     <div className="logs-wrapper">
       <h2>Configuração de Logs</h2>
       <div className="filtros">
-        <button onClick={() => atualizarTodos(true)}>Ativar todos</button>
-        <button onClick={() => atualizarTodos(false)}>Desativar todos</button>
+        <label>
+          Log global
+          <input
+            type="checkbox"
+            checked={globalEnabled}
+            onChange={(e) => atualizarTodos(e.target.checked)}
+          />
+        </label>
       </div>
       <table className="tabela">
         <thead>
@@ -80,22 +96,48 @@ const LogsConfig: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {configs
-            .filter((c) => c.entidade !== '__all__')
-            .map((cfg) => (
-              <tr key={cfg.entidade}>
-                <td>{cfg.entidade}</td>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={cfg.habilitado}
-                    onChange={(e) => atualizar(cfg.entidade, e.target.checked)}
-                  />
-                </td>
-              </tr>
-            ))}
+          {configs.map((cfg) => (
+            <tr key={cfg.entidade}>
+              <td>{cfg.entidade}</td>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={cfg.habilitado}
+                  onChange={(e) => atualizar(cfg.entidade, e.target.checked)}
+                />
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
+      <div className="filtros">
+        <input
+          type="text"
+          placeholder="Nova tela"
+          value={novaEntidade}
+          onChange={(e) => setNovaEntidade(e.target.value)}
+        />
+        <label>
+          Habilitado
+          <input
+            type="checkbox"
+            checked={novaHabilitado}
+            onChange={(e) => setNovaHabilitado(e.target.checked)}
+          />
+        </label>
+        <button
+          onClick={() => {
+            const nome = novaEntidade.trim()
+            if (nome) {
+              atualizar(nome, novaHabilitado)
+              setNovaEntidade('')
+              setNovaHabilitado(true)
+            }
+          }}
+        >
+          Cadastrar
+        </button>
+      </div>
       <div className="filtros">
         <input
           type="date"

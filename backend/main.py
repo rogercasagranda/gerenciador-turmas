@@ -43,8 +43,14 @@ from pydantic import BaseModel, Field, ConfigDict  # Importa BaseModel, Field e 
 # ======================================================
 # Importa camada de acesso a dados (AJUSTE DE IMPORTS PARA EXECUTAR PELA RAIZ)
 # ======================================================
-from backend.database import get_db                    # Importa função get_db via pacote absoluto
-from backend.models.usuarios import Usuarios           # Importa o modelo Usuarios via pacote absoluto
+from backend.database import (
+    get_db, engine, SessionLocal
+)  # Importa acesso ao banco e fábrica de sessões
+from backend.models.usuarios import (
+    Usuarios, Base
+)  # Importa o modelo Usuarios e a Base compartilhada
+from backend.models.logconfig import LogConfig          # Modelo de configuração de logs
+from backend.models.logauditoria import LogAuditoria    # Modelo de auditoria para criação de tabela
 import bcrypt                                          # Importa bcrypt para validação de senha
 
 # ======================================================
@@ -103,6 +109,14 @@ logger.info(f"🔎 GOOGLE_REDIRECT_URI: {os.getenv('GOOGLE_REDIRECT_URI')}")   #
 # ======================================================
 @app.on_event("startup")                     # Define tarefa a executar no start do app
 async def startup_event():                   # Declara função assíncrona de inicialização
+    # Garante que todas as tabelas do ORM existam
+    Base.metadata.create_all(bind=engine)
+    # Assegura registro global de logs habilitado por padrão
+    with SessionLocal() as db:
+        if not db.query(LogConfig).filter(LogConfig.entidade == "__all__").first():
+            db.add(LogConfig(entidade="__all__", habilitado=True))
+            db.commit()
+
     logger.info("✅ Backend iniciado com sucesso")     # Registra mensagem de inicialização
     logger.info("✅ Rotas registradas:")               # Registra cabeçalho das rotas
     for route in app.routes:                           # Itera sobre rotas registradas
