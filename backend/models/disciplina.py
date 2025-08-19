@@ -1,10 +1,21 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Text
+# backend/models/disciplina.py
 
-Base = declarative_base()
+# Importa Base compartilhada
+from .base import Base
 
+# Importa tipos de coluna
+from sqlalchemy import Column, Integer, String
+
+# Modelo de disciplina
 class Disciplina(Base):
+    # Nome da tabela
     __tablename__ = "disciplina"
-    id_disciplina = Column(Integer, primary_key=True, autoincrement=True)
-    nome = Column(String(120), nullable=False)
-    descricao = Column(Text)
+
+    # Identificador
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # Nome da disciplina
+    nome = Column(String(255), nullable=False)
+
+    # Carga horária
+    carga_horaria = Column(Integer, nullable=False)
