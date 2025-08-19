@@ -29,10 +29,9 @@ def upgrade():
     op.create_table(
         'ano_letivo',
         sa.Column('id', sa.Integer(), primary_key=True, autoincrement=True),
-        sa.Column('ano', sa.Integer(), nullable=False),
+        sa.Column('descricao', sa.String(length=100), nullable=False, unique=True),
         sa.Column('data_inicio', sa.Date(), nullable=False),
         sa.Column('data_fim', sa.Date(), nullable=False),
-        sa.Column('ativo', sa.Boolean(), nullable=False),
         sa.CheckConstraint('data_inicio <= data_fim', name='ck_ano_letivo_datas')
     )
     # Tabela turno

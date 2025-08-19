@@ -11,42 +11,22 @@ from typing import Optional                                       # Importa Opti
 # Schemas para Ano Letivo
 # ------------------------------------------------------
 class AnoLetivoBase(BaseModel):                                   # Classe base com campos comuns
-    ano: int = Field(..., description="Ano do período letivo")               # Ano numérico
-    ativo: bool = Field(True, description="Indica se está ativo")            # Flag de ativo
+    descricao: str = Field(..., min_length=3, description="Descrição do ano letivo")  # Texto descritivo
+    data_inicio: date = Field(..., description="Data inicial")    # Data de início
+    data_fim: date = Field(..., description="Data final")         # Data de término
 
 class AnoLetivoCreate(AnoLetivoBase):                             # Schema para criação
     pass                                                          # Nenhum campo adicional
 
 class AnoLetivoUpdate(BaseModel):                                 # Schema para atualização
-    ano: Optional[int] = None                                     # Ano opcional
-    ativo: Optional[bool] = None                                  # Ativo opcional
+    descricao: Optional[str] = None                               # Descrição opcional
+    data_inicio: Optional[date] = None                            # Data inicial opcional
+    data_fim: Optional[date] = None                               # Data final opcional
 
 class AnoLetivoOut(AnoLetivoBase):                                # Schema de resposta
     id: int                                                       # Identificador do ano letivo
     class Config:                                                 # Configurações Pydantic
         from_attributes = True                                    # Permite criação a partir do ORM
-
-# ------------------------------------------------------
-# Schemas para Períodos do Ano Letivo
-# ------------------------------------------------------
-class AnoLetivoPeriodoBase(BaseModel):                            # Campos comuns do período
-    data_inicio: date = Field(..., description="Data inicial")    # Data de início
-    data_fim: date = Field(..., description="Data final")         # Data de término
-
-class AnoLetivoPeriodoCreate(AnoLetivoPeriodoBase):               # Schema de criação de período
-    pass                                                          # Nenhum campo adicional
-
-class AnoLetivoPeriodoUpdate(BaseModel):                          # Schema de atualização de período
-    data_inicio: Optional[date] = None                            # Data inicial opcional
-    data_fim: Optional[date] = None                               # Data final opcional
-
-class AnoLetivoPeriodoOut(AnoLetivoPeriodoBase):                  # Schema de saída do período
-    id: int                                                       # Identificador do período
-    class Config:                                                 # Configurações Pydantic
-        from_attributes = True                                    # Permite uso com ORM
-
-class AnoLetivoDetailOut(AnoLetivoOut):                           # Detalhe de ano letivo com períodos
-    periodos: list[AnoLetivoPeriodoOut] = []                      # Lista de períodos
 
 # ------------------------------------------------------
 # Schemas para Turno
