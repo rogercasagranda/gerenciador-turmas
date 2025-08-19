@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
 from backend.models.logauditoria import LogAuditoria
+from backend.models.logconfig import LogConfig
 from backend.models.usuarios import Usuarios
 
 
@@ -16,6 +17,14 @@ def registrar_log(
 
     # Ignora ações de leitura para reduzir ruído nos logs
     if acao.upper() == "READ":
+        return
+
+    # Verifica se logging está habilitado globalmente ou para a entidade
+    global_cfg = db.query(LogConfig).filter(LogConfig.entidade == "__all__").first()
+    if global_cfg and not global_cfg.habilitado:
+        return
+    entidade_cfg = db.query(LogConfig).filter(LogConfig.entidade == entidade).first()
+    if entidade_cfg and not entidade_cfg.habilitado:
         return
 
     # Obtém e-mail do usuário executor para detalhar o evento

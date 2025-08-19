@@ -10,6 +10,7 @@ import '../../styles/Home.lock.css'
 const CadastrarUsuario = React.lazy(() => import('../Usuarios/CadastrarUsuario'))
 const ConsultarUsuario  = React.lazy(() => import('../Usuarios/ConsultarUsuario'))
 const Logs = React.lazy(() => import('../Logs/Logs'))
+const LogsConfig = React.lazy(() => import('../Logs/LogsConfig'))
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
@@ -94,6 +95,21 @@ const Home: React.FC = () => {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <ConsultarUsuario />
+        </Suspense>
+      )
+    }
+
+    if (path.includes('/config/logs/config')) {
+      if (!isMaster) {
+        return (
+          <section className="home-welcome">
+            <h2>Sem permissão para configurar logs</h2>
+          </section>
+        )
+      }
+      return (
+        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+          <LogsConfig />
         </Suspense>
       )
     }
@@ -208,6 +224,9 @@ const Home: React.FC = () => {
                 <div className={`submenu ${submenuConfigAberto ? 'submenu--open' : ''}`}>
                   <button className="submenu-link" onClick={() => navigate('/config/logs')}>
                     Verificar logs
+                  </button>
+                  <button className="submenu-link" onClick={() => navigate('/config/logs/config')}>
+                    Configurar logs
                   </button>
                 </div>
               </div>
