@@ -1,16 +1,15 @@
-// Importa a biblioteca React
+// Importa React
 import React from 'react'
 
-// Componente para a página de cadastro de feriados
+// Componente de feriados apenas com placeholder
 const Feriados: React.FC = () => {
   return (
-    <section className="cadastro-page"> {/* Container principal */}
-      <h2>Cadastro de Feriados</h2> {/* Título da página */}
-      <p>Funcionalidade em desenvolvimento.</p> {/* Texto informativo */}
+    <section className="cadastro-page"> {/* Container */}
+      <h2>Cadastro de Feriados</h2> {/* Título */}
+      <p>Funcionalidade em desenvolvimento.</p> {/* Mensagem */}
     </section>
   )
 }
 
-// Exporta o componente para uso externo
+// Exporta componente
 export default Feriados
-
