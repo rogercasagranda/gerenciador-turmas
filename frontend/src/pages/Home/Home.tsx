@@ -58,6 +58,8 @@ const Home: React.FC = () => {
         const autorizado = data.is_master || PERFIS_PERMITIDOS.has(perfil)
         setPodeUsuarios(Boolean(autorizado))
         setIsMaster(Boolean(data.is_master))
+        try { localStorage.setItem('user_id', String(data.id_usuario)) } catch {}
+        loadTheme()
       })
       .catch(() => {})
   }, [navigate])
@@ -70,13 +72,12 @@ const Home: React.FC = () => {
     setSubmenuLogsAberto(false)
   }, [location.pathname, location.hash])
 
-  useEffect(() => { loadTheme() }, [])
-
   // Logout
   const handleLogout = useCallback(() => {
     try { localStorage.removeItem('auth_token') } catch {}
     try { sessionStorage.removeItem('auth_token') } catch {}
     try { localStorage.removeItem('usuarioLogado') } catch {}
+    try { localStorage.removeItem('user_id') } catch {}
     navigate('/login')
   }, [navigate])
 

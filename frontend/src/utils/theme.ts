@@ -11,17 +11,22 @@ const THEME_VARS: Record<ThemeName, { dark: string; mid: string; light: string }
 
 const STORAGE_KEY = 'app_theme'
 
+function getStorageKey(): string {
+  const userId = localStorage.getItem('user_id')
+  return userId ? `${STORAGE_KEY}_${userId}` : STORAGE_KEY
+}
+
 export function applyTheme(theme: ThemeName) {
   const root = document.documentElement
   const colors = THEME_VARS[theme]
   root.style.setProperty('--pp-purple-900', colors.dark)
   root.style.setProperty('--pp-purple-700', colors.mid)
   root.style.setProperty('--pp-purple-100', colors.light)
-  localStorage.setItem(STORAGE_KEY, theme)
+  localStorage.setItem(getStorageKey(), theme)
 }
 
 export function loadTheme(): ThemeName {
-  const saved = (localStorage.getItem(STORAGE_KEY) as ThemeName) || 'roxo'
+  const saved = (localStorage.getItem(getStorageKey()) as ThemeName) || 'roxo'
   if (saved in THEME_VARS) {
     const colors = THEME_VARS[saved]
     const root = document.documentElement
