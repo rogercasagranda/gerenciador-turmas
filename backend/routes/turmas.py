@@ -6,7 +6,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status           # Importa utilidades do FastAPI
 from sqlalchemy.orm import Session                                             # Importa sessão do SQLAlchemy
 from sqlalchemy import and_                                                     # Importa operador lógico
-from datetime import datetime                                                  # Importa datetime para validações
 
 from backend.database import get_db                                            # Função de dependência do banco
 from backend.models.ano_letivo import AnoLetivo                                # Modelo AnoLetivo
@@ -65,8 +64,6 @@ def listar_anos(request: Request, db: Session = Depends(get_db)):
 @router.post("/ano-letivo", response_model=AnoLetivoOut, status_code=status.HTTP_201_CREATED)
 def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(get_db)):
     require_role(request, FULL_ACCESS)                                        # Exige permissão total
-    if payload.data_inicio > payload.data_fim:                                # Valida datas
-        raise HTTPException(status_code=400, detail="Datas inválidas")       # Retorna erro se inválido
     ano = AnoLetivo(**payload.dict())                                         # Cria instância do modelo
     db.add(ano)                                                               # Adiciona à sessão
     db.commit()                                                               # Persiste
@@ -79,8 +76,6 @@ def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: S
     ano = db.get(AnoLetivo, ano_id)                                           # Busca registro
     if not ano:                                                               # Verifica existência
         raise HTTPException(status_code=404, detail="Ano letivo não encontrado")
-    if payload.data_inicio and payload.data_fim and payload.data_inicio > payload.data_fim:
-        raise HTTPException(status_code=400, detail="Datas inválidas")
     for field, value in payload.dict(exclude_unset=True).items():             # Atualiza campos enviados
         setattr(ano, field, value)                                            # Define atributo
     db.commit()                                                               # Persiste

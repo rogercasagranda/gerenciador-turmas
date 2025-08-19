@@ -12,8 +12,6 @@ from typing import Optional                                       # Importa Opti
 # ------------------------------------------------------
 class AnoLetivoBase(BaseModel):                                   # Classe base com campos comuns
     ano: int = Field(..., description="Ano do período letivo")               # Ano numérico
-    data_inicio: date = Field(..., description="Data inicial")               # Data de início
-    data_fim: date = Field(..., description="Data final")                    # Data de término
     ativo: bool = Field(True, description="Indica se está ativo")            # Flag de ativo
 
 class AnoLetivoCreate(AnoLetivoBase):                             # Schema para criação
@@ -21,8 +19,6 @@ class AnoLetivoCreate(AnoLetivoBase):                             # Schema para 
 
 class AnoLetivoUpdate(BaseModel):                                 # Schema para atualização
     ano: Optional[int] = None                                     # Ano opcional
-    data_inicio: Optional[date] = None                            # Data inicial opcional
-    data_fim: Optional[date] = None                               # Data final opcional
     ativo: Optional[bool] = None                                  # Ativo opcional
 
 class AnoLetivoOut(AnoLetivoBase):                                # Schema de resposta
@@ -162,8 +158,10 @@ class HorarioOut(HorarioBase):                                    # Resposta de 
         from_attributes = True                                    # Usa ORM
 
 class FeriadoBase(BaseModel):                                     # Campos do feriado
+    ano_letivo_id: int = Field(..., description="ID do ano letivo")          # Referência ao ano letivo
     data: date = Field(..., description="Data do feriado")                    # Data do feriado
-    descricao: Optional[str] = Field(None, description="Descrição")          # Descrição
+    descricao: str = Field(..., description="Descrição")                     # Descrição
+    origem: str = Field(..., description="Origem do feriado")                # Origem
 
 class FeriadoCreate(FeriadoBase):                                 # Criação de feriado
     pass                                                          # Sem campos extras
@@ -171,6 +169,7 @@ class FeriadoCreate(FeriadoBase):                                 # Criação de
 class FeriadoUpdate(BaseModel):                                   # Atualização de feriado
     data: Optional[date] = None                                   # Data opcional
     descricao: Optional[str] = None                               # Descrição opcional
+    origem: Optional[str] = None                                  # Origem opcional
 
 class FeriadoOut(FeriadoBase):                                    # Resposta de feriado
     id: int                                                       # Identificador

@@ -4,8 +4,10 @@ import { API_BASE, getAuthToken } from './api'
 // Tipo de feriado utilizado na aplicação
 export interface Feriado {
   id?: number
+  ano_letivo_id?: number
   data: string
   descricao: string
+  origem: 'ESCOLA' | 'NACIONAL'
 }
 
 function headers(): HeadersInit {
@@ -31,7 +33,7 @@ export async function getByAnoLetivo(id: number): Promise<Feriado[]> {
 }
 
 // Cria um feriado manual
-export async function create(data: { ano_letivo_id: number; data: string; descricao: string }): Promise<Feriado> {
+export async function create(data: { ano_letivo_id: number; data: string; descricao: string; origem: 'ESCOLA' | 'NACIONAL' }): Promise<Feriado> {
   const res = await fetch(`${API_BASE}/feriados`, {
     method: 'POST',
     headers: headers(),
@@ -42,7 +44,7 @@ export async function create(data: { ano_letivo_id: number; data: string; descri
 }
 
 // Atualiza feriado existente
-export async function update(id: number, data: { data: string; descricao: string }): Promise<Feriado> {
+export async function update(id: number, data: { data?: string; descricao?: string; origem?: 'ESCOLA' | 'NACIONAL' }): Promise<Feriado> {
   const res = await fetch(`${API_BASE}/feriados/${id}`, {
     method: 'PUT',
     headers: headers(),
