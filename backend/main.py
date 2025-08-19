@@ -61,6 +61,7 @@ from backend.routes.usuarios import router as usuarios_router   # Importa router
 from backend.routers.usuarios_delete import router as usuarios_delete_router  # Importa rotas de exclusão de usuários
 from backend.routes.logs import router as logs_router            # Importa rotas de logs de auditoria
 from backend.routes.logs_config import router as logs_config_router  # Importa rotas de configuração de logs
+from backend.routes.turmas import router as turmas_router            # Importa rotas do módulo de turmas
 
 # ======================================================
 # Configura logger da aplicação
@@ -103,6 +104,7 @@ app.include_router(usuarios_delete_router)           # Registra rota de exclusã
 app.include_router(usuarios_router)                  # Registra rotas de usuários (/usuarios GET/POST)
 app.include_router(logs_router)                      # Registra rotas de logs de auditoria
 app.include_router(logs_config_router)               # Registra rotas de configuração de logs
+app.include_router(turmas_router)                    # Registra rotas de turmas e afins
 
 # ======================================================
 # Loga variáveis públicas do OAuth (sem expor segredos)
