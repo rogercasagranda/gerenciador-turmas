@@ -1,8 +1,11 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from sqlalchemy.orm import Session
 from backend.models.logauditoria import LogAuditoria
 from backend.models.logconfig import LogConfig
 from backend.models.usuarios import Usuarios
+
+BRAZIL_TZ = ZoneInfo("America/Sao_Paulo")
 
 
 def registrar_log(
@@ -41,7 +44,7 @@ def registrar_log(
         entidade=entidade,
         id_referencia=id_referencia,
         descricao=descricao,
-        data_evento=datetime.utcnow(),
+        data_evento=datetime.now(BRAZIL_TZ),
     )
     db.add(log)
     db.commit()
