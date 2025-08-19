@@ -13,6 +13,14 @@ const ConsultarUsuario  = React.lazy(() => import('../Usuarios/ConsultarUsuario'
 const Logs = React.lazy(() => import('../Logs/Logs'))
 const LogsConfig = React.lazy(() => import('../Logs/LogsConfig'))
 const ThemeConfig = React.lazy(() => import('../Config/ThemeConfig'))
+// Páginas de cadastro diversas
+const CadTurmas = React.lazy(() => import('../Cadastro/Turmas')) // Cadastro de turmas
+const CadAlunos = React.lazy(() => import('../Cadastro/Alunos')) // Cadastro de alunos
+const CadDisciplinas = React.lazy(() => import('../Cadastro/Disciplinas')) // Cadastro de disciplinas
+const CadTurnos = React.lazy(() => import('../Cadastro/Turnos')) // Cadastro de turnos
+const CadProfessores = React.lazy(() => import('../Cadastro/Professores')) // Cadastro de professores
+const CadResponsaveis = React.lazy(() => import('../Cadastro/Responsaveis')) // Cadastro de responsáveis
+const CadFeriados = React.lazy(() => import('../Cadastro/Feriados')) // Cadastro de feriados
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
@@ -30,9 +38,10 @@ const toCanonical = (perfil: string) => {
 const Home: React.FC = () => {
   // Estado do drawer e submenu
   const [drawerAberto, setDrawerAberto] = useState(false)
-  const [submenuUsuariosAberto, setSubmenuUsuariosAberto] = useState(false)
-  const [submenuConfigAberto, setSubmenuConfigAberto] = useState(false)
-  const [submenuLogsAberto, setSubmenuLogsAberto] = useState(false)
+  const [submenuCadastroAberto, setSubmenuCadastroAberto] = useState(false) // Controle do submenu Cadastro
+  const [submenuUsuariosAberto, setSubmenuUsuariosAberto] = useState(false) // Controle do submenu Usuários
+  const [submenuConfigAberto, setSubmenuConfigAberto] = useState(false) // Controle do submenu Configuração
+  const [submenuLogsAberto, setSubmenuLogsAberto] = useState(false) // Controle do submenu Logs
   const [podeUsuarios, setPodeUsuarios] = useState(false)
   const [isMaster, setIsMaster] = useState(false)
 
@@ -66,10 +75,11 @@ const Home: React.FC = () => {
 
   // Fecha drawer a cada navegação
   useEffect(() => {
-    setDrawerAberto(false)
-    setSubmenuUsuariosAberto(false)
-    setSubmenuConfigAberto(false)
-    setSubmenuLogsAberto(false)
+    setDrawerAberto(false) // Fecha drawer após navegação
+    setSubmenuCadastroAberto(false) // Fecha submenu Cadastro
+    setSubmenuUsuariosAberto(false) // Fecha submenu Usuários
+    setSubmenuConfigAberto(false) // Fecha submenu Configuração
+    setSubmenuLogsAberto(false) // Fecha submenu Logs
   }, [location.pathname, location.hash])
 
   // Logout
@@ -86,13 +96,70 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const path = getPath()
-    if (path.includes('/usuarios') && !podeUsuarios) navigate('/home')
-    if (path.includes('/config/logs') && !isMaster) navigate('/home')
+    if (path.includes('/cadastro') && !podeUsuarios) navigate('/home') // Protege rotas de cadastro
+    if (path.includes('/usuarios') && !podeUsuarios) navigate('/home') // Protege rotas de usuários
+    if (path.includes('/config/logs') && !isMaster) navigate('/home') // Protege área restrita de logs
   }, [location.pathname, location.hash, podeUsuarios, isMaster, navigate])
 
   // Renderiza conteúdo interno
   const renderConteudo = () => {
     const path = getPath()
+
+    if (path.includes('/cadastro/turmas') && podeUsuarios) { // Página de cadastro de turmas
+      return (
+        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+          <CadTurmas />
+        </Suspense>
+      )
+    }
+
+    if (path.includes('/cadastro/alunos') && podeUsuarios) { // Página de cadastro de alunos
+      return (
+        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+          <CadAlunos />
+        </Suspense>
+      )
+    }
+
+    if (path.includes('/cadastro/disciplinas') && podeUsuarios) { // Página de cadastro de disciplinas
+      return (
+        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+          <CadDisciplinas />
+        </Suspense>
+      )
+    }
+
+    if (path.includes('/cadastro/turnos') && podeUsuarios) { // Página de cadastro de turnos
+      return (
+        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+          <CadTurnos />
+        </Suspense>
+      )
+    }
+
+    if (path.includes('/cadastro/professores') && podeUsuarios) { // Página de cadastro de professores
+      return (
+        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+          <CadProfessores />
+        </Suspense>
+      )
+    }
+
+    if (path.includes('/cadastro/responsaveis') && podeUsuarios) { // Página de cadastro de responsáveis
+      return (
+        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+          <CadResponsaveis />
+        </Suspense>
+      )
+    }
+
+    if (path.includes('/cadastro/feriados') && podeUsuarios) { // Página de cadastro de feriados
+      return (
+        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+          <CadFeriados />
+        </Suspense>
+      )
+    }
 
     if (path.includes('/usuarios/cadastrar') && podeUsuarios) {
       return (
@@ -186,6 +253,47 @@ const Home: React.FC = () => {
           aria-label="Menu lateral"
         >
           <nav className="nav">
+            {podeUsuarios && ( // Menu Cadastro visível apenas a perfis autorizados
+              <div
+                className="nav-item"
+                onMouseEnter={() => setSubmenuCadastroAberto(true)} // Abre submenu ao passar o mouse
+                onMouseLeave={() => setSubmenuCadastroAberto(false)} // Fecha submenu ao sair
+              >
+                <button
+                  className="nav-link"
+                  onClick={() => setSubmenuCadastroAberto(!submenuCadastroAberto)} // Alterna abertura
+                  aria-haspopup="true" // Indica que possui submenu
+                  aria-expanded={submenuCadastroAberto} // Estado de expansão
+                >
+                  Cadastro
+                  <span className={`caret ${submenuCadastroAberto ? 'caret--up' : 'caret--down'}`} />
+                </button>
+                <div className={`submenu ${submenuCadastroAberto ? 'submenu--open' : ''}`}> {/* Container do submenu */}
+                  <button className="submenu-link" onClick={() => navigate('/cadastro/turmas')}>
+                    Turmas
+                  </button>
+                  <button className="submenu-link" onClick={() => navigate('/cadastro/alunos')}>
+                    Alunos
+                  </button>
+                  <button className="submenu-link" onClick={() => navigate('/cadastro/disciplinas')}>
+                    Disciplinas
+                  </button>
+                  <button className="submenu-link" onClick={() => navigate('/cadastro/turnos')}>
+                    Turnos
+                  </button>
+                  <button className="submenu-link" onClick={() => navigate('/cadastro/professores')}>
+                    Professores
+                  </button>
+                  <button className="submenu-link" onClick={() => navigate('/cadastro/responsaveis')}>
+                    Responsáveis
+                  </button>
+                  <button className="submenu-link" onClick={() => navigate('/cadastro/feriados')}>
+                    Feriados
+                  </button>
+                </div>
+              </div>
+            )}
+
             {podeUsuarios && (
               <div
                 className="nav-item"
