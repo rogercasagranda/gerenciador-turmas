@@ -7,6 +7,7 @@ from pathlib import Path                     # Importa Path para manipular camin
 import requests                               # Importa requests para realizar chamadas HTTP ao Google OAuth
 import psycopg2                               # Importa psycopg2 para conexão síncrona com PostgreSQL
 from psycopg2 import Error as PsycopgError    # Importa a classe de erro específica do psycopg2
+from zoneinfo import ZoneInfo                 # Importa ZoneInfo para definir fuso horário
 
 # ======================================================
 # JWT: criação de token de acesso
@@ -64,7 +65,12 @@ from backend.routes.logs_config import router as logs_config_router  # Importa r
 # ======================================================
 # Configura logger da aplicação
 # ======================================================
-logging.basicConfig(level=logging.INFO)        # Define nível de log como INFO
+BRAZIL_TZ = ZoneInfo("America/Sao_Paulo")
+logging.Formatter.converter = lambda *args: datetime.now(BRAZIL_TZ).timetuple()
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s:%(name)s:%(message)s",
+)
 logger = logging.getLogger(__name__)           # Cria instância de logger para este módulo
 
 # ======================================================
