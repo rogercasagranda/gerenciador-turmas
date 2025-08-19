@@ -27,6 +27,28 @@ class AnoLetivoOut(AnoLetivoBase):                                # Schema de re
         from_attributes = True                                    # Permite criação a partir do ORM
 
 # ------------------------------------------------------
+# Schemas para Períodos do Ano Letivo
+# ------------------------------------------------------
+class AnoLetivoPeriodoBase(BaseModel):                            # Campos comuns do período
+    data_inicio: date = Field(..., description="Data inicial")    # Data de início
+    data_fim: date = Field(..., description="Data final")         # Data de término
+
+class AnoLetivoPeriodoCreate(AnoLetivoPeriodoBase):               # Schema de criação de período
+    pass                                                          # Nenhum campo adicional
+
+class AnoLetivoPeriodoUpdate(BaseModel):                          # Schema de atualização de período
+    data_inicio: Optional[date] = None                            # Data inicial opcional
+    data_fim: Optional[date] = None                               # Data final opcional
+
+class AnoLetivoPeriodoOut(AnoLetivoPeriodoBase):                  # Schema de saída do período
+    id: int                                                       # Identificador do período
+    class Config:                                                 # Configurações Pydantic
+        from_attributes = True                                    # Permite uso com ORM
+
+class AnoLetivoDetailOut(AnoLetivoOut):                           # Detalhe de ano letivo com períodos
+    periodos: list[AnoLetivoPeriodoOut] = []                      # Lista de períodos
+
+# ------------------------------------------------------
 # Schemas para Turno
 # ------------------------------------------------------
 class TurnoOut(BaseModel):                                        # Schema de saída para turno
@@ -175,3 +197,7 @@ class FeriadoOut(FeriadoBase):                                    # Resposta de 
     id: int                                                       # Identificador
     class Config:                                                 # Configurações
         from_attributes = True                                    # Usa ORM
+
+class FeriadoImportarNacionais(BaseModel):                        # Payload para importar nacionais
+    ano_letivo_id: int = Field(..., description="ID do ano letivo")  # Referência ao ano letivo
+    anos: list[int] = Field(..., description="Lista de anos a importar")  # Anos a consultar
