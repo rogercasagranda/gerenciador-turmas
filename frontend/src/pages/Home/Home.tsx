@@ -5,12 +5,14 @@ import { useNavigate, useLocation } from 'react-router-dom'
 // Importa CSS da Home (layout travado)
 import '../../styles/Home.css'
 import '../../styles/Home.lock.css'
+import { loadTheme } from '../../utils/theme'
 
 // Carrega páginas internas com import dinâmico
 const CadastrarUsuario = React.lazy(() => import('../Usuarios/CadastrarUsuario'))
 const ConsultarUsuario  = React.lazy(() => import('../Usuarios/ConsultarUsuario'))
 const Logs = React.lazy(() => import('../Logs/Logs'))
 const LogsConfig = React.lazy(() => import('../Logs/LogsConfig'))
+const ThemeConfig = React.lazy(() => import('../Config/ThemeConfig'))
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
@@ -30,6 +32,7 @@ const Home: React.FC = () => {
   const [drawerAberto, setDrawerAberto] = useState(false)
   const [submenuUsuariosAberto, setSubmenuUsuariosAberto] = useState(false)
   const [submenuConfigAberto, setSubmenuConfigAberto] = useState(false)
+  const [submenuLogsAberto, setSubmenuLogsAberto] = useState(false)
   const [podeUsuarios, setPodeUsuarios] = useState(false)
   const [isMaster, setIsMaster] = useState(false)
 
@@ -60,7 +63,14 @@ const Home: React.FC = () => {
   }, [navigate])
 
   // Fecha drawer a cada navegação
-  useEffect(() => { setDrawerAberto(false) }, [location.pathname, location.hash])
+  useEffect(() => {
+    setDrawerAberto(false)
+    setSubmenuUsuariosAberto(false)
+    setSubmenuConfigAberto(false)
+    setSubmenuLogsAberto(false)
+  }, [location.pathname, location.hash])
+
+  useEffect(() => { loadTheme() }, [])
 
   // Logout
   const handleLogout = useCallback(() => {
@@ -125,6 +135,14 @@ const Home: React.FC = () => {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <Logs />
+        </Suspense>
+      )
+    }
+
+    if (path.includes('/config/tema')) {
+      return (
+        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+          <ThemeConfig />
         </Suspense>
       )
     }
@@ -206,31 +224,51 @@ const Home: React.FC = () => {
               </button>
             </div>
 
-            {isMaster && (
-              <div
-                className="nav-item"
-                onMouseEnter={() => setSubmenuConfigAberto(true)}
-                onMouseLeave={() => setSubmenuConfigAberto(false)}
+            <div
+              className="nav-item"
+              onMouseEnter={() => setSubmenuConfigAberto(true)}
+              onMouseLeave={() => setSubmenuConfigAberto(false)}
+            >
+              <button
+                className="nav-link"
+                onClick={() => setSubmenuConfigAberto(!submenuConfigAberto)}
+                aria-haspopup="true"
+                aria-expanded={submenuConfigAberto}
               >
-                <button
-                  className="nav-link"
-                  onClick={() => setSubmenuConfigAberto(!submenuConfigAberto)}
-                  aria-haspopup="true"
-                  aria-expanded={submenuConfigAberto}
-                >
-                  Configuração
-                  <span className={`caret ${submenuConfigAberto ? 'caret--up' : 'caret--down'}`} />
+                Configuração
+                <span className={`caret ${submenuConfigAberto ? 'caret--up' : 'caret--down'}`} />
+              </button>
+              <div className={`submenu ${submenuConfigAberto ? 'submenu--open' : ''}`}>
+                {isMaster && (
+                  <div
+                    className="nav-item"
+                    onMouseEnter={() => setSubmenuLogsAberto(true)}
+                    onMouseLeave={() => setSubmenuLogsAberto(false)}
+                  >
+                    <button
+                      className="submenu-link"
+                      onClick={() => setSubmenuLogsAberto(!submenuLogsAberto)}
+                      aria-haspopup="true"
+                      aria-expanded={submenuLogsAberto}
+                    >
+                      Logs
+                      <span className={`caret ${submenuLogsAberto ? 'caret--up' : 'caret--down'}`} />
+                    </button>
+                    <div className={`submenu ${submenuLogsAberto ? 'submenu--open' : ''}`}>
+                      <button className="submenu-link" onClick={() => navigate('/config/logs')}>
+                        Verificar logs
+                      </button>
+                      <button className="submenu-link" onClick={() => navigate('/config/logs/config')}>
+                        Configurar logs
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <button className="submenu-link" onClick={() => navigate('/config/tema')}>
+                  Configurar Tema
                 </button>
-                <div className={`submenu ${submenuConfigAberto ? 'submenu--open' : ''}`}>
-                  <button className="submenu-link" onClick={() => navigate('/config/logs')}>
-                    Verificar logs
-                  </button>
-                  <button className="submenu-link" onClick={() => navigate('/config/logs/config')}>
-                    Configurar logs
-                  </button>
-                </div>
               </div>
-            )}
+            </div>
           </nav>
         </aside>
 
