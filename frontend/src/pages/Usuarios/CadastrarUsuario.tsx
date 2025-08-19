@@ -52,10 +52,6 @@ const CadastrarUsuario: React.FC = () => {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
 
-  // Senha/Confirmar: visíveis, NÃO obrigatórios
-  const [senha, setSenha] = useState('')
-  const [confirmarSenha, setConfirmarSenha] = useState('')
-
   const [perfil, setPerfil] = useState('professor')
   const [ddi, setDdi] = useState('55')
   const [ddd, setDdd] = useState('54')
@@ -142,7 +138,6 @@ const CadastrarUsuario: React.FC = () => {
     try {
       setEnviando(true)
       const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
-      if (senha.trim()) body.senha = senha.trim() // senha é opcional
 
       if (idEdicao) {
         await axios.put(`${API_BASE}/usuarios/${idEdicao}`, body, { headers: jsonHeaders })
@@ -150,7 +145,7 @@ const CadastrarUsuario: React.FC = () => {
       } else {
         await axios.post(`${API_BASE}/usuarios`, body, { headers: jsonHeaders })
         setSucesso('Usuário cadastrado com sucesso.')
-        setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular(''); setSenha(''); setConfirmarSenha('')
+        setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
       }
 
       setTimeout(() => navigate('/usuarios/consultar'), 700)
@@ -202,18 +197,6 @@ const CadastrarUsuario: React.FC = () => {
           <div className="campo">
             <label className="rotulo" htmlFor="email">E-mail</label>
             <input id="email" className="entrada" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-
-          {/* campos de senha opcionais */}
-          <div className="linha dois">
-            <div className="campo">
-              <label className="rotulo" htmlFor="senha">Senha</label>
-              <input id="senha" className="entrada" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} />
-            </div>
-            <div className="campo">
-              <label className="rotulo" htmlFor="confirmar">Confirmar senha</label>
-              <input id="confirmar" className="entrada" type="password" value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} />
-            </div>
           </div>
 
           <div className="campo">
