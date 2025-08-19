@@ -26,6 +26,17 @@ test('menu de feriados visível para diretor', async () => {
   await waitFor(() => expect(screen.getByText('Feriados')).toBeInTheDocument())
 })
 
+test('menu de ano letivo visível para diretor', async () => {
+  mockPerfil('diretor')
+  localStorage.setItem('auth_token', 'x')
+  render(
+    <MemoryRouter initialEntries={['/home']}>
+      <Home />
+    </MemoryRouter>
+  )
+  await waitFor(() => expect(screen.getByText('Ano Letivo')).toBeInTheDocument())
+})
+
 test('rota de feriados bloqueada para professor', async () => {
   mockPerfil('professor')
   localStorage.setItem('auth_token', 'x')
@@ -36,4 +47,16 @@ test('rota de feriados bloqueada para professor', async () => {
   )
   await waitFor(() => expect(screen.getByText(/Bem-vindo/)).toBeInTheDocument())
   expect(screen.queryByText('Cadastro de Feriados')).not.toBeInTheDocument()
+})
+
+test('rota de ano letivo bloqueada para professor', async () => {
+  mockPerfil('professor')
+  localStorage.setItem('auth_token', 'x')
+  render(
+    <MemoryRouter initialEntries={['/cadastro/ano-letivo']}>
+      <Home />
+    </MemoryRouter>
+  )
+  await waitFor(() => expect(screen.getByText(/Bem-vindo/)).toBeInTheDocument())
+  expect(screen.queryByText('Cadastro de Ano Letivo')).not.toBeInTheDocument()
 })

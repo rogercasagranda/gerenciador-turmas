@@ -21,6 +21,7 @@ const CadTurnos = React.lazy(() => import('../Cadastro/Turnos')) // Cadastro de 
 const CadProfessores = React.lazy(() => import('../Cadastro/Professores')) // Cadastro de professores
 const CadResponsaveis = React.lazy(() => import('../Cadastro/Responsaveis')) // Cadastro de responsáveis
 const CadFeriados = React.lazy(() => import('../Cadastro/Feriados')) // Cadastro de feriados
+const CadAnoLetivo = React.lazy(() => import('../Cadastro/AnoLetivo')) // Cadastro de ano letivo
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
@@ -161,6 +162,14 @@ const Home: React.FC = () => {
       )
     }
 
+    if (path.includes('/cadastro/ano-letivo') && podeUsuarios) { // Página de cadastro de ano letivo
+      return (
+        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+          <CadAnoLetivo />
+        </Suspense>
+      )
+    }
+
     if (path.includes('/usuarios/cadastrar') && podeUsuarios) {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
@@ -286,6 +295,9 @@ const Home: React.FC = () => {
                   </button>
                   <button className="submenu-link" onClick={() => navigate('/cadastro/responsaveis')}>
                     Responsáveis
+                  </button>
+                  <button className="submenu-link" onClick={() => navigate('/cadastro/ano-letivo')}>
+                    Ano Letivo
                   </button>
                   <button className="submenu-link" onClick={() => navigate('/cadastro/feriados')}>
                     Feriados
