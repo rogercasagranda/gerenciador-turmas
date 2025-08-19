@@ -87,5 +87,5 @@ def excluir_usuario(id_usuario: int, request: Request, db: Session = Depends(get
     db.delete(alvo)
     db.commit()
     logger.info("Usuário id=%s excluído por id=%s", id_usuario, me_id)
-    registrar_log(db, me_id, "DELETE", "usuarios", id_usuario, f"Excluiu usuário {id_usuario}")
+    registrar_log(db, me_id, "DELETE", "usuarios", id_usuario, f"excluiu usuário {alvo.email}")
     return JSONResponse({"message": "Usuário excluído com sucesso", "id_excluido": id_usuario})
