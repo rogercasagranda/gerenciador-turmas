@@ -48,8 +48,7 @@ test('impede salvar fora do período e mostra erro do backend', async () => {
   localStorage.setItem('auth_token', 'x')
 
   mockFetch({
-    '/ano-letivo': () => ({ ok: true, json: () => Promise.resolve([{ id: 1, ano: 2024 }]) }),
-    '/ano-letivo/1/periodos': () => ({ ok: true, json: () => Promise.resolve([{ id: 1, data_inicio: '2024-01-01T00:00:00', data_fim: '2024-12-31T00:00:00' }]) }),
+    '/ano-letivo': () => ({ ok: true, json: () => Promise.resolve([{ id: 1, descricao: '2024', data_inicio: '2024-01-01', data_fim: '2024-12-31' }]) }),
     '/feriados?anoLetivoId=1': () => ({ ok: true, json: () => Promise.resolve([]) }),
     '/feriados': (init) => {
       if (init?.method === 'POST') return { ok: false, status: 409, json: () => Promise.resolve({}) }
@@ -61,7 +60,7 @@ test('impede salvar fora do período e mostra erro do backend', async () => {
 
   // Seleciona ano letivo
   fireEvent.change(await screen.findByLabelText('Ano letivo'), { target: { value: '1' } })
-  await screen.findByText(/Períodos:/)
+  await screen.findByText(/Período:/)
 
   // Abre formulário
   fireEvent.click(screen.getByRole('button', { name: 'Novo Feriado' }))
@@ -84,8 +83,7 @@ test('importar nacionais deduplica feriados', async () => {
   localStorage.setItem('auth_token', 'x')
   let chamadas = 0
   mockFetch({
-    '/ano-letivo': () => ({ ok: true, json: () => Promise.resolve([{ id: 1, ano: 2024 }]) }),
-    '/ano-letivo/1/periodos': () => ({ ok: true, json: () => Promise.resolve([{ id: 1, data_inicio: '2024-01-01T00:00:00', data_fim: '2024-12-31T00:00:00' }]) }),
+    '/ano-letivo': () => ({ ok: true, json: () => Promise.resolve([{ id: 1, descricao: '2024', data_inicio: '2024-01-01', data_fim: '2024-12-31' }]) }),
     '/feriados?anoLetivoId=1': () => {
       chamadas += 1
       if (chamadas === 1) return { ok: true, json: () => Promise.resolve([]) }
@@ -104,9 +102,7 @@ test('importar nacionais deduplica feriados', async () => {
 
   // Seleciona ano letivo
   fireEvent.change(await screen.findByLabelText('Ano letivo'), { target: { value: '1' } })
-
-  // Aguarda carregamento dos períodos antes de abrir modal
-  await screen.findByText(/Períodos:/)
+  await screen.findByText(/Período:/)
   fireEvent.click(screen.getByRole('button', { name: 'Importar Nacionais' }))
   fireEvent.click(screen.getByRole('button', { name: 'Importar' }))
 
