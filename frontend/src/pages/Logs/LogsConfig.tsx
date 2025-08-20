@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import useDirtyForm from '@/hooks/useDirtyForm'
 import { CrudAction, listScreens, saveLogConfig, screenLabel } from '@/services/logs'
 import '../../styles/Logs.css'
+import { cadastrarConfig } from '@/services/logs'
 
 import useDirtyForm from '@/hooks/useDirtyForm'
 
@@ -14,8 +15,12 @@ const LogsConfig: React.FC = () => {
   const [globalEnabled, setGlobalEnabled] = useState(true)
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
-  const [novaEntidade, setNovaEntidade] = useState('')
-  const [novaHabilitado, setNovaHabilitado] = useState(true)
+
+  const [tela, setTela] = useState('')
+  const [crud, setCrud] = useState<string[]>([])
+  const [mensagem, setMensagem] = useState('')
+  const [tipoMsg, setTipoMsg] = useState<'sucesso' | 'erro' | ''>('')
+  const [touched, setTouched] = useState(false)
 
   const { setDirty } = useDirtyForm()
 
@@ -76,6 +81,32 @@ const LogsConfig: React.FC = () => {
     }
   }
 
+  const toggleCrud = (acao: string) => {
+    setTouched(true)
+    setCrud((prev) =>
+      prev.includes(acao) ? prev.filter((c) => c !== acao) : [...prev, acao]
+    )
+  }
+
+  const formValido = tela.trim() !== '' && crud.length > 0
+
+  const salvar = async () => {
+    setTouched(true)
+    if (!formValido) return
+    try {
+      await cadastrarConfig({ tela: tela.trim(), crud })
+      setMensagem('Configuração salva com sucesso.')
+      setTipoMsg('sucesso')
+      setTela('')
+      setCrud([])
+      setTouched(false)
+      carregar()
+    } catch (e: any) {
+      setMensagem(e?.message || 'Erro ao salvar configuração.')
+      setTipoMsg('erro')
+    }
+  }
+
   return (
     <div className="logs-config-container">
       <h2>Configuração de Logs</h2>
@@ -122,41 +153,66 @@ const LogsConfig: React.FC = () => {
           ))}
         </tbody>
       </table>
+
+      {mensagem && <div className={`alerta ${tipoMsg}`}>{mensagem}</div>}
+
       <div className="filtros">
         <input
           type="text"
-          placeholder="Nova tela"
-          value={novaEntidade}
+
+          placeholder="Tela"
+          value={tela}
           onChange={(e) => {
-            setNovaEntidade(e.target.value)
-            setDirty(true)
+            setTela(e.target.value)
+            setTouched(true)
+
           }}
         />
         <label>
-          Habilitado
           <input
             type="checkbox"
-            checked={novaHabilitado}
-            onChange={(e) => {
-              setNovaHabilitado(e.target.checked)
-              setDirty(true)
-            }}
+
+            checked={crud.includes('CREATE')}
+            onChange={() => toggleCrud('CREATE')}
+
           />
+          CREATE
         </label>
-        <button
-          onClick={() => {
-            const nome = novaEntidade.trim()
-            if (nome) {
-              atualizar(nome, novaHabilitado)
-              setNovaEntidade('')
-              setNovaHabilitado(true)
-              setDirty(false)
-            }
-          }}
-        >
-          Cadastrar
+
+        <label>
+          <input
+            type="checkbox"
+            checked={crud.includes('READ')}
+            onChange={() => toggleCrud('READ')}
+          />
+          READ
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={crud.includes('UPDATE')}
+            onChange={() => toggleCrud('UPDATE')}
+          />
+          UPDATE
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={crud.includes('DELETE')}
+            onChange={() => toggleCrud('DELETE')}
+          />
+          DELETE
+        </label>
+        <button disabled={!formValido} onClick={salvar}>
+          Salvar alterações
+
         </button>
       </div>
+      {!formValido && touched && (
+        <div className="alerta erro">
+          Preencha a tela e selecione pelo menos uma ação.
+        </div>
+      )}
       <div className="filtros">
         <input
           type="date"
