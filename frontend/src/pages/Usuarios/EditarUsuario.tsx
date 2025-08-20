@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'                        // Importa React/useState/useEffect
 import axios from 'axios'                                                 // Importa axios
 import { useNavigate, useParams } from 'react-router-dom'                 // Importa navegação/params
+import { API_BASE } from '@/services/api'
 import '../../styles/CadastrarUsuario.css'                                 // Reaproveita CSS do cadastro
 
 // Define tipo do usuário
@@ -33,7 +34,6 @@ const EditarUsuario: React.FC = () => {                                   // Def
 
   const { id } = useParams()                                              // Lê id da rota
   const navigate = useNavigate()                                          // Navegação
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'// Base da API
 
   useEffect(() => {                                                        // Efeito de carregamento
     setErro('')                                                            // Limpa erro
