@@ -32,3 +32,11 @@ html, body, #root {
 .pp-page--login {
   width: 100%;
 }
+
+/* Ensure login page uses full viewport width */
+.pp-page--login .pp-page__content {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
