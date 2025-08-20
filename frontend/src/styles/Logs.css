@@ -1,24 +1,95 @@
-/* ===== Container genérico das telas de logs ===== */
+
+/* ===== Configuração de Logs ===== */
+:root {
+  --pp-border: #e5e7eb; /* cor de borda neutra usada em inputs e tabelas */
+}
+
 .logs-wrapper {
-  padding: 1rem; /* espaçamento interno */
+  max-width: 840px; /* limita largura para leitura confortável */
+  margin: 24px auto; /* centraliza o card horizontalmente */
+  padding: 24px; /* adiciona espaçamento interno */
+  background: #fff; /* fundo neutro mantendo tema claro */
+  border-radius: 12px; /* cantos levemente arredondados */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* sombra suave para efeito de card */
+  display: flex; /* permite organizar conteúdo em coluna */
+  flex-direction: column; /* empilha elementos verticalmente */
+  gap: 16px; /* espaço entre blocos internos */
 }
 
-/* ===== Barra de filtros comum para tabelas ===== */
 .filtros {
-  display: flex; /* usa flexbox para alinhamento */
-  flex-wrap: wrap; /* permite quebra de linha */
-  gap: 0.5rem; /* espaço entre campos */
-  margin-bottom: 1rem; /* separação da tabela */
+  display: grid; /* usa grid para distribuir os campos */
+  gap: 16px; /* espaçamento uniforme entre os itens */
+  grid-template-columns: 1fr; /* uma coluna em telas pequenas */
 }
 
-/* ===== Tabela de registros de log ===== */
+@media (min-width: 640px) {
+  .filtros {
+    grid-template-columns: repeat(2, 1fr); /* duas colunas a partir de 640px */
+  }
+}
+
+.filtros label {
+  display: flex; /* alinha checkbox e texto na horizontal */
+  align-items: center; /* centraliza verticalmente o conteúdo do label */
+  gap: 8px; /* espaço entre checkbox e texto */
+}
+
+.logs-wrapper input[type="text"],
+.logs-wrapper input[type="date"],
+.logs-wrapper select {
+  height: 40px; /* define altura uniforme para campos */
+  padding: 0 10px; /* espaço interno horizontal */
+  border: 1px solid var(--pp-border); /* borda sutil seguindo o tema */
+  border-radius: 8px; /* cantos arredondados suaves */
+  background: #fff; /* fundo branco para leitura clara */
+}
+
+.logs-wrapper input[type="checkbox"] {
+  width: 20px; /* largura padrão do checkbox */
+  height: 20px; /* altura uniforme do checkbox */
+  border: 1px solid var(--pp-border); /* borda visível para destaque */
+}
+
+.logs-wrapper input:focus,
+.logs-wrapper select:focus {
+  outline: none; /* remove contorno nativo do navegador */
+  border-color: var(--pp-purple-700); /* borda roxa ao focar */
+  box-shadow: 0 0 0 3px rgba(83, 19, 156, 0.25); /* halo suave para acessibilidade */
+}
+
+.logs-wrapper input[type="checkbox"]:focus {
+  outline: 2px solid var(--pp-purple-700); /* realce visível no foco do checkbox */
+  outline-offset: 2px; /* separa o contorno do elemento */
+}
+
+.logs-wrapper button {
+  height: 40px; /* mesma altura dos demais campos */
+  padding: 0 16px; /* espaçamento horizontal do botão */
+  background: var(--pp-purple-700); /* cor primária do tema sem hardcode */
+  color: #fff; /* texto claro para contraste */
+  border: none; /* remove bordas padrão */
+  border-radius: 8px; /* cantos arredondados coerentes */
+  cursor: pointer; /* indica interatividade */
+}
+
+.logs-wrapper button:hover {
+  filter: brightness(0.9); /* leve escurecimento no hover */
+}
+
+.logs-wrapper button:focus {
+  outline: 2px solid var(--pp-purple-700); /* contorno temático para acessibilidade */
+  outline-offset: 2px; /* separa contorno do botão */
+}
+
 .tabela {
-  width: 100%; /* ocupa toda a largura */
-  border-collapse: collapse; /* remove espaços entre bordas */
+  width: 100%; /* tabela ocupa toda a largura disponível */
+  border-collapse: collapse; /* remove espaçamento entre bordas */
+
 }
 
 .tabela th,
 .tabela td {
+
   border: 1px solid #ddd; /* borda suave */
   padding: 0.5rem; /* espaçamento interno */
   text-align: left; /* alinha texto à esquerda */
@@ -65,4 +136,5 @@
   display: flex; /* alinha checkbox e texto */
   align-items: center; /* centraliza verticalmente */
   gap: 0.25rem; /* espaço entre checkbox e rótulo */
+
 }
