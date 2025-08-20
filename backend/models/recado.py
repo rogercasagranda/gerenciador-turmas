@@ -1,13 +1,13 @@
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, Text, DateTime, ForeignKey
 from datetime import datetime
 
-Base = declarative_base()
+from .base import Base
+
 
 class Recado(Base):
     __tablename__ = "recado"
     id_recado = Column(Integer, primary_key=True, autoincrement=True)
-    id_professor = Column(Integer, ForeignKey("usuario.id_usuario"), nullable=False)
+    id_professor = Column(Integer, ForeignKey("usuarios.id_usuario"), nullable=False)
     id_aluno = Column(Integer, ForeignKey("aluno.id_aluno"))
     id_responsavel = Column(Integer, ForeignKey("responsavel.id_responsavel"))
     mensagem = Column(Text, nullable=False)

@@ -12,7 +12,7 @@ class Disciplina(Base):
     __tablename__ = "disciplina"
 
     # Identificador
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_disciplina = Column(Integer, primary_key=True, autoincrement=True)
 
     # Nome da disciplina
     nome = Column(String(255), nullable=False)

@@ -12,7 +12,7 @@ class Aluno(Base):
     __tablename__ = "aluno"
 
     # Identificador (nome da coluna no banco segue padrão legado id_aluno)
-    id = Column("id_aluno", Integer, primary_key=True, autoincrement=True)
+    id_aluno = Column(Integer, primary_key=True, autoincrement=True)
 
     # Referência ao usuário
     user_id = Column(Integer, ForeignKey("usuarios.id_usuario"), nullable=False)

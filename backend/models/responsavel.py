@@ -12,7 +12,7 @@ class Responsavel(Base):
     __tablename__ = "responsavel"
 
     # Identificador
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_responsavel = Column(Integer, primary_key=True, autoincrement=True)
 
     # Referência ao usuário
     user_id = Column(Integer, ForeignKey("usuarios.id_usuario"), nullable=False)
