@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 // Importa navegação
 import { useNavigate } from 'react-router-dom'
+import { API_BASE } from '@/services/api'
 
 // Define tipo do usuário retornado pela API
 type Usuario = {
@@ -49,8 +50,6 @@ const ConsultarUsuario: React.FC = () => {
   // Navegação
   const navigate = useNavigate()
 
-  // Base da API
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
   // Função utilitária: monta headers de autenticação
   const getAuthHeaders = () => {
