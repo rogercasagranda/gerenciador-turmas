@@ -11,8 +11,8 @@ class Aluno(Base):
     # Nome da tabela
     __tablename__ = "aluno"
 
-    # Identificador
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    # Identificador (nome da coluna no banco segue padrão legado id_aluno)
+    id = Column("id_aluno", Integer, primary_key=True, autoincrement=True)
 
     # Referência ao usuário
     user_id = Column(Integer, ForeignKey("usuarios.id_usuario"), nullable=False)
