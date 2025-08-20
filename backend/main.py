@@ -86,6 +86,15 @@ load_dotenv(dotenv_path=env_path)                    # Carrega as variáveis do 
 # ======================================================
 app = FastAPI()                                      # Cria instância principal do app FastAPI
 
+# URL do frontend para redirecionamento raiz
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://<SEU_FRONTEND>.onrender.com")
+
+
+@app.get("/")
+def root():
+    """Redireciona a raiz para o domínio do frontend."""
+    return RedirectResponse(url=FRONTEND_URL, status_code=302)
+
 # ======================================================
 # Configura CORS de forma ampla (padrão já aprovado)
 # ======================================================

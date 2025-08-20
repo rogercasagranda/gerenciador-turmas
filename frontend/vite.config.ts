@@ -9,6 +9,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // Exporta a configuração do Vite
 export default defineConfig({
+  // Garante que os caminhos sejam resolvidos a partir da raiz
+  base: '/',
   // Aplica os plugins
   plugins: [
     react(),                 // Ativa plugin React
