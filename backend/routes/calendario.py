@@ -50,7 +50,7 @@ def listar_anos(request: Request, db: Session = Depends(get_db)):
     if request.headers.get("Authorization"):
         require_role(request, READ_RESTRITO)                              # Valida permissão de leitura
     anos = db.query(AnoLetivo).all()                                  # Consulta anos existentes
-    return {"message": "Anos letivos listados", "data": anos}         # Retorna resposta padronizada
+    return anos                                                       # Retorna lista simples
 
 @router.post("/ano-letivo", response_model=AnoLetivoOut, status_code=status.HTTP_201_CREATED)  # Cria ano letivo
 def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(get_db)):
@@ -64,7 +64,7 @@ def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(
     db.add(ano)                                                       # Adiciona à sessão
     db.commit()                                                       # Persiste no banco
     db.refresh(ano)                                                   # Atualiza com ID gerado
-    return {"message": "Ano letivo criado", "data": ano}              # Retorna sucesso
+    return ano                                                        # Retorna ano criado
 
 @router.get("/ano-letivo/{ano_id}", response_model=AnoLetivoOut)  # Obtém ano letivo específico
 
@@ -73,7 +73,7 @@ def obter_ano(ano_id: int, request: Request, db: Session = Depends(get_db)):
     ano = db.get(AnoLetivo, ano_id)                                   # Busca registro
     if not ano:                                                       # Se não encontrado
         raise HTTPException(status_code=404, detail="Ano letivo não encontrado")  # Retorna 404
-    return {"message": "Ano letivo encontrado", "data": ano}          # Retorna dados
+    return ano                                                        # Retorna ano encontrado
 
 @router.put("/ano-letivo/{ano_id}", response_model=AnoLetivoOut)      # Atualiza ano letivo
 def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: Session = Depends(get_db)):
@@ -98,7 +98,7 @@ def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: S
         setattr(ano, field, value)                                    # Atualiza atributos
     db.commit()                                                       # Persiste alterações
     db.refresh(ano)                                                   # Atualiza objeto
-    return {"message": "Ano letivo atualizado", "data": ano}          # Retorna sucesso
+    return ano                                                        # Retorna ano atualizado
 
 @router.delete("/ano-letivo/{ano_id}")                               # Remove ano letivo
 def remover_ano(ano_id: int, request: Request, db: Session = Depends(get_db)):
@@ -123,7 +123,7 @@ def remover_ano(ano_id: int, request: Request, db: Session = Depends(get_db)):
 def listar_feriados(anoLetivoId: int, request: Request, db: Session = Depends(get_db)):
     require_role(request, READ_RESTRITO)                              # Permite leitura a todos os perfis
     feriados = db.query(Feriado).filter(Feriado.ano_letivo_id == anoLetivoId).all()  # Consulta feriados
-    return {"message": "Feriados listados", "data": feriados}         # Retorna resposta
+    return feriados                                                  # Retorna lista simples
 
 @router.post("/feriados", response_model=FeriadoOut, status_code=status.HTTP_201_CREATED)  # Cria feriado escolar
 def criar_feriado(payload: FeriadoCreate, request: Request, db: Session = Depends(get_db)):
@@ -144,7 +144,7 @@ def criar_feriado(payload: FeriadoCreate, request: Request, db: Session = Depend
     db.add(fer)                                                       # Adiciona
     db.commit()                                                       # Persiste
     db.refresh(fer)                                                   # Atualiza
-    return {"message": "Feriado criado", "data": fer}            # Retorna sucesso
+    return fer                                                        # Retorna feriado criado
 
 @router.put("/feriados/{feriado_id}", response_model=FeriadoOut)  # Atualiza feriado
 def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request, db: Session = Depends(get_db)):
@@ -173,7 +173,7 @@ def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request,
         fer.descricao = payload.descricao                            # Atualiza descrição
     db.commit()                                                       # Persiste alterações
     db.refresh(fer)                                                   # Atualiza objeto
-    return {"message": "Feriado atualizado", "data": fer}          # Retorna sucesso
+    return fer                                                        # Retorna feriado atualizado
 
 @router.delete("/feriados/{feriado_id}")                             # Remove feriado
 def remover_feriado(feriado_id: int, request: Request, db: Session = Depends(get_db)):
@@ -226,7 +226,7 @@ def importar_nacionais(payload: FeriadoImportarNacionais, request: Request, db: 
     db.commit()                                                     # Persiste todos
     for fer in inseridos:                                           # Atualiza objetos com IDs
         db.refresh(fer)
-    return {"message": "Feriados importados", "data": inseridos}     # Retorna feriados inseridos
+    return inseridos                                                 # Retorna feriados inseridos
 
 # ------------------------------------------------------
 # Stub de feriados nacionais
