@@ -58,12 +58,12 @@ export default defineConfig({
 
   // Corrige erro de WebSocket (HMR)
   server: {
-    host: 'localhost',        // Define o host como localhost
+    host: '0.0.0.0',          // Permite acesso externo (ex.: dispositivos móveis)
     port: 5173,               // Define a porta fixa do Vite
     strictPort: true,         // Garante que o Vite use essa porta
     hmr: {
       protocol: 'ws',         // Usa WebSocket sem SSL
-      host: 'localhost',      // Corrige o destino do HMR
+      host: '0.0.0.0',        // Garante que o HMR esteja acessível externamente
       port: 5173              // Garante que o HMR use a mesma porta do Vite
     }
   },
