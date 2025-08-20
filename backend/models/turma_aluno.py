@@ -6,6 +6,7 @@ from .base import Base
 # Importa tipos de coluna
 from sqlalchemy import Column, Integer, ForeignKey, Date
 
+
 # Modelo de vínculo turma-aluno
 class TurmaAluno(Base):
     # Nome da tabela
@@ -14,8 +15,8 @@ class TurmaAluno(Base):
     # Identificador
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    # Referência à turma
-    turma_id = Column(Integer, ForeignKey("turma.id"), nullable=False)
+    # Referência à turma (FK ajustada para coluna legada id_turma)
+    turma_id = Column(Integer, ForeignKey("turma.id_turma"), nullable=False)
 
     # Referência ao aluno
     aluno_id = Column(Integer, ForeignKey("aluno.id"), nullable=False)
