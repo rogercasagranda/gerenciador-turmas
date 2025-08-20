@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
-import { API_BASE } from '@/services/api'
+import useDirtyForm from '@/hooks/useDirtyForm'
+import { CrudAction, listScreens, saveLogConfig, screenLabel } from '@/services/logs'
 import '../../styles/Logs.css'
+
 import useDirtyForm from '@/hooks/useDirtyForm'
 
-type ConfigItem = {
-  entidade: string
-  habilitado: boolean
-}
+
+const CRUD_OPTIONS: CrudAction[] = ['CREATE', 'READ', 'UPDATE', 'DELETE']
 
 const LogsConfig: React.FC = () => {
+
   const [configs, setConfigs] = useState<ConfigItem[]>([])
   const [globalEnabled, setGlobalEnabled] = useState(true)
   const [dataInicio, setDataInicio] = useState('')
@@ -56,74 +56,67 @@ const LogsConfig: React.FC = () => {
   }
 
   useEffect(() => {
-    carregar()
+    listScreens().then(setTelas).catch(() => setTelas([]))
   }, [])
 
-  const atualizar = (entidade: string, habilitado: boolean) => {
-    axios
-      .put(
-        `${API_BASE}/logs/config/${encodeURIComponent(entidade)}`,
-        { habilitado },
-        { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
-      )
-      .then(() => carregar())
-      .catch(() => {})
+  const toggleCrud = (item: CrudAction) => {
+    setCrud((prev) =>
+      prev.includes(item) ? prev.filter((c) => c !== item) : [...prev, item]
+    )
+    setDirty(true)
   }
 
-  const atualizarTodos = (habilitado: boolean) => {
-    axios
-      .put(
-        `${API_BASE}/logs/config/all`,
-        { habilitado },
-        { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
-      )
-      .then(() => carregar())
-      .catch(() => {})
-  }
-
-  const excluirLogs = () => {
-    axios
-      .delete(`${API_BASE}/logs`, {
-        params: {
-          ...(dataInicio ? { data_inicio: dataInicio } : {}),
-          ...(dataFim ? { data_fim: dataFim } : {}),
-        },
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      })
-      .then(() => alert('Logs excluídos com sucesso'))
-      .catch(() => alert('Erro ao excluir logs'))
+  const onSave = async () => {
+    try {
+      await saveLogConfig({ tela, crud })
+      alert('Configuração salva com sucesso')
+      setDirty(false)
+    } catch {
+      alert('Erro ao salvar configuração')
+    }
   }
 
   return (
-    <div className="logs-wrapper">
+    <div className="logs-config-container">
       <h2>Configuração de Logs</h2>
-      <div className="filtros">
-        <label>
-          Log global
+      <form
+        className="logs-form"
+        onSubmit={(e) => {
+          e.preventDefault()
+          onSave()
+        }}
+      >
+        <div className="logs-field">
+          <label htmlFor="tela">Tela</label>
           <input
-            type="checkbox"
-            checked={globalEnabled}
-            onChange={(e) => atualizarTodos(e.target.checked)}
+            id="tela"
+            className="logs-input"
+            list="telas-list"
+            value={tela}
+            onChange={(e) => {
+              setTela(e.target.value)
+              setDirty(true)
+            }}
+            placeholder="Selecione a tela"
           />
-        </label>
-      </div>
-      <table className="tabela">
-        <thead>
-          <tr>
-            <th>Tela</th>
-            <th>Habilitado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {configs.map((cfg) => (
-            <tr key={cfg.entidade}>
-              <td>{cfg.entidade}</td>
-              <td>
+          <datalist id="telas-list">
+            {telas.map((t) => (
+              <option key={t} value={t} label={screenLabel(t)} />
+            ))}
+          </datalist>
+        </div>
+
+        <div className="logs-field">
+          <span>CRUD</span>
+          <div className="crud-options">
+            {CRUD_OPTIONS.map((c) => (
+              <label key={c} className="crud-option">
                 <input
                   type="checkbox"
-                  checked={cfg.habilitado}
-                  onChange={(e) => atualizar(cfg.entidade, e.target.checked)}
+                  checked={crud.includes(c)}
+                  onChange={() => toggleCrud(c)}
                 />
+
               </td>
             </tr>
           ))}
@@ -190,6 +183,7 @@ const LogsConfig: React.FC = () => {
           Excluir por período
         </button>
       </div>
+
     </div>
   )
 }
