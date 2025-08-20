@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import '../../styles/CadastrarUsuario.css'
+import { API_BASE } from '@/services/api'
 
 type MeuPerfil = { id_usuario?: number; tipo_perfil?: string; is_master?: boolean }
 
@@ -63,7 +64,6 @@ const CadastrarUsuario: React.FC = () => {
   const [carregandoEdicao, setCarregandoEdicao] = useState(false)
 
   const navigate = useNavigate()
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
   const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
   const headers: Record<string, string> = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token])
 
