@@ -14,8 +14,8 @@ class AlunoResponsavel(Base):
     # Identificador
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    # Referência ao aluno
-    aluno_id = Column(Integer, ForeignKey("aluno.id"), nullable=False)
+    # Referência ao aluno (FK ajustada para coluna legada id_aluno)
+    aluno_id = Column(Integer, ForeignKey("aluno.id_aluno"), nullable=False)
 
     # Referência ao responsável
     responsavel_id = Column(Integer, ForeignKey("responsavel.id"), nullable=False)

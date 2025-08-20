@@ -18,8 +18,8 @@ class TurmaAluno(Base):
     # Referência à turma (FK ajustada para coluna legada id_turma)
     turma_id = Column(Integer, ForeignKey("turma.id_turma"), nullable=False)
 
-    # Referência ao aluno
-    aluno_id = Column(Integer, ForeignKey("aluno.id"), nullable=False)
+    # Referência ao aluno (FK ajustada para coluna legada id_aluno)
+    aluno_id = Column(Integer, ForeignKey("aluno.id_aluno"), nullable=False)
 
     # Data de matrícula
     dt_matricula = Column(Date, nullable=False)

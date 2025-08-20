@@ -137,7 +137,7 @@ def upgrade():
     op.create_table(
         "aluno_responsavel",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
-        sa.Column("aluno_id", sa.Integer(), sa.ForeignKey("aluno.id"), nullable=False),
+        sa.Column("aluno_id", sa.Integer(), sa.ForeignKey("aluno.id_aluno"), nullable=False),
         sa.Column(
             "responsavel_id",
             sa.Integer(),
@@ -153,7 +153,7 @@ def upgrade():
         sa.Column(
             "turma_id", sa.Integer(), sa.ForeignKey("turma.id_turma"), nullable=False
         ),
-        sa.Column("aluno_id", sa.Integer(), sa.ForeignKey("aluno.id"), nullable=False),
+        sa.Column("aluno_id", sa.Integer(), sa.ForeignKey("aluno.id_aluno"), nullable=False),
         sa.Column("dt_matricula", sa.Date(), nullable=False),
     )
     # Tabela feriado
