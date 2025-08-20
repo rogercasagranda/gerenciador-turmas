@@ -34,6 +34,8 @@ services:
         sync: false
       - key: NODE_VERSION
         value: "18"
+    # Reescreve todas as rotas para o index.html para que o React Router
+    # controle a navegação e evite erros "Not Found" em dispositivos móveis
     routes:
       - type: rewrite
         source: "/*"
