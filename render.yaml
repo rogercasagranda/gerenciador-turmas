@@ -4,7 +4,7 @@ services:
     env: python
     plan: free
     region: oregon
-    buildCommand: "pip install -r backend/requirements.txt"  
+    buildCommand: "pip install -r  backend/requirements.txt 
     startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: "/docs"
     autoDeploy: true
@@ -24,15 +24,17 @@ services:
       - key: FRONTEND_ORIGIN
         sync: false
 
-  - type: static_site
+  - type: static
     name: portal-professor-frontend
     plan: free
     buildCommand: "cd frontend && npm ci && npm run build"
-    staticPublishPath: "frontend/dist"
+    publishPath: "frontend/dist"
     autoDeploy: true
     envVars:
       - key: VITE_API_URL
         sync: false
+      - key: NODE_VERSION
+        value: "18"
     routes:
       - type: rewrite
         source: "/*"
