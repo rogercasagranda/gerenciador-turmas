@@ -2,10 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-# Reuse the same declarative base as the Usuarios model so that the
-# metadata includes both tables and SQLAlchemy can resolve the foreign
-# key correctly.
-from backend.models.usuarios import Base
+from .base import Base
 
 BRAZIL_TZ = ZoneInfo("America/Sao_Paulo")
 

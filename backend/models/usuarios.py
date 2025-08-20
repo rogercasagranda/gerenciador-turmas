@@ -1,16 +1,13 @@
 # backend/models/usuarios.py
 
-# Importa o declarative_base para modelos ORM
-from sqlalchemy.ext.declarative import declarative_base
-
 # Importa os tipos de coluna do SQLAlchemy
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 
 # Importa datetime para timestamps
 from datetime import datetime
 
-# Cria a base para os modelos
-Base = declarative_base()
+# Importa a base compartilhada dos modelos
+from .base import Base
 
 # ✅ Define o modelo oficial de usuário
 class Usuarios(Base):

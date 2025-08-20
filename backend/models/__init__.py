@@ -14,3 +14,6 @@ from .responsavel import Responsavel  # noqa: F401
 from .aluno_responsavel import AlunoResponsavel  # noqa: F401
 from .turma_aluno import TurmaAluno  # noqa: F401
 from .feriado import Feriado  # noqa: F401
+from .usuarios import Usuarios  # noqa: F401
+from .logconfig import LogConfig  # noqa: F401
+from .logauditoria import LogAuditoria  # noqa: F401
