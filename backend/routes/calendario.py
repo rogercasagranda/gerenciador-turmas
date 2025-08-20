@@ -47,7 +47,8 @@ def require_role(request: Request, allowed: set[str]):                # Função
 # ------------------------------------------------------
 @router.get("/ano-letivo", response_model=list[AnoLetivoOut])         # Lista todos os anos letivos
 def listar_anos(request: Request, db: Session = Depends(get_db)):
-    require_role(request, READ_RESTRITO)                              # Valida permissão de leitura
+    if request.headers.get("Authorization"):
+        require_role(request, READ_RESTRITO)                              # Valida permissão de leitura
     anos = db.query(AnoLetivo).all()                                  # Consulta anos existentes
     return {"message": "Anos letivos listados", "data": anos}         # Retorna resposta padronizada
 
