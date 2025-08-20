@@ -4,6 +4,8 @@
 import React, { useEffect, useState } from 'react' // Importa React e hooks
 import FormPage from '../../components/FormPage' // Layout padrão
 import '../../styles/CadastrarUsuario.css' // Reaproveita estilos existentes
+import '../../styles/Forms.css'
+import useDirtyForm from '@/hooks/useDirtyForm'
 import { // Serviços de API
   AnoLetivo,
   getAnoLetivos,
@@ -21,6 +23,8 @@ const AnoLetivoPage: React.FC = () => {
   const [fim, setFim] = useState('') // Campo data fim
   const [erro, setErro] = useState('') // Mensagem de erro
 
+  const { isDirty, setDirty, confirmIfDirty } = useDirtyForm()
+
   // Carrega anos ao montar
   useEffect(() => {
     getAnoLetivos().then(setLista).catch(() => setLista([]))
@@ -33,6 +37,7 @@ const AnoLetivoPage: React.FC = () => {
     setInicio('')
     setFim('')
     setErro('')
+    setDirty(false)
   }
 
   // Preenche formulário para edição
@@ -42,6 +47,7 @@ const AnoLetivoPage: React.FC = () => {
     setInicio(a.data_inicio.slice(0, 10))
     setFim(a.data_fim.slice(0, 10))
     setErro('')
+    setDirty(false)
   }
 
   // Exclui um registro
@@ -77,6 +83,7 @@ const AnoLetivoPage: React.FC = () => {
         const novo = await createAnoLetivo(dto)
         setLista(prev => [...prev, novo])
       }
+      setDirty(false)
       limpar()
     } catch (err: any) {
       const msg = String(err.message)
@@ -129,7 +136,7 @@ const AnoLetivoPage: React.FC = () => {
               className="entrada"
               type="text"
               value={descricao}
-              onChange={e => setDescricao(e.target.value)}
+              onChange={e => { setDescricao(e.target.value); setDirty(true) }}
             />
           </div>
           <div className="campo">
@@ -139,7 +146,7 @@ const AnoLetivoPage: React.FC = () => {
               className="entrada"
               type="date"
               value={inicio}
-              onChange={e => setInicio(e.target.value)}
+              onChange={e => { setInicio(e.target.value); setDirty(true) }}
             />
           </div>
           <div className="campo">
@@ -149,12 +156,12 @@ const AnoLetivoPage: React.FC = () => {
               className="entrada"
               type="date"
               value={fim}
-              onChange={e => setFim(e.target.value)}
+              onChange={e => { setFim(e.target.value); setDirty(true) }}
             />
           </div>
         </div>
-        <div className="acoes">
-          <button type="submit" className="btn primario" disabled={!podeSalvar}>Salvar</button>
+        <div className="form-actions">
+          <button type="submit" className="save-button" disabled={!isDirty || !podeSalvar}>Salvar</button>
         </div>
       </form>
 

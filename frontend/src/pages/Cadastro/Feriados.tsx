@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import FormPage from '../../components/FormPage'
 import '../../styles/CadastrarUsuario.css'
 import '../../styles/Feriados.css'
+import '../../styles/Forms.css'
+import useDirtyForm from '@/hooks/useDirtyForm'
 import { AnoLetivo, getAnoLetivos } from '../../services/anoLetivo'
 import {
   Feriado,
@@ -54,6 +56,8 @@ const Feriados: React.FC = () => {
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
 
+  const { isDirty, setDirty, confirmIfDirty } = useDirtyForm()
+
   // Carrega anos letivos ao montar
   useEffect(() => {
     getAnoLetivos().then(setAnos).catch(() => setAnos([]))
@@ -93,17 +97,17 @@ const Feriados: React.FC = () => {
 
   // Abre formulário para novo feriado
   const abrirNovo = () => {
-    setEditando(null); setData(''); setDescricao(''); setFormAberto(true)
+    setEditando(null); setData(''); setDescricao(''); setFormAberto(true); setDirty(false)
   }
 
   // Abre formulário para edição
   const abrirEdicao = (f: Feriado) => {
-    setEditando(f); setData(f.data); setDescricao(f.descricao); setFormAberto(true)
+    setEditando(f); setData(f.data); setDescricao(f.descricao); setFormAberto(true); setDirty(false)
   }
 
   // Fecha formulário
   const fecharForm = () => {
-    setFormAberto(false); setEditando(null); setData(''); setDescricao('')
+    setFormAberto(false); setEditando(null); setData(''); setDescricao(''); setDirty(false)
   }
 
   // Salva novo/alterado
@@ -122,6 +126,7 @@ const Feriados: React.FC = () => {
       }
       const lista = await getFeriados(Number(anoSelecionado))
       setFeriados(dedup(lista).sort((a, b) => a.data.localeCompare(b.data)))
+      setDirty(false)
       fecharForm()
     } catch (e: any) {
       const msg = String(e.message)
@@ -206,16 +211,32 @@ const Feriados: React.FC = () => {
           <div className="linha dois">
             <div className="campo">
               <label className="rotulo" htmlFor="dataFeriado">Data</label>
-              <input id="dataFeriado" type="date" className="entrada" value={data} onChange={e => setData(e.target.value)} />
+              <input
+                id="dataFeriado"
+                type="date"
+                className="entrada"
+                value={data}
+                onChange={e => { setData(e.target.value); setDirty(true) }}
+              />
             </div>
             <div className="campo">
               <label className="rotulo" htmlFor="descFeriado">Descrição</label>
-              <input id="descFeriado" type="text" className="entrada" value={descricao} onChange={e => setDescricao(e.target.value)} />
+              <input
+                id="descFeriado"
+                type="text"
+                className="entrada"
+                value={descricao}
+                onChange={e => { setDescricao(e.target.value); setDirty(true) }}
+              />
             </div>
           </div>
-          <div className="acoes">
+          <div className="form-actions">
             <button type="button" className="btn secundario" onClick={fecharForm}>Cancelar</button>
-            <button type="submit" className="btn primario" disabled={!data || !descricao.trim() || !dentroDeAnoLetivo(data, anoAtual)}>
+            <button
+              type="submit"
+              className="save-button"
+              disabled={!isDirty || !data || !descricao.trim() || !dentroDeAnoLetivo(data, anoAtual)}
+            >
               {editando ? 'Salvar' : 'Cadastrar'}
             </button>
           </div>
