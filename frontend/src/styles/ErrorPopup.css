@@ -1,0 +1,36 @@
+/* Sobreposição escura que cobre a tela */
+.error-overlay { /* Delimita fundo semitransparente */
+  position: fixed; /* Fixa no viewport */
+  top: 0; /* Encosta no topo */
+  left: 0; /* Encosta à esquerda */
+  right: 0; /* Encosta à direita */
+  bottom: 0; /* Encosta na base */
+  background-color: rgba(0,0,0,0.5); /* Fundo escuro translúcido */
+  display: flex; /* Usa flex para centralizar */
+  align-items: center; /* Centraliza verticalmente */
+  justify-content: center; /* Centraliza horizontalmente */
+  z-index: 1000; /* Garante sobreposição */
+}
+
+/* Caixa de mensagem de erro */
+.error-popup { /* Janela flutuante */
+  background: var(--pp-surface); /* Usa cor de fundo do tema */
+  padding: 30px; /* Espaçamento interno */
+  border-radius: 10px; /* Arredonda cantos */
+  box-shadow: 0 0 10px rgba(0,0,0,0.25); /* Aplica sombra suave */
+  position: relative; /* Referência para botão fechar */
+  max-width: 400px; /* Limita largura */
+  text-align: center; /* Centraliza texto */
+}
+
+/* Botão de fechamento */
+.error-close-button { /* Botão X de fechar */
+  position: absolute; /* Posiciona dentro da popup */
+  top: 5px; /* Distância do topo */
+  right: 10px; /* Distância da direita */
+  background: none; /* Fundo transparente */
+  border: none; /* Remove borda padrão */
+  font-size: 20px; /* Aumenta o tamanho da fonte */
+  cursor: pointer; /* Indica clicável */
+  color: var(--pp-text); /* Usa cor de texto do tema */
+}
