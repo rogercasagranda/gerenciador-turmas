@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { API_BASE } from '@/services/api'
 import '../../styles/Logs.css'
+import { cadastrarConfig } from '@/services/logs'
 
 type ConfigItem = {
   entidade: string
@@ -13,8 +14,12 @@ const LogsConfig: React.FC = () => {
   const [globalEnabled, setGlobalEnabled] = useState(true)
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
-  const [novaEntidade, setNovaEntidade] = useState('')
-  const [novaHabilitado, setNovaHabilitado] = useState(true)
+
+  const [tela, setTela] = useState('')
+  const [crud, setCrud] = useState<string[]>([])
+  const [mensagem, setMensagem] = useState('')
+  const [tipoMsg, setTipoMsg] = useState<'sucesso' | 'erro' | ''>('')
+  const [touched, setTouched] = useState(false)
 
   const token =
     localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
@@ -91,6 +96,32 @@ const LogsConfig: React.FC = () => {
       .catch(() => alert('Erro ao excluir logs'))
   }
 
+  const toggleCrud = (acao: string) => {
+    setTouched(true)
+    setCrud((prev) =>
+      prev.includes(acao) ? prev.filter((c) => c !== acao) : [...prev, acao]
+    )
+  }
+
+  const formValido = tela.trim() !== '' && crud.length > 0
+
+  const salvar = async () => {
+    setTouched(true)
+    if (!formValido) return
+    try {
+      await cadastrarConfig({ tela: tela.trim(), crud })
+      setMensagem('Configuração salva com sucesso.')
+      setTipoMsg('sucesso')
+      setTela('')
+      setCrud([])
+      setTouched(false)
+      carregar()
+    } catch (e: any) {
+      setMensagem(e?.message || 'Erro ao salvar configuração.')
+      setTipoMsg('erro')
+    }
+  }
+
   return (
     <div className="logs-wrapper">
       <h2>Configuração de Logs</h2>
@@ -126,34 +157,60 @@ const LogsConfig: React.FC = () => {
           ))}
         </tbody>
       </table>
+
+      {mensagem && <div className={`alerta ${tipoMsg}`}>{mensagem}</div>}
+
       <div className="filtros">
         <input
           type="text"
-          placeholder="Nova tela"
-          value={novaEntidade}
-          onChange={(e) => setNovaEntidade(e.target.value)}
+          placeholder="Tela"
+          value={tela}
+          onChange={(e) => {
+            setTela(e.target.value)
+            setTouched(true)
+          }}
         />
         <label>
-          Habilitado
           <input
             type="checkbox"
-            checked={novaHabilitado}
-            onChange={(e) => setNovaHabilitado(e.target.checked)}
+            checked={crud.includes('CREATE')}
+            onChange={() => toggleCrud('CREATE')}
           />
+          CREATE
         </label>
-        <button
-          onClick={() => {
-            const nome = novaEntidade.trim()
-            if (nome) {
-              atualizar(nome, novaHabilitado)
-              setNovaEntidade('')
-              setNovaHabilitado(true)
-            }
-          }}
-        >
-          Cadastrar
+        <label>
+          <input
+            type="checkbox"
+            checked={crud.includes('READ')}
+            onChange={() => toggleCrud('READ')}
+          />
+          READ
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={crud.includes('UPDATE')}
+            onChange={() => toggleCrud('UPDATE')}
+          />
+          UPDATE
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={crud.includes('DELETE')}
+            onChange={() => toggleCrud('DELETE')}
+          />
+          DELETE
+        </label>
+        <button disabled={!formValido} onClick={salvar}>
+          Salvar alterações
         </button>
       </div>
+      {!formValido && touched && (
+        <div className="alerta erro">
+          Preencha a tela e selecione pelo menos uma ação.
+        </div>
+      )}
       <div className="filtros">
         <input
           type="date"
