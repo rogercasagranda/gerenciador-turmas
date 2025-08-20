@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { API_BASE } from '@/services/api'
 import '../../styles/Logs.css'
+import useDirtyForm from '@/hooks/useDirtyForm'
 
 type ConfigItem = {
   entidade: string
@@ -15,6 +16,8 @@ const LogsConfig: React.FC = () => {
   const [dataFim, setDataFim] = useState('')
   const [novaEntidade, setNovaEntidade] = useState('')
   const [novaHabilitado, setNovaHabilitado] = useState(true)
+
+  const { setDirty } = useDirtyForm()
 
   const token =
     localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
@@ -131,14 +134,20 @@ const LogsConfig: React.FC = () => {
           type="text"
           placeholder="Nova tela"
           value={novaEntidade}
-          onChange={(e) => setNovaEntidade(e.target.value)}
+          onChange={(e) => {
+            setNovaEntidade(e.target.value)
+            setDirty(true)
+          }}
         />
         <label>
           Habilitado
           <input
             type="checkbox"
             checked={novaHabilitado}
-            onChange={(e) => setNovaHabilitado(e.target.checked)}
+            onChange={(e) => {
+              setNovaHabilitado(e.target.checked)
+              setDirty(true)
+            }}
           />
         </label>
         <button
@@ -148,6 +157,7 @@ const LogsConfig: React.FC = () => {
               atualizar(nome, novaHabilitado)
               setNovaEntidade('')
               setNovaHabilitado(true)
+              setDirty(false)
             }
           }}
         >
@@ -158,14 +168,27 @@ const LogsConfig: React.FC = () => {
         <input
           type="date"
           value={dataInicio}
-          onChange={(e) => setDataInicio(e.target.value)}
+          onChange={(e) => {
+            setDataInicio(e.target.value)
+            setDirty(true)
+          }}
         />
         <input
           type="date"
           value={dataFim}
-          onChange={(e) => setDataFim(e.target.value)}
+          onChange={(e) => {
+            setDataFim(e.target.value)
+            setDirty(true)
+          }}
         />
-        <button onClick={excluirLogs}>Excluir por período</button>
+        <button
+          onClick={() => {
+            excluirLogs()
+            setDirty(false)
+          }}
+        >
+          Excluir por período
+        </button>
       </div>
     </div>
   )
