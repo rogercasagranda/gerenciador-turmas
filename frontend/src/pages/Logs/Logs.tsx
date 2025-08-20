@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { API_BASE } from '@/services/api'
 import '../../styles/Logs.css'
+import useDirtyForm from '@/hooks/useDirtyForm'
 
 type LogItem = {
   id_log: number
@@ -18,6 +19,8 @@ const Logs: React.FC = () => {
   const [entidade, setEntidade] = useState('')
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
+
+  const { setDirty } = useDirtyForm()
 
   const carregar = () => {
     const params: Record<string, string> = {}
@@ -47,26 +50,45 @@ const Logs: React.FC = () => {
         <input
           type="date"
           value={dataInicio}
-          onChange={(e) => setDataInicio(e.target.value)}
+          onChange={(e) => {
+            setDataInicio(e.target.value)
+            setDirty(true)
+          }}
         />
         <input
           type="date"
           value={dataFim}
-          onChange={(e) => setDataFim(e.target.value)}
+          onChange={(e) => {
+            setDataFim(e.target.value)
+            setDirty(true)
+          }}
         />
         <input
           type="text"
           placeholder="ID Usuário"
           value={usuario}
-          onChange={(e) => setUsuario(e.target.value)}
+          onChange={(e) => {
+            setUsuario(e.target.value)
+            setDirty(true)
+          }}
         />
         <input
           type="text"
           placeholder="Tela"
           value={entidade}
-          onChange={(e) => setEntidade(e.target.value)}
+          onChange={(e) => {
+            setEntidade(e.target.value)
+            setDirty(true)
+          }}
         />
-        <button onClick={carregar}>Filtrar</button>
+        <button
+          onClick={() => {
+            carregar()
+            setDirty(false)
+          }}
+        >
+          Filtrar
+        </button>
       </div>
       <table className="tabela">
         <thead>
