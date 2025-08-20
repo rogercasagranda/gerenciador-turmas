@@ -13,17 +13,17 @@ class TurmaDisciplina(Base):
     __tablename__ = "turma_disciplina"
 
     # Identificador
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_turma_disciplina = Column(Integer, primary_key=True, autoincrement=True)
 
     # Referência à turma (FK ajustada para coluna legada id_turma)
     turma_id = Column(Integer, ForeignKey("turma.id_turma"), nullable=False)
 
     # Referência à disciplina
-    disciplina_id = Column(Integer, ForeignKey("disciplina.id"), nullable=False)
+    disciplina_id = Column(Integer, ForeignKey("disciplina.id_disciplina"), nullable=False)
 
     # Referência ao professor responsável
     professor_responsavel_id = Column(
-        Integer, ForeignKey("professor.id"), nullable=False
+        Integer, ForeignKey("professor.id_professor"), nullable=False
     )
 
     # Restrição de unicidade

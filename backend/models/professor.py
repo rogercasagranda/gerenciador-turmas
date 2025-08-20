@@ -12,7 +12,7 @@ class Professor(Base):
     __tablename__ = "professor"
 
     # Identificador
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_professor = Column(Integer, primary_key=True, autoincrement=True)
 
     # Referência ao usuário
     user_id = Column(Integer, ForeignKey("usuarios.id_usuario"), nullable=False)

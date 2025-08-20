@@ -13,7 +13,7 @@ class Turma(Base):
     __tablename__ = "turma"
 
     # Identificador (nome da coluna no banco segue padrão legado id_turma)
-    id = Column("id_turma", Integer, primary_key=True, autoincrement=True)
+    id_turma = Column(Integer, primary_key=True, autoincrement=True)
 
     # Nome da turma
     nome = Column(String(255), nullable=False)
@@ -25,4 +25,4 @@ class Turma(Base):
     turno_id = Column(Integer, ForeignKey("turno.id"), nullable=False)
 
     # Referência ao coordenador
-    coordenador_id = Column(Integer, ForeignKey("professor.id"), nullable=True)
+    coordenador_id = Column(Integer, ForeignKey("professor.id_professor"), nullable=True)

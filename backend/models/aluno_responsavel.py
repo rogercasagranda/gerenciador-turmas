@@ -18,7 +18,7 @@ class AlunoResponsavel(Base):
     aluno_id = Column(Integer, ForeignKey("aluno.id_aluno"), nullable=False)
 
     # Referência ao responsável
-    responsavel_id = Column(Integer, ForeignKey("responsavel.id"), nullable=False)
+    responsavel_id = Column(Integer, ForeignKey("responsavel.id_responsavel"), nullable=False)
 
     # Restrição de unicidade
     __table_args__ = (
