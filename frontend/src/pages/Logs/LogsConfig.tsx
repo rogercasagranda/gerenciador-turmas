@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
+import { API_BASE } from '@/services/api'
 import '../../styles/Logs.css'
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 type ConfigItem = {
   entidade: string
