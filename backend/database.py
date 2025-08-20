@@ -7,6 +7,9 @@ from dotenv import load_dotenv             # Importa load_dotenv para carregar v
 from sqlalchemy import create_engine       # Importa create_engine para criar o engine do SQLAlchemy
 from sqlalchemy.orm import sessionmaker    # Importa sessionmaker para criar sessões de banco
 
+# Importa modelos para registrar tabelas
+from backend.models import Base, AnoLetivo
+
 # ======================================================
 # Carrega o .env da pasta backend
 # ======================================================
@@ -36,6 +39,11 @@ engine = create_engine(                   # Cria o engine do SQLAlchemy
     max_overflow=10,                      # Define overflow do pool
     future=True                           # Usa API futura do SQLAlchemy
 )
+
+# ======================================================
+# Cria as tabelas no banco
+# ======================================================
+Base.metadata.create_all(bind=engine)     # Gera as tabelas conforme os modelos
 
 # ======================================================
 # Cria a fábrica de sessões
