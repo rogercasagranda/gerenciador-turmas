@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 
 // Importa suporte ao React
 import react from '@vitejs/plugin-react'
+import path from 'node:path'
 
 // Importa o plugin de PWA
 import { VitePWA } from 'vite-plugin-pwa'
@@ -41,6 +42,13 @@ export default defineConfig({
       }
     })
   ],
+
+  // Alias para facilitar imports
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
 
   // Corrige erro de WebSocket (HMR)
   server: {
