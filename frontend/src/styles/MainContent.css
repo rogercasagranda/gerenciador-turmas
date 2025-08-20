@@ -1,0 +1,10 @@
+/* Container principal do conteúdo */
+.main-content { /* Delimita a área central de conteúdo */
+  padding: 40px 20px; /* Aplica espaçamento interno */
+  width: 100%; /* Ocupa toda a largura disponível */
+  min-height: calc(100vh - 130px); /* Garante altura mínima visível */
+  display: flex; /* Habilita layout flexível */
+  justify-content: center; /* Centraliza horizontalmente */
+  align-items: flex-start; /* Alinha conteúdo ao topo */
+  overflow-y: auto; /* Permite rolagem vertical */
+}
