@@ -14,9 +14,7 @@ from jose import jwt, JWTError
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
-logger = logging.getLogger("portal.professor")
-if not logger.handlers:
-    logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 
