@@ -3,7 +3,7 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 
 // Importa páginas
-import Login from './components/Login'
+import LoginPageWrapper from './pages/Login/LoginPageWrapper'
 import Home from './pages/Home/Home'
 
 // Componente principal da aplicação
@@ -14,7 +14,7 @@ const App: React.FC = () => {
       <Route path="/" element={<Navigate to="/login" replace />} />
 
       {/* Tela de login (layout travado) */}
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<LoginPageWrapper />} />
 
       {/* Página principal Home */}
       <Route path="/home" element={<Home />} />

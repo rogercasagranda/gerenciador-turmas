@@ -1,0 +1,34 @@
+/* Global layout helpers for full-viewport pages */
+html, body, #root {
+  height: 100%;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.pp-app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.pp-page {
+  flex: 1 1 auto;
+  min-height: 100vh;
+  display: flex;
+}
+
+.pp-page__content {
+  /* Centraliza sem alterar o CSS do Login */
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* Opcional: impedir restrições herdadas que comprimem a página */
+.pp-page--login {
+  width: 100%;
+}
