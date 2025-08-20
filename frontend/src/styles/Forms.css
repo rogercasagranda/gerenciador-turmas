@@ -1,0 +1,20 @@
+/* ===== Regras globais para formulários ===== */
+.form-actions { /* container de botões ao final do formulário */
+  display: flex; /* posiciona elementos lado a lado */
+  gap: 10px; /* espaço horizontal entre botões */
+  justify-content: flex-end; /* alinha botões à direita */
+}
+
+.save-button { /* botão padrão para salvar alterações */
+  background: var(--pp-purple-700); /* cor principal do tema */
+  color: #fff; /* texto claro para contraste */
+  border: none; /* remove borda nativa */
+  border-radius: 8px; /* cantos arredondados */
+  padding: 8px 16px; /* espaçamento interno */
+  font-weight: 600; /* destaque no texto */
+  cursor: pointer; /* indica elemento clicável */
+}
+
+.save-button:hover { /* efeito ao passar o mouse */
+  background: var(--pp-purple-900); /* escurece suavemente */
+}

@@ -1,9 +1,11 @@
 // Importa React e hooks
 import React, { useEffect, useState } from 'react'                        // Importa React/useState/useEffect
 import axios from 'axios'                                                 // Importa axios
-import { useNavigate, useParams } from 'react-router-dom'                 // Importa navegação/params
-import { API_BASE } from '@/services/api'
+import { useNavigate, useParams } from 'react-router-dom' // Navegação
+import { API_BASE, getAuthToken } from '@/services/api'
 import '../../styles/CadastrarUsuario.css'                                 // Reaproveita CSS do cadastro
+import '../../styles/Forms.css'
+import useDirtyForm from '@/hooks/useDirtyForm'
 
 // Define tipo do usuário
 type Usuario = {                                                          // Tipo do usuário
@@ -35,9 +37,11 @@ const EditarUsuario: React.FC = () => {                                   // Def
   const { id } = useParams()                                              // Lê id da rota
   const navigate = useNavigate()                                          // Navegação
 
+  const { isDirty, setDirty, confirmIfDirty } = useDirtyForm()
+
   useEffect(() => {                                                        // Efeito de carregamento
     setErro('')                                                            // Limpa erro
-    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') // Lê token
+    const token = getAuthToken()                                          // Lê token
     const headers: Record<string, string> = {}                             // Prepara headers
     if (token) headers['Authorization'] = `Bearer ${token}`               // Injeta Bearer
 
@@ -46,12 +50,13 @@ const EditarUsuario: React.FC = () => {                                   // Def
         const u = res.data
         u.tipo_perfil = toCanonical(u.tipo_perfil)
         setUsuario(u)
+        setDirty(false)
       })                                // Guarda usuário
       .catch((e) => {                                                     // Trata erro
         const msg = e?.response?.data?.detail || 'Falha ao carregar usuário.' // Extrai mensagem
         setErro(msg)                                                      // Define erro
       })                                                                  // Finaliza then/catch
-  }, [API_BASE, id])                                                      // Dependências
+  }, [API_BASE, id, setDirty])                                                      // Dependências
 
   const handleSubmit = async (e: React.FormEvent) => {                    // Define envio
     e.preventDefault()                                                    // Previne reload
@@ -63,7 +68,7 @@ const EditarUsuario: React.FC = () => {                                   // Def
     if (!usuario.email.trim()) { setErro('O e-mail é obrigatório.'); return }      // Valida e-mail
     if (!usuario.numero_celular.trim()) { setErro('O número de celular é obrigatório.'); return } // Valida número
 
-    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') // Lê token
+    const token = getAuthToken()                                          // Lê token
     const headers: Record<string, string> = { 'Content-Type': 'application/json' } // Define headers
     if (token) headers['Authorization'] = `Bearer ${token}`               // Injeta Bearer
 
@@ -79,6 +84,7 @@ const EditarUsuario: React.FC = () => {                                   // Def
       }, { headers })                                                     // Headers
 
       setSucesso('Usuário atualizado com sucesso.')                       // Mensagem de sucesso
+      setDirty(false)
       setTimeout(() => navigate('/usuarios/consultar'), 800)             // Redireciona
     } catch (err: any) {                                                  // Em erro
       const msg = err?.response?.data?.detail || 'Falha ao atualizar usuário.' // Extrai mensagem
@@ -101,23 +107,36 @@ const EditarUsuario: React.FC = () => {                                   // Def
         <form className="cadastro-form" onSubmit={handleSubmit}>          {/* Formulário */}
           <div className="campo">                                         {/* Campo nome */}
             <label htmlFor="nome" className="rotulo">Nome completo</label>{/* Rótulo */}
-            <input id="nome" type="text" className="entrada"             // Input
-              value={usuario.nome} onChange={(e) => setUsuario({ ...usuario, nome: e.target.value })} // Atualiza
-              required />                                                {/* Obrigatório */}
+            <input
+              id="nome"
+              type="text"
+              className="entrada"
+              value={usuario.nome}
+              onChange={(e) => { setUsuario({ ...usuario, nome: e.target.value }); setDirty(true) }}
+              required
+            />
           </div>
 
           <div className="campo">                                         {/* Campo e-mail */}
             <label htmlFor="email" className="rotulo">E-mail</label>      {/* Rótulo */}
-            <input id="email" type="email" className="entrada"           // Input
-              value={usuario.email} onChange={(e) => setUsuario({ ...usuario, email: e.target.value })} // Atualiza
-              required />                                                {/* Obrigatório */}
+            <input
+              id="email"
+              type="email"
+              className="entrada"
+              value={usuario.email}
+              onChange={(e) => { setUsuario({ ...usuario, email: e.target.value }); setDirty(true) }}
+              required
+            />
           </div>
 
           <div className="linha-tripla">                                  {/* Linha DDI/DDD/Número */}
             <div className="campo">                                       {/* Campo perfil */}
               <label htmlFor="perfil" className="rotulo">Perfil</label>   {/* Rótulo */}
-              <select id="perfil" className="entrada"                    // Select
-                value={usuario.tipo_perfil} onChange={(e) => setUsuario({ ...usuario, tipo_perfil: e.target.value })} // Atualiza
+              <select
+                id="perfil"
+                className="entrada"
+                value={usuario.tipo_perfil}
+                onChange={(e) => { setUsuario({ ...usuario, tipo_perfil: e.target.value }); setDirty(true) }}
               >
                 <option value="master">Master</option>
                 <option value="diretor">Diretor(a)</option>
@@ -131,32 +150,51 @@ const EditarUsuario: React.FC = () => {                                   // Def
 
             <div className="campo">                                       {/* Campo DDI */}
               <label htmlFor="ddi" className="rotulo">DDI</label>         {/* Rótulo */}
-              <input id="ddi" type="text" className="entrada"            // Input
-                value={usuario.ddi} onChange={(e) => setUsuario({ ...usuario, ddi: e.target.value })} // Atualiza
+              <input
+                id="ddi"
+                type="text"
+                className="entrada"
+                value={usuario.ddi}
+                onChange={(e) => { setUsuario({ ...usuario, ddi: e.target.value }); setDirty(true) }}
               />
             </div>
 
             <div className="campo">                                       {/* Campo DDD */}
               <label htmlFor="ddd" className="rotulo">DDD</label>         {/* Rótulo */}
-              <input id="ddd" type="text" className="entrada"            // Input
-                value={usuario.ddd} onChange={(e) => setUsuario({ ...usuario, ddd: e.target.value })} // Atualiza
+              <input
+                id="ddd"
+                type="text"
+                className="entrada"
+                value={usuario.ddd}
+                onChange={(e) => { setUsuario({ ...usuario, ddd: e.target.value }); setDirty(true) }}
               />
             </div>
           </div>
 
           <div className="campo">                                         {/* Campo número */}
             <label htmlFor="numero" className="rotulo">Número de celular</label>{/* Rótulo */}
-            <input id="numero" type="tel" className="entrada"            // Input
-              value={usuario.numero_celular} onChange={(e) => setUsuario({ ...usuario, numero_celular: e.target.value })} // Atualiza
-              required />                                                {/* Obrigatório */}
+            <input
+              id="numero"
+              type="tel"
+              className="entrada"
+              value={usuario.numero_celular}
+              onChange={(e) => { setUsuario({ ...usuario, numero_celular: e.target.value }); setDirty(true) }}
+              required
+            />
           </div>
 
-          <div className="acoes">                                         {/* Área de ações */}
-            <button type="submit" className="botao" disabled={enviando}> {/* Botão salvar */}
-              {enviando ? 'Salvando…' : 'Salvar alterações'}             {/* Texto */}
+          <div className="form-actions">                                 {/* Área de ações */}
+            <button type="submit" className="save-button" disabled={enviando || !isDirty}>
+              {enviando ? 'Salvando…' : 'Salvar alterações'}
             </button>
-            <button type="button" className="botao secundario" onClick={() => navigate('/usuarios/consultar')}> {/* Cancelar */}
-              Cancelar                                                   {/* Texto */}
+            <button
+              type="button"
+              className="btn secundario"
+              onClick={() => {
+                if (!isDirty || confirmIfDirty()) navigate('/usuarios/consultar')
+              }}
+            >
+              Cancelar
             </button>
           </div>
         </form>

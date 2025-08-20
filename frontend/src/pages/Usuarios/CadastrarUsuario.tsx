@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import '../../styles/CadastrarUsuario.css'
-import { API_BASE } from '@/services/api'
+import '../../styles/Forms.css'
+import useDirtyForm from '@/hooks/useDirtyForm'
+import { API_BASE, getAuthToken } from '@/services/api'
 
 type MeuPerfil = { id_usuario?: number; tipo_perfil?: string; is_master?: boolean }
 
@@ -36,7 +38,7 @@ function toCanonical(perfil: string): string {
 
 // Fallback: decodifica o payload do JWT se /usuarios/me falhar (422 etc.)
 function getClaimsFromToken(): { sub?: string; role?: string; perfil?: string; tipo_perfil?: string } | null {
-  const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+  const token = getAuthToken()
   if (!token) return null
   const parts = token.split('.')
   if (parts.length !== 3) return null
@@ -64,8 +66,13 @@ const CadastrarUsuario: React.FC = () => {
   const [carregandoEdicao, setCarregandoEdicao] = useState(false)
 
   const navigate = useNavigate()
-  const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
-  const headers: Record<string, string> = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token])
+  const token = getAuthToken()
+  const headers: Record<string, string> = useMemo(
+    () => (token ? { Authorization: `Bearer ${token}` } : {}),
+    [token]
+  )
+
+  const { isDirty, setDirty, confirmIfDirty } = useDirtyForm()
 
   // >>> NOVO: dados do usuário logado (robusto)
   const [meuId, setMeuId] = useState<number | undefined>(undefined)
@@ -76,7 +83,7 @@ const CadastrarUsuario: React.FC = () => {
   useEffect(() => {
     const check = async () => {
       try {
-        const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+        const token = getAuthToken()
         if (!token) { navigate('/login'); return }
         // tenta /me
         const r = await fetch(`${API_BASE}/usuarios/me`, { headers })
@@ -121,6 +128,7 @@ const CadastrarUsuario: React.FC = () => {
         setDdi(u.ddi)
         setDdd(u.ddd)
         setNumeroCelular(u.numero_celular)
+        setDirty(false)
       })
       .catch((e) => setErro(e?.response?.data?.detail || 'Falha ao carregar usuário.'))
       .finally(() => setCarregandoEdicao(false))
@@ -135,25 +143,26 @@ const CadastrarUsuario: React.FC = () => {
 
     const jsonHeaders: Record<string, string> = { ...headers, 'Content-Type': 'application/json' }
 
-    try {
-      setEnviando(true)
-      const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
+      try {
+        setEnviando(true)
+        const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
 
-      if (idEdicao) {
-        await axios.put(`${API_BASE}/usuarios/${idEdicao}`, body, { headers: jsonHeaders })
-        setSucesso('Usuário atualizado com sucesso.')
-      } else {
-        await axios.post(`${API_BASE}/usuarios`, body, { headers: jsonHeaders })
-        setSucesso('Usuário cadastrado com sucesso.')
-        setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
+        if (idEdicao) {
+          await axios.put(`${API_BASE}/usuarios/${idEdicao}`, body, { headers: jsonHeaders })
+          setSucesso('Usuário atualizado com sucesso.')
+        } else {
+          await axios.post(`${API_BASE}/usuarios`, body, { headers: jsonHeaders })
+          setSucesso('Usuário cadastrado com sucesso.')
+          setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
+        }
+
+        setDirty(false)
+        setTimeout(() => navigate('/usuarios/consultar'), 700)
+      } catch (err: any) {
+        setErro(err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
+      } finally {
+        setEnviando(false)
       }
-
-      setTimeout(() => navigate('/usuarios/consultar'), 700)
-    } catch (err: any) {
-      setErro(err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
-    } finally {
-      setEnviando(false)
-    }
   }
 
   // Lógica do botão Excluir: apenas master/diretor e sem autoexclusão
@@ -189,56 +198,107 @@ const CadastrarUsuario: React.FC = () => {
 
       {!carregandoEdicao && (
         <form className="cadastro-form" onSubmit={handleSubmit}>
-          <div className="campo">
-            <label className="rotulo" htmlFor="nome">Nome</label>
-            <input id="nome" className="entrada" type="text" value={nome} onChange={(e) => setNome(e.target.value)} required />
-          </div>
+            <div className="campo">
+              <label className="rotulo" htmlFor="nome">Nome</label>
+              <input
+                id="nome"
+                className="entrada"
+                type="text"
+                value={nome}
+                onChange={(e) => { setNome(e.target.value); setDirty(true) }}
+                required
+              />
+            </div>
 
-          <div className="campo">
-            <label className="rotulo" htmlFor="email">E-mail</label>
-            <input id="email" className="entrada" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
+            <div className="campo">
+              <label className="rotulo" htmlFor="email">E-mail</label>
+              <input
+                id="email"
+                className="entrada"
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setDirty(true) }}
+                required
+              />
+            </div>
 
-          <div className="campo">
-            <label className="rotulo" htmlFor="perfil">Perfil</label>
-            <select id="perfil" className="entrada" value={perfil} onChange={(e) => setPerfil(toCanonical(e.target.value))}>
-              {PERFIS_SELECT.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
+            <div className="campo">
+              <label className="rotulo" htmlFor="perfil">Perfil</label>
+              <select
+                id="perfil"
+                className="entrada"
+                value={perfil}
+                onChange={(e) => { setPerfil(toCanonical(e.target.value)); setDirty(true) }}
+              >
+                {PERFIS_SELECT.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
 
           {/* DDI + DDD + Número na mesma linha */}
           <div className="linha tres-telefone">
-            <div className="campo curto">
-              <label className="rotulo" htmlFor="ddi">DDI</label>
-              <input id="ddi" className="entrada" type="text" value={ddi} onChange={(e) => setDdi(e.target.value)} />
-            </div>
-            <div className="campo curto">
-              <label className="rotulo" htmlFor="ddd">DDD</label>
-              <input id="ddd" className="entrada" type="text" value={ddd} onChange={(e) => setDdd(e.target.value)} />
-            </div>
-            <div className="campo">
-              <label className="rotulo" htmlFor="numero">Número de celular</label>
-              <input id="numero" className="entrada" type="tel" placeholder="Ex.: 991234567" value={numeroCelular} onChange={(e) => setNumeroCelular(e.target.value)} required />
-            </div>
+              <div className="campo curto">
+                <label className="rotulo" htmlFor="ddi">DDI</label>
+                <input
+                  id="ddi"
+                  className="entrada"
+                  type="text"
+                  value={ddi}
+                  onChange={(e) => { setDdi(e.target.value); setDirty(true) }}
+                />
+              </div>
+              <div className="campo curto">
+                <label className="rotulo" htmlFor="ddd">DDD</label>
+                <input
+                  id="ddd"
+                  className="entrada"
+                  type="text"
+                  value={ddd}
+                  onChange={(e) => { setDdd(e.target.value); setDirty(true) }}
+                />
+              </div>
+              <div className="campo">
+                <label className="rotulo" htmlFor="numero">Número de celular</label>
+                <input
+                  id="numero"
+                  className="entrada"
+                  type="tel"
+                  placeholder="Ex.: 991234567"
+                  value={numeroCelular}
+                  onChange={(e) => { setNumeroCelular(e.target.value); setDirty(true) }}
+                  required
+                />
+              </div>
           </div>
 
-          <div className="acoes">
-            <button type="button" className="btn secundario" onClick={() => navigate('/usuarios/consultar')}>
-              Consultar Usuários
-            </button>
-            <button type="submit" className="btn primario" disabled={enviando}>
-              {enviando ? (idEdicao ? 'Salvando…' : 'Enviando…') : (idEdicao ? 'Salvar alterações' : 'Cadastrar')}
-            </button>
-
-            {/* NOVO: Botão Excluir usuário (robusto ao erro do /me) */}
-            {podeExcluir && (
-              <button type="button" className="btn perigo" onClick={handleExcluir} aria-label="Excluir usuário" title="Excluir usuário">
-                Excluir usuário
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn secundario"
+                onClick={() => {
+                  if (!isDirty || confirmIfDirty()) navigate('/usuarios/consultar')
+                }}
+              >
+                Consultar Usuários
               </button>
-            )}
-          </div>
+              <button type="submit" className="save-button" disabled={enviando || !isDirty}>
+                {enviando ? (idEdicao ? 'Salvando…' : 'Enviando…') : (idEdicao ? 'Salvar alterações' : 'Cadastrar')}
+              </button>
+
+              {/* NOVO: Botão Excluir usuário (robusto ao erro do /me) */}
+              {podeExcluir && (
+                <button
+                  type="button"
+                  className="btn perigo"
+                  onClick={handleExcluir}
+                  aria-label="Excluir usuário"
+                  title="Excluir usuário"
+                >
+                  Excluir usuário
+                </button>
+              )}
+            </div>
         </form>
       )}
     </div>
