@@ -21,7 +21,12 @@ from backend.schemas.turmas import (                                   # Importa
 
 from backend.routes.usuarios import token_data_from_request, to_canonical  # Utilidades de autenticação
 
-router = APIRouter(prefix="/api", tags=["Calendário"])               # Instancia roteador com prefixo /api
+# As demais rotas do projeto já são registradas na raiz (sem prefixo).
+# Para manter consistência e atender ao frontend, removemos o prefixo
+# "/api" que fazia com que os endpoints fossem expostos como
+# "/api/ano-letivo". Assim, agora eles podem ser acessados diretamente
+# em "/ano-letivo", alinhando backend e frontend.
+router = APIRouter(tags=["Calendário"])               # Instancia roteador sem prefixo
 
 # ------------------------------------------------------
 # Controle de acesso
