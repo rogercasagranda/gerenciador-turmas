@@ -87,13 +87,24 @@ load_dotenv(dotenv_path=env_path)                    # Carrega as variáveis do 
 app = FastAPI()                                      # Cria instância principal do app FastAPI
 
 # URL do frontend para redirecionamento raiz
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://gerenciador-turmas-f.onrender.com")
+# Mantemos a variável para compatibilidade, mas o endpoint raiz agora
+# responde com uma mensagem padrão. Isso evita que usuários recebam
+# um erro "Not Found" caso a URL do frontend não esteja disponível.
+FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 
 @app.get("/")
 def root():
-    """Redireciona a raiz para o domínio do frontend."""
-    return RedirectResponse(url=FRONTEND_URL, status_code=302)
+    """Endpoint de saúde simples para a API.
+
+    Se ``FRONTEND_URL`` estiver configurada o valor é retornado na
+    resposta para referência, mas nenhuma tentativa de redirecionamento
+    é feita. Assim a abertura da aplicação sempre retorna ``200``.
+    """
+    body = {"status": "ok"}
+    if FRONTEND_URL:
+        body["frontend_url"] = FRONTEND_URL
+    return body
 
 # ======================================================
 # Configura CORS de forma ampla (padrão já aprovado)
