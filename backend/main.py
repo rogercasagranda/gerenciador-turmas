@@ -118,16 +118,10 @@ app.include_router(turmas_router)                    # Registra rotas de turmas 
 app.include_router(calendario_router)                # Registra rotas de calendário (ano letivo e afins)
 
 # ======================================================
-# Loga variáveis públicas do OAuth (sem expor segredos)
+# Evento de inicialização do servidor
 # ======================================================
-logger.info(f"🔎 GOOGLE_CLIENT_ID: {os.getenv('GOOGLE_CLIENT_ID')}")         # Registra o client_id para conferência
-logger.info(f"🔎 GOOGLE_REDIRECT_URI: {os.getenv('GOOGLE_REDIRECT_URI')}")   # Registra a redirect_uri para conferência
-
-# ======================================================
-# Exibe rotas ao iniciar o servidor
-# ======================================================
-@app.on_event("startup")                     # Define tarefa a executar no start do app
-async def startup_event():                   # Declara função assíncrona de inicialização
+@app.on_event("startup")  # Executa no start do app
+async def startup_event():  # Declara função assíncrona de inicialização
     # Garante que todas as tabelas do ORM existam
     Base.metadata.create_all(bind=engine)
     # Assegura registro global de logs habilitado por padrão
@@ -136,10 +130,7 @@ async def startup_event():                   # Declara função assíncrona de i
             db.add(LogConfig(entidade="__all__", habilitado=True))
             db.commit()
 
-    logger.info("✅ Backend iniciado com sucesso")     # Registra mensagem de inicialização
-    logger.info("✅ Rotas registradas:")               # Registra cabeçalho das rotas
-    for route in app.routes:                           # Itera sobre rotas registradas
-        logger.info(f"➡️ {route.path}")                # Registra caminho de cada rota
+    logger.info("✅ Backend iniciado com sucesso")  # Log único de inicialização
 
 # ======================================================
 # Modelo de payload com alias para compatibilizar o front
