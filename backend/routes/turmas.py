@@ -56,7 +56,7 @@ def require_role(request: Request, allowed: set[str]):                        # 
 def listar_turnos(request: Request, db: Session = Depends(get_db)):
     require_role(request, READ_RESTRITO)                                      # Permite qualquer perfil autenticado
     turnos = db.query(Turno).all()                                            # Consulta todos os turnos
-    return {"message": "Turnos listados", "data": turnos}                # Retorna dados
+    return turnos                                                             # Retorna lista simples
 
 # ------------------------------------------------------
 # Rotas de Turma
@@ -65,7 +65,7 @@ def listar_turnos(request: Request, db: Session = Depends(get_db)):
 def listar_turmas(request: Request, db: Session = Depends(get_db)):
     require_role(request, READ_COORD)                                         # Exige leitura ampliada
     turmas = db.query(Turma).all()                                            # Consulta todas as turmas
-    return {"message": "Turmas listadas", "data": turmas}                # Retorna dados
+    return turmas                                                             # Retorna lista simples
 
 @router.post("/turmas", response_model=TurmaOut, status_code=status.HTTP_201_CREATED)
 def criar_turma(payload: TurmaCreate, request: Request, db: Session = Depends(get_db)):
@@ -74,7 +74,7 @@ def criar_turma(payload: TurmaCreate, request: Request, db: Session = Depends(ge
     db.add(turma)                                                             # Adiciona
     db.commit()                                                               # Persiste
     db.refresh(turma)                                                         # Atualiza
-    return {"message": "Turma criada", "data": turma}                    # Retorna resposta
+    return turma                                                              # Retorna turma criada
 
 @router.get("/turmas/{turma_id}", response_model=TurmaOut)                   # Obtém turma específica
 def obter_turma(turma_id: int, request: Request, db: Session = Depends(get_db)):
@@ -82,7 +82,7 @@ def obter_turma(turma_id: int, request: Request, db: Session = Depends(get_db)):
     turma = db.get(Turma, turma_id)                                           # Busca turma
     if not turma:                                                             # Verifica existência
         raise HTTPException(status_code=404, detail="Turma não encontrada")
-    return {"message": "Turma encontrada", "data": turma}                # Retorna dados
+    return turma                                                              # Retorna turma encontrada
 
 @router.put("/turmas/{turma_id}", response_model=TurmaOut)                   # Atualiza turma
 def atualizar_turma(turma_id: int, payload: TurmaUpdate, request: Request, db: Session = Depends(get_db)):
@@ -94,7 +94,7 @@ def atualizar_turma(turma_id: int, payload: TurmaUpdate, request: Request, db: S
         setattr(turma, field, value)                                          # Define atributo
     db.commit()                                                               # Persiste
     db.refresh(turma)                                                         # Atualiza
-    return {"message": "Turma atualizada", "data": turma}                # Retorna dados
+    return turma                                                              # Retorna turma atualizada
 
 @router.delete("/turmas/{turma_id}")                                         # Remove turma
 def remover_turma(turma_id: int, request: Request, db: Session = Depends(get_db)):
@@ -118,7 +118,7 @@ def listar_alunos_turma(turma_id: int, request: Request, db: Session = Depends(g
         .filter(TurmaAluno.turma_id == turma_id)                              # Filtra pela turma
         .all()                                                                # Executa
     )
-    return {"message": "Alunos listados", "data": alunos}                # Retorna dados
+    return alunos                                                             # Retorna lista simples
 
 @router.post("/turmas/{turma_id}/alunos", status_code=status.HTTP_201_CREATED)
 def adicionar_aluno_turma(turma_id: int, payload: TurmaAlunoCreate, request: Request, db: Session = Depends(get_db)):
@@ -164,7 +164,7 @@ def listar_disciplinas_turma(turma_id: int, request: Request, db: Session = Depe
         }
         for td, disc in registros
     ]
-    return {"message": "Disciplinas listadas", "data": dados}            # Retorna dados
+    return dados                                                              # Retorna lista simples
 
 @router.post("/turmas/{turma_id}/disciplinas", status_code=status.HTTP_201_CREATED)
 def adicionar_disciplina_turma(turma_id: int, payload: TurmaDisciplinaCreate, request: Request, db: Session = Depends(get_db)):
@@ -207,7 +207,7 @@ def remover_disciplina_turma(turma_id: int, disciplina_id: int, request: Request
 def listar_disciplinas(request: Request, db: Session = Depends(get_db)):
     require_role(request, READ_COORD)                                         # Exige leitura ampliada
     dis = db.query(Disciplina).all()                                          # Consulta todas
-    return {"message": "Disciplinas listadas", "data": dis}
+    return dis                                                                # Retorna lista simples
 
 @router.post("/disciplinas", response_model=DisciplinaOut, status_code=status.HTTP_201_CREATED)
 def criar_disciplina(payload: DisciplinaCreate, request: Request, db: Session = Depends(get_db)):
@@ -216,7 +216,7 @@ def criar_disciplina(payload: DisciplinaCreate, request: Request, db: Session = 
     db.add(disc)                                                              # Adiciona
     db.commit()                                                               # Persiste
     db.refresh(disc)                                                          # Atualiza
-    return {"message": "Disciplina criada", "data": disc}
+    return disc                                                               # Retorna disciplina criada
 
 @router.put("/disciplinas/{disciplina_id}", response_model=DisciplinaOut)
 def atualizar_disciplina(disciplina_id: int, payload: DisciplinaUpdate, request: Request, db: Session = Depends(get_db)):
@@ -228,7 +228,7 @@ def atualizar_disciplina(disciplina_id: int, payload: DisciplinaUpdate, request:
         setattr(disc, field, value)                                           # Define atributo
     db.commit()                                                               # Persiste
     db.refresh(disc)                                                          # Atualiza
-    return {"message": "Disciplina atualizada", "data": disc}
+    return disc                                                               # Retorna disciplina atualizada
 
 @router.delete("/disciplinas/{disciplina_id}")                              # Remove disciplina
 def remover_disciplina(disciplina_id: int, request: Request, db: Session = Depends(get_db)):
@@ -247,7 +247,7 @@ def remover_disciplina(disciplina_id: int, request: Request, db: Session = Depen
 def listar_professores(request: Request, db: Session = Depends(get_db)):
     require_role(request, READ_COORD)                                         # Exige leitura ampliada
     profs = db.query(Professor).all()                                         # Consulta todos
-    return {"message": "Professores listados", "data": profs}
+    return profs                                                              # Retorna lista simples
 
 @router.post("/professores", response_model=ProfessorOut, status_code=status.HTTP_201_CREATED)
 def criar_professor(payload: ProfessorCreate, request: Request, db: Session = Depends(get_db)):
@@ -256,7 +256,7 @@ def criar_professor(payload: ProfessorCreate, request: Request, db: Session = De
     db.add(prof)                                                              # Adiciona
     db.commit()                                                               # Persiste
     db.refresh(prof)                                                          # Atualiza
-    return {"message": "Professor criado", "data": prof}
+    return prof                                                               # Retorna professor criado
 
 @router.put("/professores/{professor_id}", response_model=ProfessorOut)
 def atualizar_professor(professor_id: int, payload: ProfessorUpdate, request: Request, db: Session = Depends(get_db)):
@@ -268,7 +268,7 @@ def atualizar_professor(professor_id: int, payload: ProfessorUpdate, request: Re
         setattr(prof, field, value)                                           # Define atributo
     db.commit()                                                               # Persiste
     db.refresh(prof)                                                          # Atualiza
-    return {"message": "Professor atualizado", "data": prof}
+    return prof                                                               # Retorna professor atualizado
 
 @router.delete("/professores/{professor_id}")                              # Remove professor
 def remover_professor(professor_id: int, request: Request, db: Session = Depends(get_db)):
@@ -287,7 +287,7 @@ def remover_professor(professor_id: int, request: Request, db: Session = Depends
 def listar_responsaveis(request: Request, db: Session = Depends(get_db)):
     require_role(request, READ_COORD)                                         # Exige leitura ampliada
     resp = db.query(Responsavel).all()                                        # Consulta todos
-    return {"message": "Responsáveis listados", "data": resp}
+    return resp                                                               # Retorna lista simples
 
 @router.post("/responsaveis", response_model=ResponsavelOut, status_code=status.HTTP_201_CREATED)
 def criar_responsavel(payload: ResponsavelCreate, request: Request, db: Session = Depends(get_db)):
@@ -296,7 +296,7 @@ def criar_responsavel(payload: ResponsavelCreate, request: Request, db: Session 
     db.add(resp)                                                              # Adiciona
     db.commit()                                                               # Persiste
     db.refresh(resp)                                                          # Atualiza
-    return {"message": "Responsável criado", "data": resp}
+    return resp                                                               # Retorna responsável criado
 
 @router.put("/responsaveis/{responsavel_id}", response_model=ResponsavelOut)
 def atualizar_responsavel(responsavel_id: int, payload: ResponsavelUpdate, request: Request, db: Session = Depends(get_db)):
@@ -308,7 +308,7 @@ def atualizar_responsavel(responsavel_id: int, payload: ResponsavelUpdate, reque
         setattr(resp, field, value)                                           # Define atributo
     db.commit()                                                               # Persiste
     db.refresh(resp)                                                          # Atualiza
-    return {"message": "Responsável atualizado", "data": resp}
+    return resp                                                               # Retorna responsável atualizado
 
 @router.delete("/responsaveis/{responsavel_id}")                            # Remove responsável
 def remover_responsavel(responsavel_id: int, request: Request, db: Session = Depends(get_db)):
@@ -332,7 +332,7 @@ def listar_responsaveis_aluno(aluno_id: int, request: Request, db: Session = Dep
         .filter(AlunoResponsavel.aluno_id == aluno_id)
         .all()
     )
-    return {"message": "Responsáveis listados", "data": registros}
+    return registros                                                          # Retorna lista simples
 
 @router.post("/alunos/{aluno_id}/responsaveis", status_code=status.HTTP_201_CREATED)
 def vincular_responsavel(aluno_id: int, payload: AlunoResponsavelCreate, request: Request, db: Session = Depends(get_db)):
@@ -372,7 +372,7 @@ def desvincular_responsavel(aluno_id: int, responsavel_id: int, request: Request
 def listar_horarios(turma_id: int, request: Request, db: Session = Depends(get_db)):
     require_role(request, READ_COORD)                                         # Exige leitura ampliada
     horarios = db.query(Horario).filter(Horario.turma_id == turma_id).all()   # Consulta horários
-    return {"message": "Horários listados", "data": horarios}
+    return horarios                                                           # Retorna lista simples
 
 @router.post("/turmas/{turma_id}/horarios", response_model=HorarioOut, status_code=status.HTTP_201_CREATED)
 def criar_horario(turma_id: int, payload: HorarioCreate, request: Request, db: Session = Depends(get_db)):
@@ -412,7 +412,7 @@ def criar_horario(turma_id: int, payload: HorarioCreate, request: Request, db: S
     db.add(horario)                                                           # Adiciona
     db.commit()                                                               # Persiste
     db.refresh(horario)                                                       # Atualiza
-    return {"message": "Horário criado", "data": horario}
+    return horario                                                            # Retorna horário criado
 
 @router.put("/turmas/{turma_id}/horarios/{horario_id}", response_model=HorarioOut)
 def atualizar_horario(turma_id: int, horario_id: int, payload: HorarioUpdate, request: Request, db: Session = Depends(get_db)):
@@ -424,7 +424,7 @@ def atualizar_horario(turma_id: int, horario_id: int, payload: HorarioUpdate, re
         setattr(horario, field, value)                                        # Define atributo
     db.commit()                                                               # Persiste
     db.refresh(horario)                                                       # Atualiza
-    return {"message": "Horário atualizado", "data": horario}
+    return horario                                                            # Retorna horário atualizado
 
 @router.delete("/turmas/{turma_id}/horarios/{horario_id}")
 def remover_horario(turma_id: int, horario_id: int, request: Request, db: Session = Depends(get_db)):
