@@ -1,5 +1,6 @@
 import { API_BASE, getAuthToken } from './api'
 
+
 // Tipos de ações permitidas para CRUD
 export type CrudAction = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE'
 
@@ -11,12 +12,14 @@ export interface LogConfigPayload {
 
 // Cabeçalhos padrão das requisições autenticadas
 function headers(): HeadersInit {
+
   const token = getAuthToken()
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 }
+
 
 // Salva configuração de log via POST
 export async function saveLogConfig(payload: LogConfigPayload): Promise<void> {
@@ -67,3 +70,4 @@ export function screenLabel(name: string): string {
     })
     .join(' > ')
 }
+
