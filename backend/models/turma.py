@@ -6,13 +6,14 @@ from .base import Base
 # Importa tipos de coluna
 from sqlalchemy import Column, Integer, String, ForeignKey
 
+
 # Modelo de turma
 class Turma(Base):
     # Nome da tabela
     __tablename__ = "turma"
 
-    # Identificador
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    # Identificador (nome da coluna no banco segue padrão legado id_turma)
+    id = Column("id_turma", Integer, primary_key=True, autoincrement=True)
 
     # Nome da turma
     nome = Column(String(255), nullable=False)

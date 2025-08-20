@@ -7,6 +7,7 @@ from .base import Base
 from sqlalchemy import Column, Integer, ForeignKey, Time, Enum
 from enum import Enum as PyEnum
 
+
 # Enum de dias da semana
 class DiaSemana(PyEnum):
     SEG = "SEG"
@@ -16,6 +17,7 @@ class DiaSemana(PyEnum):
     SEX = "SEX"
     SAB = "SAB"
 
+
 # Modelo de horário
 class Horario(Base):
     # Nome da tabela
@@ -24,8 +26,8 @@ class Horario(Base):
     # Identificador
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    # Referência à turma
-    turma_id = Column(Integer, ForeignKey("turma.id"), nullable=False)
+    # Referência à turma (FK ajustada para coluna legada id_turma)
+    turma_id = Column(Integer, ForeignKey("turma.id_turma"), nullable=False)
 
     # Dia da semana
     dia_semana = Column(Enum(DiaSemana, name="dia_semana_enum"), nullable=False)
