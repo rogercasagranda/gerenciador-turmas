@@ -87,7 +87,7 @@ load_dotenv(dotenv_path=env_path)                    # Carrega as variáveis do 
 app = FastAPI()                                      # Cria instância principal do app FastAPI
 
 # URL do frontend para redirecionamento raiz
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://<SEU_FRONTEND>.onrender.com")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://gerenciador-turmas-f.onrender.com")
 
 
 @app.get("/")
