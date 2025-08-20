@@ -9,7 +9,7 @@ import requests                                                         # Import
 from datetime import date                                               # Importa date para manipulação de datas
 
 from backend.database import get_db                                    # Dependência de banco de dados
-from backend.models.ano_letivo import AnoLetivo                        # Modelo de AnoLetivo
+from backend.models import AnoLetivo                                   # Modelo de AnoLetivo
 from backend.models.turma import Turma                                 # Modelo de Turma para verificar dependências
 from backend.models.feriado import Feriado                             # Modelo de Feriado
 
