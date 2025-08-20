@@ -7,11 +7,17 @@ import path from 'node:path'
 
 // Importa o plugin de PWA
 import { VitePWA } from 'vite-plugin-pwa'
+import { fileURLToPath, URL } from 'node:url'
 
 // Exporta a configuração do Vite
 export default defineConfig({
   // Garante que os caminhos sejam resolvidos a partir da raiz
   base: '/',
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
   // Aplica os plugins
   plugins: [
     react(),                 // Ativa plugin React
