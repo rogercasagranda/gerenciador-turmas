@@ -6,6 +6,9 @@ import React, { useState, useEffect } from "react";
 // Importa o hook de navegação do React Router
 import { useNavigate } from "react-router-dom";
 
+// Base da API
+import { API_BASE } from "@/services/api";
+
 // Importa o arquivo CSS da tela de login
 import "../styles/Login.css";
 
@@ -79,7 +82,7 @@ useEffect(() => {
     e.preventDefault(); // Previne comportamento padrão
 
     try {
-      const response = await fetch("http://localhost:8000/login", {
+      const response = await fetch(`${API_BASE}/login`, {
         method: "POST", // Método POST
         headers: {
           "Content-Type": "application/json", // Tipo do conteúdo
@@ -123,7 +126,7 @@ useEffect(() => {
 
   // Redireciona para o login do Google
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:8000/google-login";
+    window.location.href = `${API_BASE}/google-login`;
   };
 
   // Controla o temporizador do popup
