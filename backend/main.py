@@ -293,8 +293,11 @@ def google_callback(request: Request):
             if not result:                                   # Verifica se usuário não existe
                 logger.warning(f"⛔ Usuário não pré-cadastrado (GOOGLE): {user_email}")  # Registra ausência
                 from fastapi.responses import RedirectResponse                            # Importa RedirectResponse
-                frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")        # Define URL do front
-                return RedirectResponse(url=f"{frontend_url}/login?err=USER_NOT_FOUND", status_code=302)  # Redireciona
+                frontend_origin = os.getenv("FRONTEND_ORIGIN")                           # Lê origem do front
+                if not frontend_origin:                                                         # Verifica configuração
+                    logger.error("❌ FRONTEND_ORIGIN não configurado")                        # Registra erro
+                    raise HTTPException(status_code=500, detail="FRONTEND_ORIGIN não configurado")
+                return RedirectResponse(url=f"{frontend_origin}/login?err=USER_NOT_FOUND", status_code=302)  # Redireciona
 
             logger.info(f"✅ Usuário autorizado: {user_email}")    # Registra sucesso
             id_usuario, tipo_perfil = result                     # Extrai dados do usuário
@@ -305,9 +308,12 @@ def google_callback(request: Request):
             }
             token = create_access_token(token_payload)           # Gera JWT completo
             from fastapi.responses import RedirectResponse         # Importa RedirectResponse
-            frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")  # Define URL do front
+            frontend_origin = os.getenv("FRONTEND_ORIGIN")                          # Lê origem do front
+            if not frontend_origin:                                                      # Verifica configuração
+                logger.error("❌ FRONTEND_ORIGIN não configurado")                     # Registra erro
+                raise HTTPException(status_code=500, detail="FRONTEND_ORIGIN não configurado")
             return RedirectResponse(
-                url=f"{frontend_url}/login?token={token}",
+                url=f"{frontend_origin}/login?token={token}",
                 status_code=302,
             )  # Redireciona com token
 
