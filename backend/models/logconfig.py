@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Boolean
 
-from backend.models.usuarios import Base
+from .base import Base
 
 
 class LogConfig(Base):
