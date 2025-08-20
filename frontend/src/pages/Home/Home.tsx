@@ -6,6 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import '../../styles/Home.css'
 import '../../styles/Home.lock.css'
 import { loadTheme } from '../../utils/theme'
+import { API_BASE } from '@/services/api'
 
 // Carrega páginas internas com import dinâmico
 const CadastrarUsuario = React.lazy(() => import('../Usuarios/CadastrarUsuario'))
@@ -23,7 +24,6 @@ const CadResponsaveis = React.lazy(() => import('../Cadastro/Responsaveis')) // 
 const CadFeriados = React.lazy(() => import('../Cadastro/Feriados')) // Cadastro de feriados
 const CadAnoLetivo = React.lazy(() => import('../Cadastro/AnoLetivo')) // Cadastro de ano letivo
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
 
 // Converte qualquer variação de perfil para nossa forma canônica
