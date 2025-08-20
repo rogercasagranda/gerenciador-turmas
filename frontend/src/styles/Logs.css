@@ -1,3 +1,4 @@
+
 /* ===== Configuração de Logs ===== */
 :root {
   --pp-border: #e5e7eb; /* cor de borda neutra usada em inputs e tabelas */
@@ -83,11 +84,57 @@
 .tabela {
   width: 100%; /* tabela ocupa toda a largura disponível */
   border-collapse: collapse; /* remove espaçamento entre bordas */
+
 }
 
 .tabela th,
 .tabela td {
-  border: 1px solid var(--pp-border); /* borda discreta entre células */
-  padding: 8px; /* espaçamento interno das células */
-  text-align: left; /* texto alinhado à esquerda */
+
+  border: 1px solid #ddd; /* borda suave */
+  padding: 0.5rem; /* espaçamento interno */
+  text-align: left; /* alinha texto à esquerda */
+}
+
+/* ===== Configuração de logs ===== */
+.logs-config-container {
+  padding: 1rem; /* mantém espaçamento similar ao restante */
+  max-width: 800px; /* limita largura máxima */
+  margin: 0 auto; /* centraliza conteúdo */
+}
+
+.logs-form {
+  display: grid; /* utiliza grid layout */
+  gap: 1rem; /* espaçamento entre campos */
+  grid-template-columns: 1fr; /* uma coluna padrão */
+}
+
+@media (min-width: 640px) {
+  .logs-form {
+    grid-template-columns: 1fr 1fr; /* duas colunas em telas ≥640px */
+  }
+}
+
+.logs-field {
+  display: flex; /* organiza label e input */
+  flex-direction: column; /* empilha verticalmente */
+  gap: 0.25rem; /* separa elementos */
+}
+
+.logs-input {
+  padding: 0.5rem; /* espaçamento interno */
+  border: 1px solid #ccc; /* borda neutra */
+  border-radius: 4px; /* cantos levemente arredondados */
+}
+
+.crud-options {
+  display: flex; /* alinha opções lado a lado */
+  flex-wrap: wrap; /* permite quebra de linha */
+  gap: 0.75rem; /* espaçamento entre checkboxes */
+}
+
+.crud-option {
+  display: flex; /* alinha checkbox e texto */
+  align-items: center; /* centraliza verticalmente */
+  gap: 0.25rem; /* espaço entre checkbox e rótulo */
+
 }
