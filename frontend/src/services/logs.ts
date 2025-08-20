@@ -1,5 +1,6 @@
 import { API_BASE, getAuthToken } from './api'
 
+
 export interface LogConfigPayload {
   tela: string
   crud: string[]
@@ -24,3 +25,4 @@ export async function cadastrarConfig(data: LogConfigPayload): Promise<void> {
     throw new Error(msg)
   }
 }
+

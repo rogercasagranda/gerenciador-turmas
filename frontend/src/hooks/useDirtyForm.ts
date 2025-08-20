@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
+import { UNSAFE_NavigationContext } from 'react-router-dom'
 
 export default function useDirtyForm() {
   const [isDirty, setDirty] = useState(false)
+  const navContext = useContext(UNSAFE_NavigationContext)
+  const navigator = navContext?.navigator
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -10,23 +13,29 @@ export default function useDirtyForm() {
         e.returnValue = ''
       }
     }
-    const handlePopState = (e: PopStateEvent) => {
-      if (isDirty && !window.confirm('Existem alterações não salvas')) {
-        e.preventDefault()
-        history.pushState(null, '', window.location.href)
-      }
-    }
     window.addEventListener('beforeunload', handleBeforeUnload)
-    window.addEventListener('popstate', handlePopState)
+
+    let unblock: (() => void) | undefined
+    if (isDirty && navigator) {
+      unblock = navigator.block((tx) => {
+        if (window.confirm('Existem alterações não salvas')) {
+          unblock?.()
+          tx.retry()
+        }
+      })
+    }
+
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
-      window.removeEventListener('popstate', handlePopState)
+      unblock?.()
     }
-  }, [isDirty])
+  }, [isDirty, navigator])
 
   const confirmIfDirty = useCallback((): boolean => {
     if (!isDirty) return true
-    return window.confirm('Existem alterações não salvas')
+    const ok = window.confirm('Existem alterações não salvas')
+    if (ok) setDirty(false)
+    return ok
   }, [isDirty])
 
   return { isDirty, setDirty, confirmIfDirty }
