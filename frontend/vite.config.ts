@@ -4,7 +4,6 @@ import { defineConfig } from 'vite'
 // Importa suporte ao React
 import react from '@vitejs/plugin-react'
 import legacy from '@vitejs/plugin-legacy'
-import path from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 
 // Exporta a configuração do Vite
@@ -24,13 +23,6 @@ export default defineConfig({
       additionalLegacyPolyfills: ['regenerator-runtime/runtime']
     })
   ],
-
-  // Alias para facilitar imports
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
-    },
-  },
 
   // Corrige erro de WebSocket (HMR)
   server: {

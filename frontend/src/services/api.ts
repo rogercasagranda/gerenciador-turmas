@@ -174,7 +174,7 @@ function raiseHttpError(res: Response, payload?: ApiErrorPayload): never {
 }
 
 // Faz requisição com AbortController e timeout opcional
-async function apiRequest<T = unknown>(
+export async function apiRequest<T = unknown>(
   path: string,
   options: {
     method?: HttpMethod
