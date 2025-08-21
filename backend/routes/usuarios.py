@@ -43,6 +43,7 @@ class UsuarioOut(BaseModel):
 class UsuarioCreate(BaseModel):
     nome: str
     email: EmailStr
+    senha: str | None = None
     tipo_perfil: str | None = None
     ddi: str | None = None
     ddd: str | None = None
@@ -101,7 +102,10 @@ def criar_usuario(payload: UsuarioCreate, request: Request, db: Session = Depend
         raise HTTPException(status_code=409, detail="E-mail já cadastrado.")
 
     salt = bcrypt.gensalt(rounds=12)
-    senha_hash = bcrypt.hashpw(os.urandom(16).hex().encode("utf-8"), salt).decode("utf-8")
+    if payload.senha:
+        senha_hash = bcrypt.hashpw(payload.senha.encode("utf-8"), salt).decode("utf-8")
+    else:
+        senha_hash = bcrypt.hashpw(os.urandom(16).hex().encode("utf-8"), salt).decode("utf-8")
 
     novo = UsuariosModel(
         nome=payload.nome,
