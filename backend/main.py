@@ -152,7 +152,7 @@ async def startup_event():  # Declara função assíncrona de inicialização
             db.add(LogConfig(screen="__all__", create_enabled=True, read_enabled=True, update_enabled=True, delete_enabled=True))
             db.commit()
 
-    logger.info("✅ Backend iniciado com sucesso")  # Log único de inicialização
+    logger.info("Backend iniciado com sucesso")  # Log único de inicialização
 
 # ======================================================
 # Modelo de payload com alias para compatibilizar o front
@@ -188,17 +188,17 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # Validação mínima do payload
     # --------------------------------------------------
     if not email or not senha:                                       # Verifica se faltam campos
-        logger.warning("⚠️ Payload inválido no /login (faltando email/senha)")             # Registra aviso
+        logger.warning("Payload inválido no /login (faltando email/senha)")  # Registra aviso
         raise HTTPException(status_code=422, detail="Payload inválido: envie 'email' e 'senha'.")  # Retorna 422
 
-    logger.info(f"🔍 Tentativa de login com e-mail: {email}")         # Registra tentativa de login
+    logger.info(f"Tentativa de login com e-mail: {email}")  # Registra tentativa de login
 
     # --------------------------------------------------
     # Consulta usuário via ORM
     # --------------------------------------------------
     usuario = db.query(Usuarios).filter(Usuarios.email == email).first()  # Busca usuário por e-mail
     if not usuario:                                                       # Verifica inexistência
-        logger.warning(f"⛔ Usuário não pré-cadastrado (LOCAL): {email}")  # Registra pré-cadastro ausente
+        logger.warning(f"Usuário não pré-cadastrado (LOCAL): {email}")  # Registra pré-cadastro ausente
         return JSONResponse(                                               # Retorna 403 com código e mensagem
             status_code=403,
             content={"code": "USER_NOT_FOUND", "message": "Cadastro não encontrado, procure a secretaria da sua escola"}
@@ -208,13 +208,13 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # Valida senha com bcrypt
     # --------------------------------------------------
     if not usuario.senha_hash:                                             # Verifica ausência de senha local
-        logger.warning(f"⛔ Usuário sem senha local configurada: {email}")  # Registra ausência de senha
+        logger.warning(f"Usuário sem senha local configurada: {email}")  # Registra ausência de senha
         return JSONResponse(                                               # Retorna 403 com código e mensagem
             status_code=403,
             content={"code": "NO_LOCAL_PASSWORD", "message": "Cadastro não possui senha local, utilize o login com Google"}
         )
     if not bcrypt.checkpw(senha.encode("utf-8"), usuario.senha_hash.encode("utf-8")):  # Compara hash
-        logger.warning(f"❌ Senha incorreta para o e-mail: {email}")                     # Registra senha incorreta
+        logger.warning(f"Senha incorreta para o e-mail: {email}")  # Registra senha incorreta
         raise HTTPException(                                                            # Retorna 401 padronizado
             status_code=401,
             detail="SEU USUÁRIO E/OU SENHA ESTÃO INCORRETAS, TENTE NOVAMENTE"
@@ -224,8 +224,8 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # Sucesso
     # --------------------------------------------------
     logger.info(
-        f"✅ Login realizado com sucesso para: {email} (perfil: {usuario.tipo_perfil})"
-    )       # Registra sucesso com perfil do usuário
+        f"Login realizado com sucesso para: {email} (perfil: {usuario.tipo_perfil})"
+    )  # Registra sucesso com perfil do usuário
     # Gera JWT incluindo identificador e tipo de perfil do usuário
     token_payload = {
         "sub": email,
@@ -307,7 +307,7 @@ def google_callback(request: Request):
 
         token_response = requests.post(token_url, data=token_data, timeout=10)  # Solicita token ao Google
         if token_response.status_code != 200:                                   # Valida resposta
-            logger.error(f"❌ Erro ao obter token: {token_response.text}")      # Registra erro
+            logger.error(f"Erro ao obter token: {token_response.text}")  # Registra erro
             raise HTTPException(status_code=400, detail="Falha ao obter token de acesso")  # Retorna 400
 
         access_token = token_response.json().get("access_token")      # Extrai access_token
@@ -318,7 +318,7 @@ def google_callback(request: Request):
         headers = {"Authorization": f"Bearer {access_token}"}            # Monta header de autorização
         user_info_response = requests.get(user_info_url, headers=headers, timeout=10)  # Consulta dados do usuário
         if user_info_response.status_code != 200:                        # Valida resposta
-            logger.error(f"❌ Erro ao obter dados do usuário: {user_info_response.text}")  # Registra erro
+            logger.error(f"Erro ao obter dados do usuário: {user_info_response.text}")  # Registra erro
             raise HTTPException(status_code=400, detail="Erro ao obter dados do usuário")  # Retorna 400
 
         user_data = user_info_response.json()                # Converte resposta para dicionário
@@ -340,15 +340,15 @@ def google_callback(request: Request):
             result = cur.fetchone()                          # Lê resultado
 
             if not result:                                   # Verifica se usuário não existe
-                logger.warning(f"⛔ Usuário não pré-cadastrado (GOOGLE): {user_email}")  # Registra ausência
+                logger.warning(f"Usuário não pré-cadastrado (GOOGLE): {user_email}")  # Registra ausência
                 from fastapi.responses import RedirectResponse                            # Importa RedirectResponse
                 frontend_origin = os.getenv("FRONTEND_ORIGIN")                           # Lê origem do front
                 if not frontend_origin:                                                         # Verifica configuração
-                    logger.error("❌ FRONTEND_ORIGIN não configurado")                        # Registra erro
+                    logger.error("FRONTEND_ORIGIN não configurado")  # Registra erro
                     raise HTTPException(status_code=500, detail="FRONTEND_ORIGIN não configurado")
                 return RedirectResponse(url=f"{frontend_origin}/login?err=USER_NOT_FOUND", status_code=302)  # Redireciona
 
-            logger.info(f"✅ Usuário autorizado: {user_email}")    # Registra sucesso
+            logger.info(f"Usuário autorizado: {user_email}")  # Registra sucesso
             id_usuario, tipo_perfil = result                     # Extrai dados do usuário
             token_payload = {
                 "sub": user_email,
@@ -359,7 +359,7 @@ def google_callback(request: Request):
             from fastapi.responses import RedirectResponse         # Importa RedirectResponse
             frontend_origin = os.getenv("FRONTEND_ORIGIN")                          # Lê origem do front
             if not frontend_origin:                                                      # Verifica configuração
-                logger.error("❌ FRONTEND_ORIGIN não configurado")                     # Registra erro
+                logger.error("FRONTEND_ORIGIN não configurado")  # Registra erro
                 raise HTTPException(status_code=500, detail="FRONTEND_ORIGIN não configurado")
             return RedirectResponse(
                 url=f"{frontend_origin}/login?token={token}",
@@ -367,24 +367,24 @@ def google_callback(request: Request):
             )  # Redireciona com token
 
         except PsycopgError as db_err:                       # Captura erro de banco
-            logger.error(f"❌ Erro ao consultar banco de dados: {db_err}")  # Registra erro
+            logger.error(f"Erro ao consultar banco de dados: {db_err}")  # Registra erro
             raise HTTPException(status_code=500, detail="Erro ao acessar banco de dados")  # Retorna 500
         finally:
             if cur is not None:                              # Verifica cursor aberto
                 try:
                     cur.close()                              # Fecha cursor
                 except Exception:
-                    logger.warning("⚠️ Falha ao fechar cursor do banco")   # Registra aviso
+                    logger.warning("Falha ao fechar cursor do banco")  # Registra aviso
             if conn is not None:                             # Verifica conexão aberta
                 try:
                     conn.close()                             # Fecha conexão
                 except Exception:
-                    logger.warning("⚠️ Falha ao fechar conexão com o banco")  # Registra aviso
+                    logger.warning("Falha ao fechar conexão com o banco")  # Registra aviso
 
     except HTTPException:                                    # Mantém HTTPException original
         raise                                                # Propaga exceção
     except Exception:                                        # Captura exceções não previstas
-        logger.exception("❌ Erro inesperado na callback do Google")  # Registra stacktrace
+        logger.exception("Erro inesperado na callback do Google")  # Registra stacktrace
         raise HTTPException(status_code=500, detail="Erro interno no servidor")  # Retorna 500
 
 

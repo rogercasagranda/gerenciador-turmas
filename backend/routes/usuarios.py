@@ -5,11 +5,11 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from jose import jwt, JWTError
-import os, bcrypt, logging
+import os, bcrypt, logging, hashlib
 
 from backend.database import get_db
 from backend.models.usuarios import Usuarios as UsuariosModel
-from backend.utils.audit import registrar_log
+from backend.utils.audit import registrar_log, log_403
 from backend.utils.pdf import generate_pdf
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
@@ -88,26 +88,28 @@ def token_data_from_request(request: Request) -> TokenData:
         raise HTTPException(status_code=401, detail="Token inválido.")
 
 
-def require_perfil(request: Request) -> TokenData:
+def require_perfil(request: Request, db: Session) -> TokenData:
     token_data = token_data_from_request(request)
     perfil = to_canonical(token_data.tipo_perfil)
-    autorizado = perfil in ALLOWED_PERFIS
-    logger.info(f"[AUTH] user={token_data.email} perfil={perfil} autorizado={autorizado}")
-    if not autorizado:
+    if perfil not in ALLOWED_PERFIS:
+        log_403(db, token_data.id_usuario, perfil, request.url.path, "perfil sem acesso")
+        logger.warning(
+            "403 denied: user_id=%s perfil=%s path=%s", token_data.id_usuario, perfil, request.url.path
+        )
         raise HTTPException(status_code=403, detail="Sem permissão para acessar usuários.")
     token_data.tipo_perfil = perfil
     return token_data
 
 @router.get("/usuarios", response_model=list[UsuarioOut])
 def listar_usuarios(request: Request, db: Session = Depends(get_db)):
-    token_data = require_perfil(request)
+    token_data = require_perfil(request, db)
     logs = db.query(UsuariosModel).all()
     registrar_log(db, token_data.id_usuario, "READ", "usuarios", descricao="Listou usuários")
     return logs
 
 @router.post("/usuarios", status_code=status.HTTP_201_CREATED, response_model=UsuarioOut)
 def criar_usuario(payload: UsuarioCreate, request: Request, db: Session = Depends(get_db)):
-    token_data = require_perfil(request)
+    token_data = require_perfil(request, db)
     if db.query(UsuariosModel).filter(UsuariosModel.email == payload.email).first():
         raise HTTPException(status_code=409, detail="E-mail já cadastrado.")
 
@@ -136,7 +138,7 @@ def criar_usuario(payload: UsuarioCreate, request: Request, db: Session = Depend
 
 @router.put("/usuarios/{id_usuario}", response_model=UsuarioOut)
 def atualizar_usuario(id_usuario: int, payload: UsuarioUpdate, request: Request, db: Session = Depends(get_db)):
-    token_data = require_perfil(request)
+    token_data = require_perfil(request, db)
     user = db.query(UsuariosModel).filter(UsuariosModel.id_usuario == id_usuario).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
@@ -164,7 +166,7 @@ def meu_perfil(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/usuarios/{id_usuario}", response_model=UsuarioOut)
 def obter_usuario(id_usuario: int, request: Request, db: Session = Depends(get_db)):
-    token_data = require_perfil(request)
+    token_data = require_perfil(request, db)
     user = db.query(UsuariosModel).filter(UsuariosModel.id_usuario == id_usuario).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
@@ -180,7 +182,7 @@ def exportar_usuarios(
     db: Session = Depends(get_db),
 ):
     """Exporta usuários em PDF aplicando o mesmo filtro de consulta."""
-    token_data = require_perfil(request)
+    token_data = require_perfil(request, db)
     query = db.query(UsuariosModel)
     if q:
         termo = f"%{q.lower()}%"
@@ -210,6 +212,14 @@ def exportar_usuarios(
         rows=rows,
         orientation=orientation,
         logo_path=os.getenv("SYSTEM_LOGO_PATH"),
+    )
+    sha = hashlib.sha256(pdf_bytes).hexdigest()
+    registrar_log(
+        db,
+        token_data.id_usuario,
+        "export",
+        request.url.path,
+        descricao=f"tipo={format} filtro={q} hash={sha}",
     )
 
     return Response(
