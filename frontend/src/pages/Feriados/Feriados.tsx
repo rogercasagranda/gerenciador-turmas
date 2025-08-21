@@ -1,6 +1,6 @@
 // Página de cadastro de feriados
 import React, { useEffect, useState } from 'react'
-import FormPage from '../../components/FormPage'
+import ListPage from '../../components/ListPage'
 import '../../styles/CadastrarUsuario.css'
 import '../../styles/Feriados.css'
 import '../../styles/Forms.css'
@@ -141,13 +141,14 @@ const Feriados: React.FC = () => {
   const validas = linhas.filter(l => !l.erro).length
   const erros = total - validas
 
+  const botoes = (
+    <>
+      <button className="btn secundario" onClick={() => { setLinhas([]); setImportAberto(true) }}>Importar Feriados</button>
+      <button className="btn primario button" onClick={abrirNovo}>+ Novo Feriado</button>
+    </>
+  )
   return (
-    <FormPage title="Cadastro de Feriados">
-      <div className="acoes">
-        <button className="btn secundario" onClick={() => { setLinhas([]); setImportAberto(true) }}>Importar Feriados</button>
-        <button className="btn primario button" onClick={abrirNovo}>+ Novo Feriado</button>
-      </div>
-
+    <ListPage title="Cadastro de Feriados" actions={botoes}>
       {carregado && feriados.length === 0 && <p>Nenhum feriado cadastrado.</p>}
 
       {feriados.length > 0 && (
@@ -241,7 +242,7 @@ const Feriados: React.FC = () => {
           </div>
         </div>
       )}
-    </FormPage>
+    </ListPage>
   )
 }
 
