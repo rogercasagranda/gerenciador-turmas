@@ -16,5 +16,4 @@ from .turma_aluno import TurmaAluno  # noqa: F401
 from .feriado import Feriado  # noqa: F401
 from .usuarios import Usuarios  # noqa: F401
 from .logconfig import LogConfig  # noqa: F401
-from .log_config import LogConfigScreen  # noqa: F401
 from .logauditoria import LogAuditoria  # noqa: F401

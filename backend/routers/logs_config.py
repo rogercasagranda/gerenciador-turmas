@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.routes.usuarios import token_data_from_request, to_canonical
-from backend.models.log_config import LogConfigScreen
+from backend.models.logconfig import LogConfig
 from backend.models.logauditoria import LogAuditoria
 from backend.models.usuarios import Usuarios
 from backend.schemas.logs_config import LogConfigIn, LogConfigOut
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/logs", tags=["LogsConfig"])
 
 def _known_screens(db: Session) -> List[str]:
     logs = [r[0] for r in db.query(LogAuditoria.entidade).distinct().all()]
-    cfg = [r[0] for r in db.query(LogConfigScreen.screen).distinct().all()]
+    cfg = [r[0] for r in db.query(LogConfig.screen).distinct().all()]
     return sorted(set(logs + cfg))
 
 
@@ -36,9 +36,9 @@ def listar_telas(request: Request, db: Session = Depends(get_db)):
 def obter_config(screen: str, request: Request, db: Session = Depends(get_db)):
     token_data_from_request(request)
     row = (
-        db.query(LogConfigScreen, Usuarios.nome)
-        .outerjoin(Usuarios, Usuarios.id_usuario == LogConfigScreen.updated_by)
-        .filter(LogConfigScreen.screen == screen)
+        db.query(LogConfig, Usuarios.nome)
+        .outerjoin(Usuarios, Usuarios.id_usuario == LogConfig.updated_by)
+        .filter(LogConfig.screen == screen)
         .first()
     )
     if row:
@@ -74,7 +74,7 @@ def atualizar_config(payload: LogConfigIn, request: Request, db: Session = Depen
     now = datetime.utcnow()
     before_after = []
     for tela in telas:
-        cfg = db.query(LogConfigScreen).filter(LogConfigScreen.screen == tela).first()
+        cfg = db.query(LogConfig).filter(LogConfig.screen == tela).first()
         if cfg:
             before = {
                 "create": cfg.create,
@@ -96,7 +96,7 @@ def atualizar_config(payload: LogConfigIn, request: Request, db: Session = Depen
             }
         else:
             before = {"create": False, "read": False, "update": False, "delete": False}
-            cfg = LogConfigScreen(
+            cfg = LogConfig(
                 screen=tela,
                 create=payload.create,
                 read=payload.read,
@@ -142,8 +142,8 @@ def resumo(
         raise HTTPException(status_code=403, detail="Sem permissão para acessar visão geral de logs")
     telas = _known_screens(db)
     rows = (
-        db.query(LogConfigScreen, Usuarios.nome)
-        .outerjoin(Usuarios, Usuarios.id_usuario == LogConfigScreen.updated_by)
+        db.query(LogConfig, Usuarios.nome)
+        .outerjoin(Usuarios, Usuarios.id_usuario == LogConfig.updated_by)
         .all()
     )
     mapa = {cfg.screen: (cfg, nome) for cfg, nome in rows}
