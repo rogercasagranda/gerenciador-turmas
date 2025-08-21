@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import '../../styles/ConfigTema.css'
-import { applyTheme, loadThemeFromStorage, THEME_OPTIONS, ThemeName, ModeKey } from '../../utils/theme'
+import { applyTheme, loadThemeFromStorage, saveTheme, saveMode, THEME_OPTIONS, ThemeName, ModeKey } from '../../theme/utils'
 
 const ConfigurarTema: React.FC = () => {
-  const [selectedTheme, setSelectedTheme] = useState<ThemeName>('indigo')
+  const [selectedTheme, setSelectedTheme] = useState<ThemeName>('roxo')
   const [selectedMode, setSelectedMode] = useState<ModeKey>('light')
   const [showToast, setShowToast] = useState(false)
 
@@ -14,6 +14,8 @@ const ConfigurarTema: React.FC = () => {
   }, [])
 
   const handleSalvar = () => {
+    saveTheme(selectedTheme)
+    saveMode(selectedMode)
     applyTheme(selectedTheme, selectedMode)
     setShowToast(true)
     setTimeout(() => setShowToast(false), 2000)

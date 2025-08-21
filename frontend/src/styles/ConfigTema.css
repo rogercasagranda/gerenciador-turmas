@@ -13,16 +13,14 @@
   cursor: pointer;
 }
 
-.theme-swatch.indigo { background: #6366F1; }
-.theme-swatch.purple { background: #8B5CF6; }
-.theme-swatch.blue   { background: #3B82F6; }
-.theme-swatch.green  { background: #10B981; }
-.theme-swatch.orange { background: #F59E0B; }
-.theme-swatch.red    { background: #EF4444; }
-.theme-swatch.gray   { background: #6B7280; }
-.theme-swatch.pink   { background: #EC4899; }
-.theme-swatch.teal   { background: #14B8A6; }
-.theme-swatch.yellow { background: #EAB308; }
+.theme-swatch.roxo      { background: #6D28D9; }
+.theme-swatch.vermelho  { background: #EF4444; }
+.theme-swatch.azul      { background: #3B82F6; }
+.theme-swatch.verde     { background: #10B981; }
+.theme-swatch.laranja   { background: #F59E0B; }
+.theme-swatch.cinza     { background: #6B7280; }
+.theme-swatch.rosa      { background: #EC4899; }
+.theme-swatch.ciano     { background: #06B6D4; }
 
 .theme-swatch.selected {
   outline: 3px solid var(--color-primary);
@@ -62,16 +60,14 @@
   --border: #1f2937;
 }
 
-.theme-preview[data-theme='indigo']  { --color-primary: #6366F1; --on-primary: #ffffff; }
-.theme-preview[data-theme='purple']  { --color-primary: #8B5CF6; --on-primary: #ffffff; }
-.theme-preview[data-theme='blue']    { --color-primary: #3B82F6; --on-primary: #ffffff; }
-.theme-preview[data-theme='green']   { --color-primary: #10B981; --on-primary: #ffffff; }
-.theme-preview[data-theme='orange']  { --color-primary: #F59E0B; --on-primary: #111111; }
-.theme-preview[data-theme='red']     { --color-primary: #EF4444; --on-primary: #ffffff; }
-.theme-preview[data-theme='gray']    { --color-primary: #6B7280; --on-primary: #ffffff; }
-.theme-preview[data-theme='pink']    { --color-primary: #EC4899; --on-primary: #ffffff; }
-.theme-preview[data-theme='teal']    { --color-primary: #14B8A6; --on-primary: #ffffff; }
-.theme-preview[data-theme='yellow']  { --color-primary: #EAB308; --on-primary: #111111; }
+.theme-preview[data-theme='roxo']     { --color-primary: #6D28D9; --color-primary-contrast: #ffffff; }
+.theme-preview[data-theme='vermelho'] { --color-primary: #EF4444; --color-primary-contrast: #ffffff; }
+.theme-preview[data-theme='azul']     { --color-primary: #3B82F6; --color-primary-contrast: #ffffff; }
+.theme-preview[data-theme='verde']    { --color-primary: #10B981; --color-primary-contrast: #ffffff; }
+.theme-preview[data-theme='laranja']  { --color-primary: #F59E0B; --color-primary-contrast: #111827; }
+.theme-preview[data-theme='cinza']    { --color-primary: #6B7280; --color-primary-contrast: #ffffff; }
+.theme-preview[data-theme='rosa']     { --color-primary: #EC4899; --color-primary-contrast: #ffffff; }
+.theme-preview[data-theme='ciano']    { --color-primary: #06B6D4; --color-primary-contrast: #ffffff; }
 
 .theme-preview .preview-header {
   height: 44px;
@@ -86,7 +82,7 @@
 
 .toast-success {
   background: var(--color-primary);
-  color: var(--on-primary);
+  color: var(--color-primary-contrast);
   padding: .5rem .75rem;
   border-radius: .5rem;
 }

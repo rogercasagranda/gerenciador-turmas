@@ -1,10 +1,12 @@
 :root {
-  --color-primary: #6366F1;   /* valor padrão, será sobrescrito por data-theme */
-  --on-primary: #ffffff;
+  --color-primary: #6D28D9;   /* valor padrão, será sobrescrito por data-theme */
+  --color-primary-contrast: #ffffff;
   --bg: #ffffff;
   --text: #111827;
   --surface: #f5f7fb;
   --border: #e5e7eb;
+  --btn-radius: .75rem;
+  --btn-shadow: 0 2px 4px rgba(0,0,0,0.1);
   /* Variáveis legadas para o layout atual */
   --pp-purple-700: var(--color-primary);
   --pp-purple-900: color-mix(in srgb, var(--color-primary) 80%, black);
@@ -15,7 +17,7 @@
   --pp-border: var(--border);
   --pp-muted: color-mix(in srgb, var(--text) 60%, var(--bg));
   --pp-danger: #e53e3e;
-  --pp-shadow: rgba(0,0,0,0.1);
+  --pp-shadow: var(--btn-shadow);
 }
 
 /* Dark mode (aplicar junto com data-mode="dark") */
@@ -26,40 +28,41 @@
   --border: #1f2937;
 }
 
-/* 10 temas (ajustam apenas --color-primary e --on-primary quando necessário) */
-:root[data-theme="indigo"]  { --color-primary: #6366F1; --on-primary: #ffffff; }
-:root[data-theme="purple"]  { --color-primary: #8B5CF6; --on-primary: #ffffff; }
-:root[data-theme="blue"]    { --color-primary: #3B82F6; --on-primary: #ffffff; }
-:root[data-theme="green"]   { --color-primary: #10B981; --on-primary: #ffffff; }
-:root[data-theme="orange"]  { --color-primary: #F59E0B; --on-primary: #111111; }
-:root[data-theme="red"]     { --color-primary: #EF4444; --on-primary: #ffffff; }
-:root[data-theme="gray"]    { --color-primary: #6B7280; --on-primary: #ffffff; }
-:root[data-theme="pink"]    { --color-primary: #EC4899; --on-primary: #ffffff; }
-:root[data-theme="teal"]    { --color-primary: #14B8A6; --on-primary: #ffffff; }
-:root[data-theme="yellow"]  { --color-primary: #EAB308; --on-primary: #111111; }
+/* Mapas de tema */
+:root[data-theme="roxo"]     { --color-primary: #6D28D9; --color-primary-contrast: #ffffff; }
+:root[data-theme="vermelho"] { --color-primary: #EF4444; --color-primary-contrast: #ffffff; }
+:root[data-theme="azul"]     { --color-primary: #3B82F6; --color-primary-contrast: #ffffff; }
+:root[data-theme="verde"]    { --color-primary: #10B981; --color-primary-contrast: #ffffff; }
+:root[data-theme="laranja"]  { --color-primary: #F59E0B; --color-primary-contrast: #111827; }
+:root[data-theme="cinza"]    { --color-primary: #6B7280; --color-primary-contrast: #ffffff; }
+:root[data-theme="rosa"]     { --color-primary: #EC4899; --color-primary-contrast: #ffffff; }
+:root[data-theme="ciano"]    { --color-primary: #06B6D4; --color-primary-contrast: #ffffff; }
 
 /* Botões padrão que seguem o tema */
 .button {
   background: var(--color-primary);
-  color: var(--on-primary);
+  color: var(--color-primary-contrast);
   border: 1px solid transparent;
-  border-radius: .75rem;
+  border-radius: var(--btn-radius);
+  box-shadow: var(--btn-shadow);
   padding: .75rem 1rem;
   font-weight: 600;
 }
 .button:hover { filter: brightness(0.92); }
 .button:focus { outline: 2px solid color-mix(in srgb, var(--color-primary) 40%, #ffffff); outline-offset: 2px; }
 
-/* Botão Sair: FIXO em vermelho, não herda tema */
+/* Botão Sair: padrão vermelho, exceção em tema vermelho */
 .button-exit {
-  background: #ef4444;
+  background: #EF4444;
   color: #ffffff;
   border: 1px solid transparent;
-  border-radius: .75rem;
+  border-radius: var(--btn-radius);
+  box-shadow: var(--btn-shadow);
   padding: .5rem .875rem;
   font-weight: 700;
 }
 .button-exit:hover { filter: brightness(0.92); }
+:root[data-theme="vermelho"] .button-exit { background: #111827; }
 
 /* Utilitários base (sem alterar layout existente) */
 .app-bg      { background: var(--bg);    color: var(--text); }

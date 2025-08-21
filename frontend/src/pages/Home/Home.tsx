@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 // Importa CSS da Home (layout travado)
 import '../../styles/Home.css'
 import '../../styles/Home.lock.css'
-import { loadTheme } from '../../utils/theme'
+import { loadThemeFromStorage } from '../../theme/utils'
 import { API_BASE } from '@/services/api'
 
 // Carrega páginas internas com import dinâmico
@@ -72,7 +72,7 @@ const Home: React.FC = () => {
         setPodeUsuarios(Boolean(autorizado))
         setIsMaster(Boolean(data.is_master))
         try { localStorage.setItem('user_id', String(data.id_usuario)) } catch {}
-        loadTheme()
+        loadThemeFromStorage()
       })
       .catch(() => {})
   }, [navigate])
