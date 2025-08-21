@@ -99,18 +99,6 @@ body { /* Aplica ao corpo do documento */
 .icon-lines::before { top: -6px; } /* Posiciona a linha superior acima da central */
 .icon-lines::after  { top:  6px; } /* Posiciona a linha inferior abaixo da central */
 
-/* Botão Sair */
-.btn-sair { /* Define estilo do botão de sair */
-  background: var(--pp-danger);  /* Aplica cor de destaque vermelho */
-  color: #fff;                   /* Define texto branco */
-  border: none;                  /* Remove borda padrão */
-  padding: 10px 14px;            /* Define espaçamento interno */
-  border-radius: 10px;           /* Arredonda cantos */
-  font-weight: 600;              /* Destaca visualmente o texto */
-  cursor: pointer;               /* Indica elemento clicável */
-  transition: filter .2s ease;   /* Adiciona transição suave ao hover */
-}
-.btn-sair:hover { filter: brightness(0.95); } /* Escurece levemente ao passar o mouse */
 
 /* Estrutura do corpo: sidebar + conteúdo */
 .home-layout { /* Define contêiner principal do corpo */
@@ -261,7 +249,7 @@ body { /* Aplica ao corpo do documento */
   .app-title { /* Ajusta o tamanho do título */
     font-size: 18px;             /* Reduz levemente para caber melhor */
   }
-  .btn-sair { /* Ajusta o botão sair */
+  .button-exit { /* Ajusta o botão sair */
     padding: 8px 10px;           /* Reduz espaçamento para caber no cabeçalho */
   }
 }

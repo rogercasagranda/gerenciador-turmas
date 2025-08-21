@@ -248,7 +248,7 @@ const Home: React.FC = () => {
           <h1 className="app-title">Portal do Professor</h1>
         </div>
         <div className="header-right">
-          <button className="btn-sair" onClick={handleLogout}>Sair</button>
+          <button className="button-exit" onClick={handleLogout}>Sair</button>
         </div>
       </header>
 
