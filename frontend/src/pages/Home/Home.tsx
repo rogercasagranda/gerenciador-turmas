@@ -7,6 +7,7 @@ import '../../styles/Home.css'
 import '../../styles/Home.lock.css'
 import { loadThemeFromStorage } from '../../theme/utils'
 import { apiFetch, getAuthToken } from '@/services/api'
+import { safeAlert } from '@/utils/safeAlert'
 
 const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
 const toCanonical = (perfil: string) => (perfil || '').toLowerCase()
@@ -33,6 +34,15 @@ const CadFeriados = React.lazy(() => import('../Feriados/Feriados')) // Cadastro
 const CadAnoLetivo = React.lazy(() => import('../Cadastro/AnoLetivo')) // Cadastro de ano letivo
 
 
+
+// Decodifica payload do JWT quando chamada à API falha
+const getClaimsFromToken = () => {
+  const token = getAuthToken()
+  if (!token) return null
+  const parts = token.split('.')
+  if (parts.length !== 3) return null
+  try { return JSON.parse(atob(parts[1])) } catch { return null }
+}
 
 const Home: React.FC = () => {
   // Estado do drawer e submenu
@@ -68,7 +78,15 @@ const Home: React.FC = () => {
         try { localStorage.setItem('user_id', String(data.id_usuario)) } catch {}
         loadThemeFromStorage()
       })
-      .catch(() => {})
+      .catch(() => {
+        const claims = getClaimsFromToken()
+        const perfil = toCanonical(
+          (claims?.role || claims?.perfil || claims?.tipo_perfil || '') as string,
+        )
+        const isMaster = perfil === 'master'
+        setPodeUsuarios(isMaster || PERFIS_PERMITIDOS.has(perfil))
+        setIsMaster(isMaster)
+      })
   }, [navigate])
 
   useEffect(() => {
@@ -103,10 +121,12 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const path = getPath()
+
     if (path.includes('/configuracao/logs') && !isMaster) navigate('/home')
   }, [location.pathname, location.hash, isMaster, navigate])
 
   const can = useCallback((p: string) => permissions.has(p), [permissions])
+
 
   // Renderiza conteúdo interno
   const renderConteudo = () => {

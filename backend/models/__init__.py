@@ -17,3 +17,13 @@ from .feriado import Feriado  # noqa: F401
 from .usuarios import Usuarios  # noqa: F401
 from .logconfig import LogConfig  # noqa: F401
 from .logauditoria import LogAuditoria  # noqa: F401
+from .tela import Tela  # noqa: F401
+from .permissoes import (
+    Grupo,
+    UsuarioGrupo,
+    GrupoPermissao,
+    UsuarioPermissaoTemp,
+    PerfilWhitelist,
+    PermissaoStatus,
+    PerfilEnum,
+)  # noqa: F401
