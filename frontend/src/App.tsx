@@ -5,7 +5,9 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 // Importa páginas
 import LoginPageWrapper from './pages/Login/LoginPageWrapper'
 import Home from './pages/Home/Home'
-import PoliticaDeCookies from './pages/Institucional/PoliticaDeCookies'
+
+import PoliticaDeCookies from './pages/PoliticaDeCookies'
+
 
 // Componente principal da aplicação
 const App: React.FC = () => {
@@ -16,6 +18,9 @@ const App: React.FC = () => {
 
       {/* Tela de login (layout travado) */}
       <Route path="/login" element={<LoginPageWrapper />} />
+
+      {/* Política de Cookies */}
+      <Route path="/politica-de-cookies" element={<PoliticaDeCookies />} />
 
       {/* Página principal Home */}
       <Route path="/home" element={<Home />} />
