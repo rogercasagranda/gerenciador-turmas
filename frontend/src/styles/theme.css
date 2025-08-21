@@ -5,6 +5,17 @@
   --text: #111827;
   --surface: #f5f7fb;
   --border: #e5e7eb;
+  /* Variáveis legadas para o layout atual */
+  --pp-purple-700: var(--color-primary);
+  --pp-purple-900: color-mix(in srgb, var(--color-primary) 80%, black);
+  --pp-purple-100: color-mix(in srgb, var(--color-primary) 20%, white);
+  --pp-purple-50: color-mix(in srgb, var(--color-primary) 10%, white);
+  --pp-surface: var(--surface);
+  --pp-text: var(--text);
+  --pp-border: var(--border);
+  --pp-muted: color-mix(in srgb, var(--text) 60%, var(--bg));
+  --pp-danger: #e53e3e;
+  --pp-shadow: rgba(0,0,0,0.1);
 }
 
 /* Dark mode (aplicar junto com data-mode="dark") */
