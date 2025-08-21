@@ -53,21 +53,31 @@ const Home: React.FC = () => {
   const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>({})
   const [isMaster, setIsMaster] = useState(false)
 
+  const loadPermissions = useCallback(() => {
+    try {
+      const raw = localStorage.getItem('permissions.effective')
+      setPermissions(raw ? JSON.parse(raw) : {})
+    } catch {
+      setPermissions({})
+    }
+  }, [])
+
   // Roteamento
   const navigate = useNavigate()
   const location = useLocation()
 
-  const fetchPermissions = useCallback(() => {
-    apiFetch('/me/permissions/effective')
-      .then((data: Record<string, Record<string, boolean>>) => {
-        const perms = data || {}
-        setPermissions(perms)
-        try { localStorage.setItem('permissions.effective', JSON.stringify(perms)) } catch {}
-      })
-      .catch(() => setPermissions({}))
-  }, [])
 
-  // Verifica sessão ativa ao montar
+  useEffect(() => {
+    loadPermissions()
+  }, [loadPermissions])
+
+  useEffect(() => {
+    const handler = () => loadPermissions()
+    window.addEventListener('permissions:updated', handler)
+    return () => window.removeEventListener('permissions:updated', handler)
+  }, [loadPermissions])
+
+// Verifica sessão ativa ao montar
   useEffect(() => {
     const token = getAuthToken()
     if (!token) { navigate('/login'); return }
@@ -79,7 +89,6 @@ const Home: React.FC = () => {
         setIsMaster(Boolean(data.is_master))
         try { localStorage.setItem('user_id', String(data.id_usuario)) } catch {}
         loadThemeFromStorage()
-        fetchPermissions()
       })
       .catch(() => {
         const claims = getClaimsFromToken()
@@ -89,20 +98,9 @@ const Home: React.FC = () => {
         const isMaster = perfil === 'master'
         setIsMaster(isMaster)
       })
-  }, [navigate, fetchPermissions])
+  }, [navigate])
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('permissions.effective')
-      if (raw) setPermissions(JSON.parse(raw))
-    } catch {}
-  }, [])
 
-  useEffect(() => {
-    const handler = () => fetchPermissions()
-    window.addEventListener('permissions:refresh', handler)
-    return () => window.removeEventListener('permissions:refresh', handler)
-  }, [fetchPermissions])
 
   // Fecha drawer a cada navegação
   useEffect(() => {
