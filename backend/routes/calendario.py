@@ -21,6 +21,7 @@ from backend.schemas.turmas import (                                   # Importa
 )
 
 from backend.routes.usuarios import token_data_from_request, to_canonical  # Utilidades de autenticação
+from backend.utils.audit import registrar_log
 
 # As demais rotas do projeto já são registradas na raiz (sem prefixo).
 # Para manter consistência e atender ao frontend, removemos o prefixo
@@ -58,7 +59,7 @@ def listar_anos(request: Request, db: Session = Depends(get_db)):
 
 @router.post("/ano-letivo", response_model=AnoLetivoOut, status_code=status.HTTP_201_CREATED)  # Cria ano letivo
 def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(get_db)):
-    require_role(request, FULL_ACCESS)                                # Exige perfis com permissão de escrita
+    token = require_role(request, FULL_ACCESS)                         # Exige perfis com permissão de escrita
     existente = db.query(AnoLetivo).filter(AnoLetivo.descricao == payload.descricao).first()  # Verifica duplicidade de descrição
     if existente:                                                     # Se já houver mesma descrição
         raise HTTPException(status_code=409, detail="Ano letivo já cadastrado")  # Retorna 409 de conflito
@@ -68,6 +69,8 @@ def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(
     db.add(ano)                                                       # Adiciona à sessão
     db.commit()                                                       # Persiste no banco
     db.refresh(ano)                                                   # Atualiza com ID gerado
+    perfil = to_canonical(token.tipo_perfil)                          # Perfil do executor
+    registrar_log(db, token.id_usuario, "CREATE", "ano_letivo", ano.id, f"{perfil} criou ano letivo {ano.descricao}")
     return ano                                                        # Retorna ano criado
 
 @router.get("/ano-letivo/{ano_id}", response_model=AnoLetivoOut)  # Obtém ano letivo específico
@@ -81,7 +84,7 @@ def obter_ano(ano_id: int, request: Request, db: Session = Depends(get_db)):
 
 @router.put("/ano-letivo/{ano_id}", response_model=AnoLetivoOut)      # Atualiza ano letivo
 def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: Session = Depends(get_db)):
-    require_role(request, FULL_ACCESS)                                # Exige permissão total
+    token = require_role(request, FULL_ACCESS)                         # Exige permissão total
     ano = db.get(AnoLetivo, ano_id)                                   # Busca registro
     if not ano:                                                       # Se inexistente
         raise HTTPException(status_code=404, detail="Ano letivo não encontrado")  # Retorna 404
@@ -102,11 +105,13 @@ def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: S
         setattr(ano, field, value)                                    # Atualiza atributos
     db.commit()                                                       # Persiste alterações
     db.refresh(ano)                                                   # Atualiza objeto
+    perfil = to_canonical(token.tipo_perfil)
+    registrar_log(db, token.id_usuario, "UPDATE", "ano_letivo", ano.id, f"{perfil} atualizou ano letivo {ano.descricao}")
     return ano                                                        # Retorna ano atualizado
 
 @router.delete("/ano-letivo/{ano_id}")                               # Remove ano letivo
 def remover_ano(ano_id: int, request: Request, db: Session = Depends(get_db)):
-    require_role(request, FULL_ACCESS)                                # Exige permissão total
+    token = require_role(request, FULL_ACCESS)                         # Exige permissão total
     ano = db.get(AnoLetivo, ano_id)                                   # Busca registro
     if not ano:                                                       # Se inexistente
         raise HTTPException(status_code=404, detail="Ano letivo não encontrado")  # Retorna 404
@@ -118,6 +123,8 @@ def remover_ano(ano_id: int, request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="Ano letivo possui dependências")  # Bloqueia remoção
     db.delete(ano)                                                    # Remove registro
     db.commit()                                                       # Confirma no banco
+    perfil = to_canonical(token.tipo_perfil)
+    registrar_log(db, token.id_usuario, "DELETE", "ano_letivo", ano_id, f"{perfil} removeu ano letivo {ano.descricao}")
     return {"message": "Ano letivo removido"}                         # Retorna confirmação
 
 # ------------------------------------------------------

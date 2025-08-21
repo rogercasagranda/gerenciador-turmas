@@ -16,8 +16,8 @@ export default function useDirtyForm() {
     window.addEventListener('beforeunload', handleBeforeUnload)
 
     let unblock: (() => void) | undefined
-    if (isDirty && navigator) {
-      unblock = navigator.block((tx) => {
+    if (isDirty && navigator && typeof (navigator as any).block === 'function') {
+      unblock = (navigator as any).block((tx: any) => {
         if (window.confirm('Existem alterações não salvas')) {
           unblock?.()
           tx.retry()

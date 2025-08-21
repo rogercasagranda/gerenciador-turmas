@@ -24,6 +24,7 @@ afterEach(() => {
 // --- RBAC ---
 test('menu e rota protegidos por role', async () => {
   localStorage.setItem('auth_token', 'x')
+  localStorage.setItem('authToken', 'x')
   mockFetch({ '/usuarios/me': () => ({ ok: true, json: () => Promise.resolve({ tipo_perfil: 'professor' }) }) })
 
   render(
@@ -38,8 +39,16 @@ test('menu e rota protegidos por role', async () => {
 
 // --- Validações do formulário ---
 test('impede submit com campos vazios ou datas inválidas', async () => {
-  mockFetch({ '/ano-letivo': () => ({ ok: true, json: () => Promise.resolve([]) }) })
-  render(<AnoLetivoPage />)
+  localStorage.setItem('authToken', 'x')
+  mockFetch({
+    '/ano-letivo': () => ({ ok: true, json: () => Promise.resolve([]) }),
+    '/usuarios/me': () => ({ ok: true, json: () => Promise.resolve({ tipo_perfil: 'master' }) }),
+  })
+  render(
+    <MemoryRouter>
+      <AnoLetivoPage />
+    </MemoryRouter>
+  )
 
   const salvar = screen.getByRole('button', { name: 'Salvar' })
   expect(salvar).toBeDisabled() // campos vazios
@@ -55,7 +64,16 @@ test('impede submit com campos vazios ou datas inválidas', async () => {
 
 // --- Mensagens de erro do backend ---
 test('exibe mensagens de erro 409/422/403', async () => {
-  render(<AnoLetivoPage />)
+  localStorage.setItem('authToken', 'x')
+  mockFetch({
+    '/ano-letivo': () => ({ ok: true, json: () => Promise.resolve([]) }),
+    '/usuarios/me': () => ({ ok: true, json: () => Promise.resolve({ tipo_perfil: 'master' }) }),
+  })
+  render(
+    <MemoryRouter>
+      <AnoLetivoPage />
+    </MemoryRouter>
+  )
 
   const desc = screen.getByLabelText('Ano Letivo')
   const inicio = screen.getByLabelText('Início')
@@ -64,6 +82,7 @@ test('exibe mensagens de erro 409/422/403', async () => {
 
   const tentar = async (status: number, regex: RegExp) => {
     mockFetch({
+      '/usuarios/me': () => ({ ok: true, json: () => Promise.resolve({ tipo_perfil: 'master' }) }),
       '/ano-letivo': (init) => {
         if (!init || init.method === 'GET') return { ok: true, json: () => Promise.resolve([]) }
         return { ok: false, status, json: () => Promise.resolve({}) }
