@@ -1,7 +1,8 @@
 // Importa React e hooks
 import React, { useEffect, useState } from 'react'                        // Importa React/useState/useEffect
 import { useNavigate, useParams } from 'react-router-dom' // Navegação
-import { apiFetch } from '@/services/api'
+import { API_BASE, apiFetch, getAuthToken } from '@/services/api'
+import { safeAlert } from '@/utils/safeAlert'
 import '../../styles/CadastrarUsuario.css'                                 // Reaproveita CSS do cadastro
 import '../../styles/Forms.css'
 import useDirtyForm from '@/hooks/useDirtyForm'
@@ -54,6 +55,7 @@ const EditarUsuario: React.FC = () => {                                   // Def
       })                                // Guarda usuário
       .catch((e) => {                                                     // Trata erro
         if (e?.response?.status === 401) navigate('/login')
+        else if (e?.response?.status === 403) safeAlert('ACESSO NEGADO')
         else {
           const msg = e?.response?.data?.detail || 'Falha ao carregar usuário.' // Extrai mensagem
           setErro(msg)                                                      // Define erro
@@ -98,9 +100,10 @@ const EditarUsuario: React.FC = () => {                                   // Def
       setTimeout(() => navigate('/usuarios/consultar'), 800)             // Redireciona
     } catch (err: any) {                                                  // Em erro
 
-      if (err?.response?.status === 401) navigate('/login')
+      if (err?.status === 401) navigate('/login')
+      else if (err?.status === 403) safeAlert('ACESSO NEGADO')
       else {
-        const msg = err?.response?.data?.detail || 'Falha ao atualizar usuário.' // Extrai mensagem
+        const msg = err?.payload?.detail || 'Falha ao atualizar usuário.' // Extrai mensagem
         setErro(msg)                                                        // Define erro
       }
 

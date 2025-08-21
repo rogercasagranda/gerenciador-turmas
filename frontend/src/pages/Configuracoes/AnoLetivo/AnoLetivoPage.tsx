@@ -5,6 +5,7 @@ import '../../../styles/CadastrarUsuario.css'
 
 import { AnoLetivo, getAnoLetivos } from '../../../services/anoLetivo'
 import { API_BASE, getAuthToken } from '../../../services/api'
+import { safeAlert } from '@/utils/safeAlert'
 
 const PERFIS_PERMITIDOS = new Set(['master', 'diretor'])
 
@@ -33,6 +34,7 @@ const AnoLetivoPage: React.FC = () => {
       try {
         const r = await fetch(`${API_BASE}/usuarios/me`, { headers })
         if (r.status === 401) { navigate('/login'); return }
+        if (r.status === 403) { safeAlert('ACESSO NEGADO'); return }
         if (r.ok) {
           const me = await r.json()
           const perfil = toCanonical(me.tipo_perfil || '')

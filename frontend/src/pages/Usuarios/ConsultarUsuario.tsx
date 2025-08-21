@@ -5,7 +5,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 // Importa navegação
 import { useNavigate } from 'react-router-dom'
 
-import { API_BASE, getAuthToken } from '@/services/api'
+import { apiFetch, getAuthToken } from '@/services/api'
+import { safeAlert } from '@/utils/safeAlert'
 
 
 // Define tipo do usuário retornado pela API
@@ -75,14 +76,15 @@ const ConsultarUsuario: React.FC = () => {
         const me = await apiFetch('/usuarios/me') as MeuPerfil
         const p = toCanonical(me.tipo_perfil || '')
         const autorizado = me.is_master || PERFIS_PERMITIDOS.has(p)
-        if (!autorizado) { navigate('/home'); return }
+        if (!autorizado) { safeAlert('ACESSO NEGADO'); return }
 
         setCarregando(true)
         const r = await apiFetch('/usuarios') as Usuario[]
         setLista(Array.isArray(r) ? r : [])
         setErro('')
       } catch (e: any) {
-        setErro('Falha ao carregar usuários.')
+        if (e?.status === 403) safeAlert('ACESSO NEGADO')
+        else setErro('Falha ao carregar usuários.')
       } finally {
         setCarregando(false)
       }
