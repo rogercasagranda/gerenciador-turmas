@@ -39,6 +39,7 @@ CANON_TO_ENUM = {
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
 ALGORITHM = "HS256"
+MAX_JWT_BYTES = 256 * 1024
 
 
 class TokenData(BaseModel):
@@ -65,6 +66,8 @@ def token_data_from_request(request: Request) -> TokenData:
     if not auth.lower().startswith("bearer "):
         raise HTTPException(status_code=401, detail="Token ausente.")
     token = auth.split(" ", 1)[1]
+    if len(token) > MAX_JWT_BYTES:
+        raise HTTPException(status_code=413, detail="Token muito grande")
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         sub = payload.get("sub")

@@ -15,6 +15,7 @@ from backend.utils.pdf import generate_pdf
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
 ALGORITHM  = "HS256"
 ALLOWED_PERFIS = {"master", "diretor", "secretaria"}
+MAX_JWT_BYTES = 256 * 1024
 
 
 def to_canonical(perfil: str | None) -> str:
@@ -73,6 +74,8 @@ def token_data_from_request(request: Request) -> TokenData:
     if not auth.lower().startswith("bearer "):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token ausente.")
     token = auth.split(" ", 1)[1]
+    if len(token) > MAX_JWT_BYTES:
+        raise HTTPException(status_code=413, detail="Token muito grande")
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         sub = payload.get("sub")

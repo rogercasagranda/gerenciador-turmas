@@ -13,6 +13,7 @@ from jose import jwt, JWTError
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+MAX_JWT_BYTES = 256 * 1024
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,8 @@ def _claims(request: Request) -> dict:
     if not auth.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Token ausente ou inválido")
     token = auth.split(" ", 1)[1].strip()
+    if len(token) > MAX_JWT_BYTES:
+        raise HTTPException(status_code=413, detail="Token muito grande")
     try:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
