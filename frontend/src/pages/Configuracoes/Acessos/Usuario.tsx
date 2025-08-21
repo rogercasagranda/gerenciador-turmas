@@ -36,12 +36,14 @@ const AcessoUsuario: React.FC = () => {
     await criarPermissoesTemporarias(Number(usuarioId), novaPerm)
     setNovaPerm({ ...novaPerm, inicio: '', fim: '' })
     carregar()
+    window.dispatchEvent(new Event('permissions:refresh'))
   }
 
   const revogar = async (id: number) => {
     if (!usuarioId) return
     await revogarPermissaoTemporaria(Number(usuarioId), id)
     carregar()
+    window.dispatchEvent(new Event('permissions:refresh'))
   }
 
   return (
