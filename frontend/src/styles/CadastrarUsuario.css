@@ -29,18 +29,18 @@
 /* Ações */
 .acoes { display: flex; gap: 10px; justify-content: flex-end; }
 .btn { padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; }
-.btn.primario { background: var(--pp-purple-700); color: #fff; border: none; }
+.btn.primario { background: var(--pp-purple-700); color: var(--text-color); border: none; }
 .btn.primario:hover { background: var(--pp-purple-900); }
 .btn.secundario { background: var(--pp-purple-100); color: var(--pp-purple-900); border: 1px solid var(--pp-border); }
 .btn.secundario:hover { background: var(--pp-purple-50); }
-.btn.perigo { background: #dc2626; color: #fff; border: none; }
-.btn.perigo:hover { background: #b91c1c; }
+.btn.perigo { background: var(--primary-color); color: var(--text-color); border: none; }
+.btn.perigo:hover { background: var(--primary-color); }
 
 /* Estados e mensagens */
 .carregando { color: var(--pp-muted); }
 .alerta { padding: 10px 12px; border-radius: 10px; font-size: 14px; }
-.alerta.erro { background: #fee2e2; color: #7f1d1d; border: 1px solid #fecaca; }
-.alerta.sucesso { background: #dcfce7; color: #14532d; border: 1px solid #bbf7d0; }
+.alerta.erro { background: var(--primary-color); color: var(--text-color); border: 1px solid #fecaca; }
+.alerta.sucesso { background: var(--primary-color); color: var(--text-color); border: 1px solid #bbf7d0; }
 
 /* Responsivo */
 @media (max-width: 700px) {

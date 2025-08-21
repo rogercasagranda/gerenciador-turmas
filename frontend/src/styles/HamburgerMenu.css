@@ -33,7 +33,7 @@
   right: 0; /* Ocupa toda a largura da caixa */
   height: 3px; /* Define espessura das barras */
   border-radius: 2px; /* Arredonda pontas para estética */
-  background: #2d004d; /* Define cor das barras compatível com tema roxo */
+  background: var(--primary-color); /* Define cor das barras compatível com tema roxo */
   transition: transform 200ms ease, opacity 200ms ease; /* Anima transformações e opacidade */
 }
 
@@ -76,7 +76,7 @@
   left: 0; /* Alinha à esquerda da tela */
   width: 84%; /* Define largura do drawer em mobile */
   max-width: 320px; /* Define largura máxima para consistência */
-  background: #ffffff; /* Define fundo branco para conteúdo */
+  background: var(--primary-color); /* Define fundo branco para conteúdo */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); /* Adiciona sombra para elevação */
   transform: translateX(-110%); /* Esconde fora da tela quando fechado */
   transition: transform 240ms ease; /* Anima abertura/fechamento suave */

@@ -39,7 +39,7 @@ body {
 /* Título do formulário */
 .login-form h2 {
   margin-bottom: 20px; /* Espaço abaixo do título */
-  color: #333; /* Cor do texto */
+  color: var(--text-color); /* Cor do texto */
 }
 
 /* Inputs de texto e senha */
@@ -85,7 +85,7 @@ body {
   align-items: center; /* Alinha verticalmente */
   gap: 8px; /* Espaçamento entre checkbox e texto */
   font-size: 14px; /* Tamanho da fonte */
-  color: #333; /* Cor do texto */
+  color: var(--text-color); /* Cor do texto */
 }
 
 /* Botão "Fazer login com o Google" */
@@ -102,7 +102,7 @@ body {
   width: 100%; /* Largura total */
   text-decoration: none; /* Remove sublinhado (caso fosse <a>) */
   font-size: 14px; /* Tamanho da fonte */
-  color: #444; /* Cor do texto */
+  color: var(--text-color); /* Cor do texto */
 }
 
 /* Logo do Google dentro do botão */
@@ -130,7 +130,7 @@ body {
 .popup-erro button {
   margin-top: 10px; /* Espaço acima */
   background-color: white; /* Fundo branco */
-  color: #ff4d4d; /* Texto vermelho */
+  color: var(--text-color); /* Texto vermelho */
   border: none; /* Sem borda */
   border-radius: 4px; /* Arredondado */
   padding: 4px 8px; /* Espaçamento interno */
