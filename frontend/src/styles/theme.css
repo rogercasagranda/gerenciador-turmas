@@ -62,7 +62,7 @@
   font-weight: 700;
 }
 .button-exit:hover { filter: brightness(0.92); }
-:root[data-theme="vermelho"] .button-exit { background: #111827; }
+:root[data-theme="vermelho"] .button-exit { background: #000000; }
 
 /* Utilitários base (sem alterar layout existente) */
 .app-bg      { background: var(--bg);    color: var(--text); }
