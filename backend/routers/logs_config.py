@@ -24,7 +24,10 @@ def _known_screens(db: Session) -> List[str]:
 
 @router.get("/config/screens")
 def listar_telas(request: Request, db: Session = Depends(get_db)):
-    token_data_from_request(request)
+    token = token_data_from_request(request)
+    perfil = to_canonical(token.tipo_perfil)
+    if perfil not in {"master", "diretor"}:
+        raise HTTPException(status_code=403, detail="Sem permissão para listar telas")
     telas = _known_screens(db)
     return [{"key": t, "label": t.replace("/", " > ")} for t in telas]
 
@@ -117,7 +120,7 @@ def atualizar_config(payload: LogConfigIn, request: Request, db: Session = Depen
             token.id_usuario,
             "UPDATE",
             "log_config",
-            descricao=f"{tela} {json.dumps(before, sort_keys=True)}->{json.dumps(after, sort_keys=True)}",
+            descricao=f"{tela} {json.dumps(before, sort_keys=True)}→{json.dumps(after, sort_keys=True)}",
         )
 
     return obter_config(payload.screen, request, db)
@@ -133,7 +136,10 @@ def resumo(
     onlyActive: bool = False,
     db: Session = Depends(get_db),
 ):
-    token_data_from_request(request)
+    token = token_data_from_request(request)
+    perfil = to_canonical(token.tipo_perfil)
+    if perfil not in {"master", "diretor"}:
+        raise HTTPException(status_code=403, detail="Sem permissão para acessar visão geral de logs")
     telas = _known_screens(db)
     rows = (
         db.query(LogConfigScreen, Usuarios.nome)

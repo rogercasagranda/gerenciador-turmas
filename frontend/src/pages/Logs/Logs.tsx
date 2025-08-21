@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import LogsConfig from './LogsConfig'
-import LogsOverview from './LogsOverview'
+
+import axios from 'axios'
+import { API_BASE, getAuthToken } from '@/services/api'
+
 import '../../styles/Logs.css'
 
 type Tab = 'config' | 'overview'
@@ -17,11 +18,22 @@ const Logs: React.FC = () => {
     setTab(tabParam)
   }, [tabParam])
 
-  const changeTab = (t: Tab) => {
-    const params = new URLSearchParams(searchParams)
-    params.set('tab', t)
-    if (t !== 'config') params.delete('screen')
-    navigate({ search: params.toString() })
+
+  const carregar = () => {
+    const params: Record<string, string> = {}
+    if (usuario) params.id_usuario = usuario
+    if (entidade) params.entidade = entidade
+    if (dataInicio) params.data_inicio = dataInicio
+    if (dataFim) params.data_fim = dataFim
+    const token = getAuthToken()
+    axios
+      .get<LogItem[]>(`${API_BASE}/logs`, {
+        params,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+      .then((r) => setLogs(r.data))
+      .catch(() => setLogs([]))
+
   }
 
   const handleEdit = (screen: string) => {
