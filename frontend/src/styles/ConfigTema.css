@@ -1,0 +1,45 @@
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(56px, 1fr));
+  gap: 12px;
+  max-width: 420px;
+}
+
+.theme-swatch {
+  width: 56px;
+  height: 36px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+}
+
+.theme-swatch.selected {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.theme-preview {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.theme-preview .preview-header {
+  height: 44px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background: var(--color-primary);
+}
+
+.theme-actions {
+  margin-top: 20px;
+}
+
+.toast-success {
+  background: var(--color-primary);
+  color: var(--on-primary);
+  padding: .5rem .75rem;
+  border-radius: .5rem;
+}
