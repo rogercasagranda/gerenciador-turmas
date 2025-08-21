@@ -5,12 +5,14 @@
 # ======================================================
 from fastapi import APIRouter, Depends, HTTPException, Request, status  # Importa FastAPI e utilidades
 from sqlalchemy.orm import Session                                      # Importa sessão do SQLAlchemy
+from sqlalchemy import func                                             # Funções SQL auxiliares
 import requests                                                         # Importa requests para chamadas HTTP
 from datetime import date                                               # Importa date para manipulação de datas
 import os                                                              # Importa os para variáveis de ambiente
+
 import json                                                            # Serializa payloads para log
 
-from backend.database import get_db                                    # Dependência de banco de dados
+
 from backend.models import AnoLetivo                                   # Modelo de AnoLetivo
 from backend.models.turma import Turma                                 # Modelo de Turma para verificar dependências
 from backend.models.feriado import Feriado                             # Modelo de Feriado
@@ -20,6 +22,7 @@ from backend.schemas.turmas import (                                   # Importa
     FeriadoCreate, FeriadoOut, FeriadoUpdate,                          # Schemas de feriado
     FeriadoImportarNacionais,                                          # Schema para importação de feriados nacionais
 )
+
 
 from backend.routes.usuarios import token_data_from_request, to_canonical  # Utilidades de autenticação
 from backend.utils.audit import registrar_log                          # Função para auditoria
@@ -33,6 +36,53 @@ router = APIRouter(tags=["Calendário"])               # Instancia roteador sem 
 
 # Base para chamadas externas de feriados
 FERIADOS_API_BASE = os.getenv("FERIADOS_API_BASE", "").rstrip("/")
+
+# Configuração de JWT
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
+ALGORITHM = "HS256"
+
+
+class TokenData(BaseModel):
+    id_usuario: int
+    email: EmailStr
+    tipo_perfil: str | None = None
+
+
+def to_canonical(perfil: str | None) -> str:
+    """Normaliza descrições de perfil."""
+    p = (perfil or "").strip().lower()
+    if p.startswith("diretor"):
+        return "diretor"
+    if p.startswith("coordenador"):
+        return "coordenador"
+    if p.startswith("professor"):
+        return "professor"
+    if p in {"aluno", "aluna"}:
+        return "aluno"
+    return p
+
+
+def token_data_from_request(request: Request) -> TokenData:
+    auth = request.headers.get("Authorization", "")
+    if not auth.lower().startswith("bearer "):
+        raise HTTPException(status_code=401, detail="Token ausente.")
+    token = auth.split(" ", 1)[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        sub = payload.get("sub")
+        id_usuario = payload.get("id_usuario")
+        tipo_perfil = payload.get("tipo_perfil")
+        if sub is None or id_usuario is None:
+            raise HTTPException(status_code=401, detail="Token inválido.")
+        return TokenData(id_usuario=int(id_usuario), email=str(sub), tipo_perfil=tipo_perfil)
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido.")
+
+
+def get_db_dep() -> Generator[Session, None, None]:
+    """Importa ``get_db`` apenas quando necessário."""
+    from backend.database import get_db as _get_db
+    yield from _get_db()
 
 # ------------------------------------------------------
 # Controle de acesso
@@ -52,20 +102,23 @@ def require_role(request: Request, allowed: set[str]):                # Função
 # Endpoints de Ano Letivo
 # ------------------------------------------------------
 @router.get("/ano-letivo", response_model=list[AnoLetivoOut])         # Lista todos os anos letivos
-def listar_anos(request: Request, db: Session = Depends(get_db)):
-    if request.headers.get("Authorization"):
-        require_role(request, READ_RESTRITO)                              # Valida permissão de leitura
+def listar_anos(request: Request, db: Session = Depends(get_db_dep)):
+    require_role(request, READ_RESTRITO)                              # Exige qualquer perfil autenticado
     anos = db.query(AnoLetivo).all()                                  # Consulta anos existentes
     return anos                                                       # Retorna lista simples
 
 @router.post("/ano-letivo", response_model=AnoLetivoOut, status_code=status.HTTP_201_CREATED)  # Cria ano letivo
+
 def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(get_db)):
     token = require_role(request, WRITE_ACCESS)                       # Exige perfis com permissão de escrita
     existente = db.query(AnoLetivo).filter(AnoLetivo.descricao == payload.descricao).first()  # Verifica duplicidade de descrição
+
     if existente:                                                     # Se já houver mesma descrição
-        raise HTTPException(status_code=409, detail="Ano letivo já cadastrado")  # Retorna 409 de conflito
-    if payload.data_inicio > payload.data_fim:                        # Valida ordem das datas
-        raise HTTPException(status_code=422, detail="data_inicio deve ser menor ou igual a data_fim")  # Retorna 422
+
+        raise HTTPException(status_code=400, detail="Descrição já cadastrada")
+    if payload.data_inicio >= payload.data_fim:                       # Valida ordem das datas
+        raise HTTPException(status_code=400, detail="data_inicio deve ser menor que data_fim")
+
     ano = AnoLetivo(**payload.dict())                                 # Cria instância do modelo
     db.add(ano)                                                       # Adiciona à sessão
     db.commit()                                                       # Persiste no banco
@@ -77,7 +130,7 @@ def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(
 
 @router.get("/ano-letivo/{ano_id}", response_model=AnoLetivoOut)  # Obtém ano letivo específico
 
-def obter_ano(ano_id: int, request: Request, db: Session = Depends(get_db)):
+def obter_ano(ano_id: int, request: Request, db: Session = Depends(get_db_dep)):
     require_role(request, READ_RESTRITO)                              # Permite leitura ampla
     ano = db.get(AnoLetivo, ano_id)                                   # Busca registro
     if not ano:                                                       # Se não encontrado
@@ -85,23 +138,28 @@ def obter_ano(ano_id: int, request: Request, db: Session = Depends(get_db)):
     return ano                                                        # Retorna ano encontrado
 
 @router.put("/ano-letivo/{ano_id}", response_model=AnoLetivoOut)      # Atualiza ano letivo
+
 def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: Session = Depends(get_db)):
     token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
+
     ano = db.get(AnoLetivo, ano_id)                                   # Busca registro
     if not ano:                                                       # Se inexistente
         raise HTTPException(status_code=404, detail="Ano letivo não encontrado")  # Retorna 404
 
     if payload.descricao is not None:                                # Se descrição foi informada
-        existente = db.query(AnoLetivo).filter(                      # Verifica duplicidade de descrição
-            AnoLetivo.descricao == payload.descricao,
+        existente = db.query(AnoLetivo).filter(                      # Verifica duplicidade (case-insens)
+            func.lower(AnoLetivo.descricao) == payload.descricao.lower(),
             AnoLetivo.id != ano_id,
         ).first()
         if existente:                                                # Se já houver outro com mesma descrição
+
             raise HTTPException(status_code=409, detail="Ano letivo já cadastrado")  # Retorna conflito
+
     nova_inicio = payload.data_inicio or ano.data_inicio              # Determina nova data inicial
     nova_fim = payload.data_fim or ano.data_fim                       # Determina nova data final
-    if nova_inicio > nova_fim:                                        # Valida ordem das datas
-        raise HTTPException(status_code=422, detail="data_inicio deve ser menor ou igual a data_fim")  # Retorna 422
+    if nova_inicio >= nova_fim:                                      # Valida ordem das datas
+        raise HTTPException(status_code=400, detail="data_inicio deve ser menor que data_fim")
+
     for field, value in payload.dict(exclude_unset=True).items():     # Percorre campos enviados
         setattr(ano, field, value)                                    # Atualiza atributos
     db.commit()                                                       # Persiste alterações
@@ -112,8 +170,10 @@ def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: S
 
 
 @router.delete("/ano-letivo/{ano_id}")                               # Remove ano letivo
+
 def remover_ano(ano_id: int, request: Request, db: Session = Depends(get_db)):
     token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
+
     ano = db.get(AnoLetivo, ano_id)                                   # Busca registro
     if not ano:                                                       # Se inexistente
         raise HTTPException(status_code=404, detail="Ano letivo não encontrado")  # Retorna 404
@@ -133,19 +193,23 @@ def remover_ano(ano_id: int, request: Request, db: Session = Depends(get_db)):
 # Endpoints de Feriados
 # ------------------------------------------------------
 @router.get("/feriados", response_model=list[FeriadoOut])            # Lista feriados por ano letivo
-def listar_feriados(anoLetivoId: int, request: Request, db: Session = Depends(get_db)):
+def listar_feriados(anoLetivoId: int, request: Request, db: Session = Depends(get_db_dep)):
     require_role(request, READ_RESTRITO)                              # Permite leitura a todos os perfis
     feriados = db.query(Feriado).filter(Feriado.ano_letivo_id == anoLetivoId).all()  # Consulta feriados
     return feriados                                                  # Retorna lista simples
 
 @router.post("/feriados", response_model=FeriadoOut, status_code=status.HTTP_201_CREATED)  # Cria feriado escolar
+
 def criar_feriado(payload: FeriadoCreate, request: Request, db: Session = Depends(get_db)):
     token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
+
     if payload.origem != "ESCOLA":                                    # Valida origem
         raise HTTPException(status_code=422, detail="Origem deve ser 'ESCOLA'")  # Retorna 422
 
     ano = db.get(AnoLetivo, payload.ano_letivo_id)                    # Busca ano letivo
+
     if not ano or not (ano.data_inicio <= payload.data <= ano.data_fim):  # Verifica se data está no período
+
         raise HTTPException(status_code=422, detail="Data fora do período do ano letivo")  # Retorna 422
     existente = db.query(Feriado).filter_by(                          # Verifica duplicidade
         ano_letivo_id=payload.ano_letivo_id, data=payload.data, origem=payload.origem
@@ -162,8 +226,10 @@ def criar_feriado(payload: FeriadoCreate, request: Request, db: Session = Depend
 
 
 @router.put("/feriados/{feriado_id}", response_model=FeriadoOut)  # Atualiza feriado
+
 def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request, db: Session = Depends(get_db)):
     token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
+
     fer = db.get(Feriado, feriado_id)                                 # Busca registro
     if not fer:                                                       # Se inexistente
         raise HTTPException(status_code=404, detail="Feriado não encontrado")  # Retorna 404
@@ -171,7 +237,9 @@ def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request,
         raise HTTPException(status_code=403, detail="Feriados nacionais não podem ser alterados")  # Retorna 403
     if payload.data is not None:                                     # Se nova data informada
         ano = db.get(AnoLetivo, fer.ano_letivo_id)                   # Obtém ano letivo
+
         if not (ano.data_inicio <= payload.data <= ano.data_fim):    # Verifica se data está no período
+
             raise HTTPException(status_code=422, detail="Data fora do período do ano letivo")  # Retorna 422
         duplicado = db.query(Feriado).filter(                         # Verifica duplicidade com outros feriados
             Feriado.id != feriado_id,
@@ -192,8 +260,10 @@ def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request,
 
 
 @router.delete("/feriados/{feriado_id}")                             # Remove feriado
+
 def remover_feriado(feriado_id: int, request: Request, db: Session = Depends(get_db)):
     token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
+
     fer = db.get(Feriado, feriado_id)                                 # Busca registro
     if not fer:                                                       # Se inexistente
         raise HTTPException(status_code=404, detail="Feriado não encontrado")  # Retorna 404
@@ -206,8 +276,10 @@ def remover_feriado(feriado_id: int, request: Request, db: Session = Depends(get
 
 
 @router.post("/feriados/importar-nacionais", response_model=list[FeriadoOut])  # Importa feriados nacionais
+
 def importar_nacionais(payload: FeriadoImportarNacionais, request: Request, db: Session = Depends(get_db)):
     token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
+
 
     ano = db.get(AnoLetivo, payload.ano_letivo_id)                    # Busca ano letivo
     if not ano:                                                       # Caso não exista
@@ -222,7 +294,9 @@ def importar_nacionais(payload: FeriadoImportarNacionais, request: Request, db: 
             dados = []                                               # Considera lista vazia
         for item in dados:                                           # Percorre feriados retornados
             data_item = date.fromisoformat(item["data"])            # Converte data para objeto date
+
             if not (ano.data_inicio <= data_item <= ano.data_fim):    # Verifica se data pertence ao período
+
                 continue                                             # Ignora data fora do período
             existente = db.query(Feriado).filter_by(                  # Verifica duplicidade
                 ano_letivo_id=payload.ano_letivo_id,
