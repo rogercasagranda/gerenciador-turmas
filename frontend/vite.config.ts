@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 
 // Importa suporte ao React
 import react from '@vitejs/plugin-react'
+import legacy from '@vitejs/plugin-legacy'
 import path from 'node:path'
 
 // Importa o plugin de PWA
@@ -21,6 +22,10 @@ export default defineConfig({
   // Aplica os plugins
   plugins: [
     react(),                 // Ativa plugin React
+    legacy({
+      targets: ['defaults', 'not IE 11', 'iOS >= 12', 'Safari >= 12'],
+      additionalLegacyPolyfills: ['regenerator-runtime/runtime']
+    }),
     VitePWA({                // Ativa PWA com configurações
       registerType: 'autoUpdate',   // Atualiza automaticamente
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'], // Ícones extras
