@@ -70,6 +70,18 @@ export interface ApiErrorPayload {
   [key: string]: unknown
 }
 
+// Erro customizado incluindo status HTTP e payload retornado
+export class ApiError extends Error {
+  status: number
+  payload?: ApiErrorPayload
+
+  constructor(status: number, message: string, payload?: ApiErrorPayload) {
+    super(message)
+    this.status = status
+    this.payload = payload
+  }
+}
+
 // Lança erro com mensagem amigável consolidando possíveis formatos do backend
 function raiseHttpError(res: Response, payload?: ApiErrorPayload): never {
   // Extrai status e texto padrão
@@ -95,8 +107,8 @@ function raiseHttpError(res: Response, payload?: ApiErrorPayload): never {
   }
   // Cria erro final com base e razão
   const msg = reason ? `${base} • ${reason}` : base
-  // Lança erro para tratamento por quem chamou
-  throw new Error(msg)
+  // Lança erro com status e payload para tratamento específico
+  throw new ApiError(res.status, msg, payload)
 }
 
 // Faz requisição com AbortController e timeout opcional
@@ -305,6 +317,66 @@ export async function atualizarUsuario(id: number, payload: AtualizarUsuarioRequ
   }
   // Executa PUT em /usuarios/:id
   return await apiRequest<Usuario>(`/usuarios/${id}`, { method: "PUT", body: payload })
+}
+
+// ============================================================
+// Ano Letivo - operações específicas
+// ============================================================
+
+export interface AnoLetivo {
+  id: number
+  descricao: string
+  data_inicio: string
+  data_fim: string
+}
+
+export type AnoLetivoPayload = Omit<AnoLetivo, "id">
+
+function handleAnoLetivoError(err: unknown): never {
+  if (err instanceof ApiError) {
+    if (err.status === 409) {
+      throw new ApiError(409, "Descrição já existe")
+    }
+    if (err.status === 400) {
+      throw new ApiError(400, "Data inicial deve ser menor que a final")
+    }
+  }
+  throw err instanceof Error ? err : new Error(String(err))
+}
+
+export async function listAnosLetivos(): Promise<AnoLetivo[]> {
+  try {
+    return await apiRequest<AnoLetivo[]>("/ano-letivo")
+  } catch (err) {
+    handleAnoLetivoError(err)
+  }
+}
+
+export async function createAnoLetivo(payload: AnoLetivoPayload): Promise<AnoLetivo> {
+  try {
+    return await apiRequest<AnoLetivo>("/ano-letivo", { method: "POST", body: payload })
+  } catch (err) {
+    handleAnoLetivoError(err)
+  }
+}
+
+export async function updateAnoLetivo(
+  id: number,
+  payload: AnoLetivoPayload,
+): Promise<AnoLetivo> {
+  try {
+    return await apiRequest<AnoLetivo>(`/ano-letivo/${id}`, { method: "PUT", body: payload })
+  } catch (err) {
+    handleAnoLetivoError(err)
+  }
+}
+
+export async function deleteAnoLetivo(id: number): Promise<void> {
+  try {
+    await apiRequest(`/ano-letivo/${id}`, { method: "DELETE" })
+  } catch (err) {
+    handleAnoLetivoError(err)
+  }
 }
 
 // Logout local (somente cliente)
