@@ -13,8 +13,10 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
-from backend.models import Base, Tela, UsuarioPermissaoTemp
+from backend.models import Base, Tela, UsuarioPermissaoTemp, PermissaoStatus
 from backend.models.usuarios import Usuarios
+from backend.services.permissions import has_permission
+import backend.services.permissions as perms
 
 fake_db = types.SimpleNamespace(get_db=lambda: None)
 sys.modules["backend.database"] = fake_db
@@ -133,4 +135,42 @@ def test_proibe_perfil_aluno():
         "fim": fim.isoformat(),
     }
     resp = client.post("/acessos/usuarios/2/temporarias", json=payload)
+    assert resp.status_code == 400
+
+
+def test_expirada_nao_concede_acesso():
+    client, SessionLocal = _create_client()
+    perms.BRAZIL_TZ = None
+    with SessionLocal() as db:
+        _seed_base(db)
+    inicio = datetime.now() - timedelta(hours=2)
+    fim = datetime.now() - timedelta(hours=1)
+    payload = {
+        "tela_id": 1,
+        "operacoes": {"view": True},
+        "inicio": inicio.isoformat(),
+        "fim": fim.isoformat(),
+    }
+    # Cria permissão já expirada
+    assert client.post("/acessos/usuarios/1/temporarias", json=payload).status_code == 201
+    with SessionLocal() as db:
+        allowed, _ = has_permission(db, 1, "professor", "/x", "view")
+        perm = db.query(UsuarioPermissaoTemp).first()
+        assert perm.status == PermissaoStatus.EXPIRADA
+        assert not allowed
+
+
+def test_periodo_invalido_rejeitado():
+    client, SessionLocal = _create_client()
+    with SessionLocal() as db:
+        _seed_base(db)
+    inicio = datetime.now(BRAZIL_TZ)
+    fim = inicio - timedelta(hours=1)
+    payload = {
+        "tela_id": 1,
+        "operacoes": {"view": True},
+        "inicio": inicio.isoformat(),
+        "fim": fim.isoformat(),
+    }
+    resp = client.post("/acessos/usuarios/1/temporarias", json=payload)
     assert resp.status_code == 400
