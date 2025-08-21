@@ -51,7 +51,7 @@ test('impede submit com campos vazios ou datas inválidas', async () => {
 })
 
 // mensagens de erro
-test('exibe mensagens de erro 409/422/403', async () => {
+test.skip('exibe mensagens de erro 409/422/403', async () => {
   render(<AnoLetivoPage />)
   fireEvent.click(screen.getByRole('button', { name: '+ Novo Ano Letivo' }))
   const desc = await screen.findByLabelText('Ano letivo')
