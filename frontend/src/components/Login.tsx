@@ -171,7 +171,7 @@ useEffect(() => {
         />
 
         {/* Botão de login */}
-        <button type="submit">Entrar</button>
+        <button type="submit" className="button">Entrar</button>
 
         {/* Checkbox e texto alinhados */}
         <div className="keep-connected">

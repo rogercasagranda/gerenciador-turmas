@@ -161,7 +161,7 @@ const AnoLetivoPage: React.FC = () => {
           </div>
         </div>
         <div className="form-actions">
-          <button type="submit" className="save-button" disabled={!isDirty || !podeSalvar}>Salvar</button>
+          <button type="submit" className="button save-button" disabled={!isDirty || !podeSalvar}>Salvar</button>
         </div>
       </form>
 

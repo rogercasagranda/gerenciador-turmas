@@ -66,7 +66,7 @@ const LogsConfig: React.FC = () => {
             {c}
           </label>
         ))}
-        <button disabled={!formValido} onClick={salvar}>
+        <button className="button" disabled={!formValido} onClick={salvar}>
           Salvar alterações
         </button>
       </div>

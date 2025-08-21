@@ -282,7 +282,7 @@ const CadastrarUsuario: React.FC = () => {
               >
                 Consultar Usuários
               </button>
-              <button type="submit" className="save-button" disabled={enviando || !isDirty}>
+              <button type="submit" className="button save-button" disabled={enviando || !isDirty}>
                 {enviando ? (idEdicao ? 'Salvando…' : 'Enviando…') : (idEdicao ? 'Salvar alterações' : 'Cadastrar')}
               </button>
 

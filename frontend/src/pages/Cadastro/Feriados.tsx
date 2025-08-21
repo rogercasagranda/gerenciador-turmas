@@ -234,7 +234,7 @@ const Feriados: React.FC = () => {
             <button type="button" className="btn secundario" onClick={fecharForm}>Cancelar</button>
             <button
               type="submit"
-              className="save-button"
+              className="button save-button"
               disabled={!isDirty || !data || !descricao.trim() || !dentroDeAnoLetivo(data, anoAtual)}
             >
               {editando ? 'Salvar' : 'Cadastrar'}
