@@ -13,8 +13,9 @@ from typing import Optional                                       # Importa Opti
 class AnoLetivoBase(BaseModel):                                   # Classe base com campos comuns
 
     descricao: str = Field(..., min_length=3, description="Descrição do ano letivo")  # Descrição textual
-    data_inicio: date = Field(..., description="Data inicial do período")             # Data de início
-    data_fim: date = Field(..., description="Data final do período")                  # Data de término
+    inicio: date = Field(..., description="Data inicial do período")                  # Data de início
+    fim: date = Field(..., description="Data final do período")                      # Data de término
+
 
 
 
@@ -26,10 +27,8 @@ class AnoLetivoCreate(AnoLetivoBase):                             # Schema para 
 
 class AnoLetivoUpdate(BaseModel):                                 # Schema para atualização
     descricao: Optional[str] = Field(None, min_length=3, description="Descrição do ano letivo")  # Descrição opcional
-    data_inicio: Optional[date] = Field(None, description="Data inicial do período")             # Data inicial opcional
-    data_fim: Optional[date] = Field(None, description="Data final do período")                  # Data final opcional
-
-
+    inicio: Optional[date] = Field(None, description="Data inicial do período")                  # Data inicial opcional
+    fim: Optional[date] = Field(None, description="Data final do período")                      # Data final opcional
 
 class AnoLetivoOut(AnoLetivoBase):                                # Schema de resposta
     id: int                                                       # Identificador do ano letivo
