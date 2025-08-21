@@ -145,7 +145,7 @@ const Feriados: React.FC = () => {
     <FormPage title="Cadastro de Feriados">
       <div className="acoes">
         <button className="btn secundario" onClick={() => { setLinhas([]); setImportAberto(true) }}>Importar Feriados</button>
-        <button className="btn primario" onClick={abrirNovo}>+ Novo Feriado</button>
+        <button className="btn primario button" onClick={abrirNovo}>+ Novo Feriado</button>
       </div>
 
       {carregado && feriados.length === 0 && <p>Nenhum feriado cadastrado.</p>}
@@ -197,7 +197,7 @@ const Feriados: React.FC = () => {
             </label>
             <div className="modal-acoes">
               <button type="button" className="btn secundario" onClick={() => setFormAberto(false)}>Cancelar</button>
-              <button type="submit" className="btn primario" disabled={!anoId || !data || !descricao.trim()}>Salvar</button>
+              <button type="submit" className="btn primario button" disabled={!anoId || !data || !descricao.trim()}>Salvar</button>
             </div>
           </form>
         </div>
@@ -236,7 +236,7 @@ const Feriados: React.FC = () => {
             )}
             <div className="modal-acoes">
               <button className="btn secundario" type="button" onClick={() => setImportAberto(false)}>Cancelar</button>
-              <button className="btn primario" type="button" onClick={salvarImport} disabled={validas === 0}>Salvar</button>
+              <button className="btn primario button" type="button" onClick={salvarImport} disabled={validas === 0}>Salvar</button>
             </div>
           </div>
         </div>

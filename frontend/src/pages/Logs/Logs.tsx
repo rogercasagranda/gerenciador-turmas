@@ -82,6 +82,7 @@ const Logs: React.FC = () => {
           }}
         />
         <button
+          className="button"
           onClick={() => {
             carregar()
             setDirty(false)
