@@ -1,294 +1,242 @@
 // Página de cadastro de feriados
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import FormPage from '../../components/FormPage'
 import '../../styles/CadastrarUsuario.css'
 import '../../styles/Feriados.css'
 import '../../styles/Forms.css'
-import useDirtyForm from '@/hooks/useDirtyForm'
 import { AnoLetivo, getAnoLetivos } from '../../services/anoLetivo'
-import {
-  Feriado,
-  getFeriados,
-  createFeriado,
-  updateFeriado,
-  deleteFeriado,
-  importarNacionais,
-} from '../../services/feriados'
+import { Feriado, getFeriados, createFeriado, deleteFeriado } from '../../services/feriados'
 
-// Função utilitária para formatar datas como dd/mm/aaaa
-function formatar(data: string): string {
-  return new Date(data).toLocaleDateString('pt-BR')
+interface LinhaImportada {
+  ano: number
+  data: string
+  descricao: string
+  erro?: string
 }
 
-// Verifica se uma data cai em algum período
-function dentroDeAnoLetivo(data: string, ano?: AnoLetivo): boolean {
-  if (!ano) return false
-  const d = new Date(data)
-  return d >= new Date(ano.data_inicio) && d <= new Date(ano.data_fim)
-}
-
-// Remove duplicados pelo trio data/descricao/origem
-function dedup(lista: Feriado[]): Feriado[] {
-  const mapa = new Map<string, Feriado>()
-  lista.forEach(f => {
-    const chave = `${f.data}-${f.descricao}-${f.origem}`
-    if (!mapa.has(chave)) mapa.set(chave, f)
-  })
-  return Array.from(mapa.values())
-}
+// Formata data para dd/mm/aaaa
+const formatar = (data: string) => new Date(data).toLocaleDateString('pt-BR')
 
 const Feriados: React.FC = () => {
-  // Anos letivos disponíveis
   const [anos, setAnos] = useState<AnoLetivo[]>([])
-  // Ano letivo selecionado
-  const [anoSelecionado, setAnoSelecionado] = useState<number | ''>('')
-  // Lista de feriados
   const [feriados, setFeriados] = useState<Feriado[]>([])
-  // Controle do formulário (novo/editar)
+  const [carregado, setCarregado] = useState(false)
+
+  // Estados do modal de novo feriado
   const [formAberto, setFormAberto] = useState(false)
-  const [editando, setEditando] = useState<Feriado | null>(null)
+  const [anoId, setAnoId] = useState('')
   const [data, setData] = useState('')
   const [descricao, setDescricao] = useState('')
-  // Modal de importação
-  const [modalImportar, setModalImportar] = useState(false)
-  const [anosImport, setAnosImport] = useState<number[]>([])
-  // Feedback ao usuário
   const [erro, setErro] = useState('')
-  const [sucesso, setSucesso] = useState('')
 
-  const { isDirty, setDirty, confirmIfDirty } = useDirtyForm()
+  // Estados da importação
+  const [importAberto, setImportAberto] = useState(false)
+  const [linhas, setLinhas] = useState<LinhaImportada[]>([])
 
-  // Carrega anos letivos ao montar
+  // Busca anos e feriados
   useEffect(() => {
-    getAnoLetivos().then(setAnos).catch(() => setAnos([]))
+    getAnoLetivos()
+      .then(setAnos)
+      .catch(() => setAnos([]))
   }, [])
 
-  // Ano letivo atualmente selecionado
-  const anoAtual = useMemo(() => anos.find(a => a.id === Number(anoSelecionado)), [anos, anoSelecionado])
-
-  // Carrega feriados ao selecionar ano
   useEffect(() => {
     const carregar = async () => {
-      if (!anoSelecionado) { setFeriados([]); return }
-      try {
-        const f = await getFeriados(Number(anoSelecionado))
-        setFeriados(dedup(f).sort((a, b) => a.data.localeCompare(b.data)))
-      } catch {
-        setFeriados([])
+      const todos: Feriado[] = []
+      for (const ano of anos) {
+        try {
+          const lista = await getFeriados(ano.id)
+          todos.push(...lista)
+        } catch {
+          /* ignora erros individuais */
+        }
       }
+      todos.sort((a, b) => a.data.localeCompare(b.data))
+      setFeriados(todos)
+      setCarregado(true)
     }
-    carregar()
-  }, [anoSelecionado])
+    if (anos.length) carregar()
+    else setCarregado(true)
+  }, [anos])
 
-  // Label com períodos para exibir ao usuário
-  const labelPeriodos = useMemo(() => {
-    if (!anoAtual) return ''
-    return `${formatar(anoAtual.data_inicio)} - ${formatar(anoAtual.data_fim)}`
-  }, [anoAtual])
-
-  // Anos civis cobertos pelos períodos (para importar nacionais)
-  const anosCobertos = useMemo(() => {
-    if (!anoAtual) return [] as number[]
-    const set = new Set<number>()
-    set.add(new Date(anoAtual.data_inicio).getFullYear())
-    set.add(new Date(anoAtual.data_fim).getFullYear())
-    return Array.from(set.values()).sort()
-  }, [anoAtual])
-
-  // Abre formulário para novo feriado
+  // Manipulação de feriados
   const abrirNovo = () => {
-    setEditando(null); setData(''); setDescricao(''); setFormAberto(true); setDirty(false)
+    setAnoId('')
+    setData('')
+    setDescricao('')
+    setErro('')
+    setFormAberto(true)
   }
 
-  // Abre formulário para edição
-  const abrirEdicao = (f: Feriado) => {
-    setEditando(f); setData(f.data); setDescricao(f.descricao); setFormAberto(true); setDirty(false)
-  }
-
-  // Fecha formulário
-  const fecharForm = () => {
-    setFormAberto(false); setEditando(null); setData(''); setDescricao(''); setDirty(false)
-  }
-
-  // Salva novo/alterado
-  const handleSubmit = async (e: React.FormEvent) => {
+  const salvar = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!anoSelecionado) { setErro('Selecione um ano letivo.'); return }
-    if (!dentroDeAnoLetivo(data, anoAtual)) { setErro('Data fora do ano letivo.'); return }
-    setErro(''); setSucesso('')
+    setErro('')
     try {
-      if (editando) {
-        await updateFeriado(editando.id!, { data, descricao })
-        setSucesso('Feriado atualizado.')
-      } else {
-        await createFeriado({ ano_letivo_id: Number(anoSelecionado), data, descricao, origem: 'ESCOLA' })
-        setSucesso('Feriado cadastrado.')
-      }
-      const lista = await getFeriados(Number(anoSelecionado))
-      setFeriados(dedup(lista).sort((a, b) => a.data.localeCompare(b.data)))
-      setDirty(false)
-      fecharForm()
-    } catch (e: any) {
-      const msg = String(e.message)
+      await createFeriado({ ano_letivo_id: Number(anoId), data, descricao, origem: 'ESCOLA' })
+      setFormAberto(false)
+      // Recarrega anos/feriados
+      const a = await getAnoLetivos()
+      setAnos(a)
+    } catch (err: any) {
+      const msg = String(err.message)
       if (msg.includes('409')) setErro('Feriado já cadastrado.')
       else if (msg.includes('422')) setErro('Dados inválidos.')
-      else if (msg.includes('403')) setErro('Sem permissão.')
       else setErro('Falha ao salvar feriado.')
     }
   }
 
-  // Exclui feriado
-  const handleExcluir = async (id?: number) => {
+  const excluir = async (id?: number) => {
     if (!id) return
-    setErro(''); setSucesso('')
-    try {
-      await deleteFeriado(id)
-      setFeriados(prev => prev.filter(f => f.id !== id))
-    } catch {
-      setErro('Falha ao excluir feriado.')
+    await deleteFeriado(id)
+    setFeriados(prev => prev.filter(f => f.id !== id))
+  }
+
+  // Importação de CSV
+  const handleFile = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = e => {
+      const texto = String(e.target?.result || '')
+      const sep = texto.includes('|') ? '|' : texto.includes(';') ? ';' : ','
+      const linhasBrutas = texto.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
+      const dados: LinhaImportada[] = []
+      linhasBrutas.slice(1).forEach(l => {
+        const partes = l.split(sep).map(p => p.trim())
+        if (partes.length < 3) {
+          dados.push({ ano: 0, data: '', descricao: '', erro: 'Formato inválido' })
+          return
+        }
+        const [a, d, desc] = partes
+        const ano = anos.find(an => String(an.id) === a)
+        if (!ano) {
+          dados.push({ ano: Number(a), data: d, descricao: desc, erro: 'Ano inválido' })
+          return
+        }
+        const dt = new Date(d)
+        const dentro = dt >= new Date(ano.data_inicio) && dt <= new Date(ano.data_fim)
+        if (isNaN(dt.getTime()) || !dentro) {
+          dados.push({ ano: ano.id, data: d, descricao: desc, erro: 'Data fora do ano' })
+          return
+        }
+        if (!desc) {
+          dados.push({ ano: ano.id, data: d, descricao: desc, erro: 'Descrição obrigatória' })
+          return
+        }
+        dados.push({ ano: ano.id, data: d, descricao: desc })
+      })
+      setLinhas(dados)
     }
+    reader.readAsText(file)
   }
 
-  // Abre modal de importação
-  const abrirImportar = () => {
-    setAnosImport(anosCobertos)
-    setModalImportar(true)
-  }
-
-  // Importa feriados nacionais
-  const confirmarImportar = async () => {
-    if (!anoSelecionado) return
-    setErro(''); setSucesso('')
-    try {
-      await importarNacionais({ ano_letivo_id: Number(anoSelecionado), anos: anosImport })
-      const lista = await getFeriados(Number(anoSelecionado))
-      setFeriados(dedup(lista).sort((a, b) => a.data.localeCompare(b.data)))
-      setSucesso('Feriados importados com sucesso.')
-    } catch (e: any) {
-      const msg = String(e.message)
-      if (msg.includes('409')) setErro('Feriados já importados.')
-      else if (msg.includes('422')) setErro('Dados inválidos.')
-      else setErro('Falha ao importar feriados.')
-    } finally {
-      setModalImportar(false)
+  const salvarImport = async () => {
+    for (const l of linhas.filter(l => !l.erro)) {
+      await createFeriado({ ano_letivo_id: l.ano, data: l.data, descricao: l.descricao, origem: 'ESCOLA' })
     }
+    setImportAberto(false)
+    const a = await getAnoLetivos()
+    setAnos(a)
   }
 
-  // Alterna seleção de um ano na modal
-  const toggleAno = (ano: number) => {
-    setAnosImport(prev => prev.includes(ano) ? prev.filter(a => a !== ano) : [...prev, ano])
-  }
+  const total = linhas.length
+  const validas = linhas.filter(l => !l.erro).length
+  const erros = total - validas
 
   return (
     <FormPage title="Cadastro de Feriados">
-      {/* Seletor de ano letivo */}
-      <div className="linha">
-        <div className="campo">
-          <label className="rotulo" htmlFor="anoLetivo">Ano letivo</label>
-          <select id="anoLetivo" className="entrada" value={anoSelecionado} onChange={e => setAnoSelecionado(e.target.value ? Number(e.target.value) : '')}>
-            <option value="">Selecione</option>
-            {anos.map(a => (
-              <option key={a.id} value={a.id}>{a.descricao}</option>
-            ))}
-          </select>
-          {labelPeriodos && <span className="rotulo">Período: {labelPeriodos}</span>}
-        </div>
-      </div>
-
-      {/* Ações principais */}
       <div className="acoes">
-        <button className="btn primario" onClick={abrirNovo} disabled={!anoSelecionado}>Novo Feriado</button>
-        <button className="btn secundario" onClick={abrirImportar} disabled={!anoSelecionado}>Importar Nacionais</button>
+        <button className="btn secundario" onClick={() => { setLinhas([]); setImportAberto(true) }}>Importar Feriados</button>
+        <button className="btn primario" onClick={abrirNovo}>+ Novo Feriado</button>
       </div>
 
-      {/* Mensagens de feedback */}
-      {erro && <div className="alerta erro">{erro}</div>}
-      {sucesso && <div className="alerta sucesso">{sucesso}</div>}
+      {carregado && feriados.length === 0 && <p>Nenhum feriado cadastrado.</p>}
 
-      {/* Formulário para novo/editar */}
-      {formAberto && (
-        <form className="cadastro-form" onSubmit={handleSubmit}>
-          <div className="linha dois">
-            <div className="campo">
-              <label className="rotulo" htmlFor="dataFeriado">Data</label>
-              <input
-                id="dataFeriado"
-                type="date"
-                className="entrada"
-                value={data}
-                onChange={e => { setData(e.target.value); setDirty(true) }}
-              />
-            </div>
-            <div className="campo">
-              <label className="rotulo" htmlFor="descFeriado">Descrição</label>
-              <input
-                id="descFeriado"
-                type="text"
-                className="entrada"
-                value={descricao}
-                onChange={e => { setDescricao(e.target.value); setDirty(true) }}
-              />
-            </div>
-          </div>
-          <div className="form-actions">
-            <button type="button" className="btn secundario" onClick={fecharForm}>Cancelar</button>
-            <button
-              type="submit"
-              className="button save-button"
-              disabled={!isDirty || !data || !descricao.trim() || !dentroDeAnoLetivo(data, anoAtual)}
-            >
-              {editando ? 'Salvar' : 'Cadastrar'}
-            </button>
-          </div>
-        </form>
+      {feriados.length > 0 && (
+        <table className="holiday-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Descrição</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {feriados.map(f => (
+              <tr key={f.id}>
+                <td>{formatar(f.data)}</td>
+                <td>{f.descricao}</td>
+                <td>
+                  <button className="btn perigo" onClick={() => excluir(f.id)}>Excluir</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
 
-      {/* Tabela de feriados */}
-      <table className="holiday-table">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Descrição</th>
-            <th>Origem</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {feriados.map(f => (
-            <tr key={f.id || `${f.data}-${f.descricao}-${f.origem}`}>
-              <td>{formatar(f.data)}</td>
-              <td>{f.descricao}</td>
-              <td>{f.origem}</td>
-              <td>
-                {f.origem === 'ESCOLA' && (
-                  <>
-                    <button className="btn secundario" onClick={() => abrirEdicao(f)}>Editar</button>
-                    <button className="btn perigo" onClick={() => handleExcluir(f.id)}>Excluir</button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {formAberto && (
+        <div className="modal-backdrop">
+          <form className="modal" onSubmit={salvar}>
+            <h3>Novo Feriado</h3>
+            {erro && <div className="alerta erro">{erro}</div>}
+            <label className="rotulo">
+              Ano letivo
+              <select className="entrada" value={anoId} onChange={e => setAnoId(e.target.value)}>
+                <option value="">Selecione</option>
+                {anos.map(a => (
+                  <option key={a.id} value={a.id}>{a.descricao}</option>
+                ))}
+              </select>
+            </label>
+            <label className="rotulo">
+              Dia do feriado
+              <input type="date" className="entrada" value={data} onChange={e => setData(e.target.value)} />
+            </label>
+            <label className="rotulo">
+              Descrição
+              <input type="text" className="entrada" value={descricao} onChange={e => setDescricao(e.target.value)} />
+            </label>
+            <div className="modal-acoes">
+              <button type="button" className="btn secundario" onClick={() => setFormAberto(false)}>Cancelar</button>
+              <button type="submit" className="btn primario" disabled={!anoId || !data || !descricao.trim()}>Salvar</button>
+            </div>
+          </form>
+        </div>
+      )}
 
-      {/* Modal para importar nacionais */}
-      {modalImportar && (
+      {importAberto && (
         <div className="modal-backdrop">
           <div className="modal" role="dialog" aria-modal="true">
-            <h3>Importar feriados nacionais</h3>
-            <div className="linha">
-              {anosCobertos.map(a => (
-                <label key={a} className="campo">
-                  <span>
-                    <input type="checkbox" checked={anosImport.includes(a)} onChange={() => toggleAno(a)} /> {a}
-                  </span>
-                </label>
-              ))}
-            </div>
+            <h3>Importar feriados</h3>
+            <p>Exemplo: Ano|data|descrição</p>
+            <input type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+            {linhas.length > 0 && (
+              <>
+                <table className="holiday-table">
+                  <thead>
+                    <tr>
+                      <th>Ano</th>
+                      <th>Data</th>
+                      <th>Descrição</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {linhas.map((l, i) => (
+                      <tr key={i}>
+                        <td>{l.ano}</td>
+                        <td>{l.data}</td>
+                        <td>{l.descricao}</td>
+                        <td>{l.erro ? l.erro : 'OK'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="resumo">Total: {total} | Válidas: {validas} | Erro: {erros}</div>
+              </>
+            )}
             <div className="modal-acoes">
-              <button className="btn secundario" type="button" onClick={() => setModalImportar(false)}>Cancelar</button>
-              <button className="btn primario" type="button" onClick={confirmarImportar} disabled={anosImport.length === 0}>Importar</button>
+              <button className="btn secundario" type="button" onClick={() => setImportAberto(false)}>Cancelar</button>
+              <button className="btn primario" type="button" onClick={salvarImport} disabled={validas === 0}>Salvar</button>
             </div>
           </div>
         </div>
@@ -298,3 +246,4 @@ const Feriados: React.FC = () => {
 }
 
 export default Feriados
+
