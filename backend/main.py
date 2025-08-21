@@ -61,7 +61,7 @@ import bcrypt                                          # Importa bcrypt para val
 from backend.routes.usuarios import router as usuarios_router   # Importa router de /usuarios
 from backend.routers.usuarios_delete import router as usuarios_delete_router  # Importa rotas de exclusão de usuários
 from backend.routes.logs import router as logs_router            # Importa rotas de logs de auditoria
-from backend.routes.logs_config import router as logs_config_router  # Importa rotas de configuração de logs
+from backend.routers.logs_config import router as logs_config_router  # Importa rotas de configuração de logs
 from backend.routes.turmas import router as turmas_router            # Importa rotas do módulo de turmas
 from backend.routes.calendario import router as calendario_router    # Importa rotas de calendário escolar
 
