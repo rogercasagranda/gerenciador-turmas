@@ -184,7 +184,7 @@ const EditarUsuario: React.FC = () => {                                   // Def
           </div>
 
           <div className="form-actions">                                 {/* Área de ações */}
-            <button type="submit" className="save-button" disabled={enviando || !isDirty}>
+            <button type="submit" className="button save-button" disabled={enviando || !isDirty}>
               {enviando ? 'Salvando…' : 'Salvar alterações'}
             </button>
             <button
