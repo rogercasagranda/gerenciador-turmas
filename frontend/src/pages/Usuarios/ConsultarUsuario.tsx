@@ -65,14 +65,11 @@ const ConsultarUsuario: React.FC = () => {
 
   // Guarda de rota por perfil + carga inicial
   useEffect(() => {
-  const carregar = async () => {
-    try {
-      const headers = authHeaders()
-      if (!headers) return
-
-      // Valida perfil (tolerante a 422/500; só 401 derruba sessão)
+    const carregar = async () => {
+      if (!authHeaders()) return
 
       try {
+        // Valida perfil (tolerante a 422/500; só 401 derruba sessão)
         const me = await apiFetch('/usuarios/me') as MeuPerfil
         const p = toCanonical(me.tipo_perfil || '')
         const autorizado = me.is_master || PERFIS_PERMITIDOS.has(p)
