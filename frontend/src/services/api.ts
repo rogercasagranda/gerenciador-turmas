@@ -168,7 +168,7 @@ async function apiRequest<T = unknown>(
     const contentType = res.headers.get("content-type") || ""
     const isJson = contentType.includes("application/json")
 
-    // Se resposta não OK, tenta extrair payload de erro e lança
+    // Se resposta não OK, tenta extrair payload de erro e trata auth expirado
     if (!res.ok) {
       let payload: ApiErrorPayload | undefined
       try {
@@ -176,6 +176,15 @@ async function apiRequest<T = unknown>(
       } catch {
         payload = undefined
       }
+
+      // Em 401/403 limpa somente o token e redireciona para /login
+      if (withAuth && (res.status === 401 || res.status === 403)) {
+        clearAuthToken()
+        if (typeof window !== "undefined") {
+          window.location.href = "/login"
+        }
+      }
+
       raiseHttpError(res, payload)
     }
 

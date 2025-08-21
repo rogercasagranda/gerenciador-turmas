@@ -141,28 +141,33 @@ const CadastrarUsuario: React.FC = () => {
     if (!email.trim()) { setErro('O e-mail é obrigatório.'); return }
     if (!numeroCelular.trim()) { setErro('O número de celular é obrigatório.'); return }
 
-    const jsonHeaders: Record<string, string> = { ...headers, 'Content-Type': 'application/json' }
+    const freshToken = getAuthToken()
+    if (!freshToken) { navigate('/login'); return }
+    const jsonHeaders: Record<string, string> = {
+      Authorization: `Bearer ${freshToken}`,
+      'Content-Type': 'application/json',
+    }
 
-      try {
-        setEnviando(true)
-        const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
+    try {
+      setEnviando(true)
+      const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
 
-        if (idEdicao) {
-          await axios.put(`${API_BASE}/usuarios/${idEdicao}`, body, { headers: jsonHeaders })
-          setSucesso('Usuário atualizado com sucesso.')
-        } else {
-          await axios.post(`${API_BASE}/usuarios`, body, { headers: jsonHeaders })
-          setSucesso('Usuário cadastrado com sucesso.')
-          setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
-        }
-
-        setDirty(false)
-        setTimeout(() => navigate('/usuarios/consultar'), 700)
-      } catch (err: any) {
-        setErro(err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
-      } finally {
-        setEnviando(false)
+      if (idEdicao) {
+        await axios.put(`${API_BASE}/usuarios/${idEdicao}`, body, { headers: jsonHeaders })
+        setSucesso('Usuário atualizado com sucesso.')
+      } else {
+        await axios.post(`${API_BASE}/usuarios`, body, { headers: jsonHeaders })
+        setSucesso('Usuário cadastrado com sucesso.')
+        setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
       }
+
+      setDirty(false)
+      setTimeout(() => navigate('/usuarios/consultar'), 700)
+    } catch (err: any) {
+      setErro(err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
+    } finally {
+      setEnviando(false)
+    }
   }
 
   // Lógica do botão Excluir: apenas master/diretor e sem autoexclusão
@@ -179,8 +184,10 @@ const CadastrarUsuario: React.FC = () => {
     if (!primeira) return
     const segunda = window.confirm('Confirme novamente: deseja realmente excluir?')
     if (!segunda) return
+    const freshToken = getAuthToken()
+    if (!freshToken) { navigate('/login'); return }
     try {
-      await axios.delete(`${API_BASE}/usuarios/${idEdicao}`, { headers })
+      await axios.delete(`${API_BASE}/usuarios/${idEdicao}`, { headers: { Authorization: `Bearer ${freshToken}` } })
       alert('Usuário excluído com sucesso.')
       navigate('/usuarios/consultar')
     } catch (e:any) {

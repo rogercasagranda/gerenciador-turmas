@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import '../../styles/Home.css'
 import '../../styles/Home.lock.css'
 import { loadThemeFromStorage } from '../../theme/utils'
-import { API_BASE } from '@/services/api'
+import { API_BASE, getAuthToken, clearAuthToken } from '@/services/api'
 
 // Carrega páginas internas com import dinâmico
 const CadastrarUsuario = React.lazy(() => import('../Usuarios/CadastrarUsuario'))
@@ -54,14 +54,12 @@ const Home: React.FC = () => {
 
   // Verifica sessão ativa ao montar
   useEffect(() => {
-    const tokenLocal   = localStorage.getItem('auth_token')
-    const tokenSession = sessionStorage.getItem('auth_token')
-    const token = tokenLocal || tokenSession
+    const token = getAuthToken()
     if (!token) { navigate('/login'); return }
 
     fetch(`${API_BASE}/usuarios/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => {
-        if (r.status === 401) { navigate('/login'); return null }
+        if (r.status === 401 || r.status === 403) { navigate('/login'); return null }
         return r.ok ? r.json() : null
       })
       .then(data => {
@@ -87,8 +85,7 @@ const Home: React.FC = () => {
 
   // Logout
   const handleLogout = useCallback(() => {
-    try { localStorage.removeItem('auth_token') } catch {}
-    try { sessionStorage.removeItem('auth_token') } catch {}
+    clearAuthToken()
     try { localStorage.removeItem('usuarioLogado') } catch {}
     try { localStorage.removeItem('user_id') } catch {}
     navigate('/login')

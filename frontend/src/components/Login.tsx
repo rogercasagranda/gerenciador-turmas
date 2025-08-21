@@ -6,8 +6,8 @@ import React, { useState, useEffect } from "react";
 // Importa o hook de navegação do React Router
 import { useNavigate } from "react-router-dom";
 
-// Base da API
-import { API_BASE } from "@/services/api";
+// Base da API e utilitários de autenticação
+import { API_BASE, getAuthToken, setAuthToken } from "@/services/api";
 
 // Importa o arquivo CSS da tela de login
 import "../styles/Login.css";
@@ -34,26 +34,11 @@ const Login: React.FC = () => {
   // Hook de navegação
   const navigate = useNavigate();
 
-  // Armazena o token conforme a opção 'Continuar conectado'
-  function storeToken(token: string) {
-    try {
-      if (keepConnected) {
-        localStorage.setItem('auth_token', token);
-      } else {
-        sessionStorage.setItem('auth_token', token);
-      }
-    } catch {}
-  }
-
   // Redireciona para Home se já houver token armazenado
   useEffect(() => {
-    try {
-      const tokenLocal = localStorage.getItem('auth_token');
-      const tokenSession = sessionStorage.getItem('auth_token');
-      if (tokenLocal || tokenSession) {
-        navigate('/home');
-      }
-    } catch {}
+    if (getAuthToken()) {
+      navigate('/home');
+    }
   }, [navigate]);
 
 
@@ -77,14 +62,14 @@ useEffect(() => {
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
   if (token) {
-    storeToken(token);
+    setAuthToken(token, keepConnected);
     // Remove o parâmetro da URL sem recarregar
     const url = new URL(window.location.href);
     url.searchParams.delete('token');
     window.history.replaceState({}, document.title, url.toString());
     navigate('/home');
   }
-}, []);
+}, [navigate, keepConnected]);
 
 
 
@@ -123,7 +108,7 @@ useEffect(() => {
       try {
         const data = await response.json();
         if (data && data.token) {
-          storeToken(data.token);
+          setAuthToken(data.token, keepConnected);
         }
       } catch {}
       navigate('/home');

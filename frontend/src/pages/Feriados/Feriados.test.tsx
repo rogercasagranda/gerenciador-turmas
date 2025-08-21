@@ -22,7 +22,7 @@ afterEach(() => {
 
 // RBAC
 it('menu e rota protegidos por role', async () => {
-  localStorage.setItem('auth_token', 'x')
+  localStorage.setItem('authToken', 'x')
   mockFetch({ '/usuarios/me': () => ({ ok: true, json: () => Promise.resolve({ tipo_perfil: 'professor' }) }) })
   render(
     <MemoryRouter initialEntries={['/cadastro/feriados']}>
@@ -35,7 +35,7 @@ it('menu e rota protegidos por role', async () => {
 
 // Novo feriado com erro 409
 it('novo feriado mostra erro do backend', async () => {
-  localStorage.setItem('auth_token', 'x')
+  localStorage.setItem('authToken', 'x')
   mockFetch({
     '/ano-letivo': () => ({ ok: true, json: () => Promise.resolve([{ id: 1, descricao: '2024', data_inicio: '2024-01-01', data_fim: '2024-12-31' }]) }),
     '/feriados?anoLetivoId=1': () => ({ ok: true, json: () => Promise.resolve([]) }),

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
-
 import axios from 'axios'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { API_BASE, getAuthToken } from '@/services/api'
 
+import LogsConfig from './LogsConfig'
+import LogsOverview from './LogsOverview'
 import '../../styles/Logs.css'
 
 type Tab = 'config' | 'overview'
@@ -17,6 +19,10 @@ const Logs: React.FC = () => {
   useEffect(() => {
     setTab(tabParam)
   }, [tabParam])
+
+  useEffect(() => {
+    if (!getAuthToken()) navigate('/login')
+  }, [navigate])
 
 
   const carregar = () => {

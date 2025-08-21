@@ -21,9 +21,9 @@ const Home: React.FC = () => {
   // Verifica se há sessão ativa ao carregar a página
   useEffect(() => {
     // Tenta ler o token de autenticação persistido no localStorage (quando 'Continuar conectado' estiver marcado)
-    const tokenLocal = localStorage.getItem('auth_token')
+    const tokenLocal = localStorage.getItem('authToken')
     // Tenta ler o token de autenticação persistido no sessionStorage (sessão atual)
-    const tokenSession = sessionStorage.getItem('auth_token')
+    const tokenSession = sessionStorage.getItem('authToken')
     // Se não houver token em nenhum lugar, redireciona para a tela de login
     if (!tokenLocal && !tokenSession) {
       navigate('/login')
@@ -50,9 +50,9 @@ const Home: React.FC = () => {
   // Executa o logout ao clicar no botão "Sair"
   const sair = () => {
     // Remove o token persistido no localStorage
-    try { localStorage.removeItem('auth_token') } catch {}
+    try { localStorage.removeItem('authToken') } catch {}
     // Remove o token persistido no sessionStorage
-    try { sessionStorage.removeItem('auth_token') } catch {}
+    try { sessionStorage.removeItem('authToken') } catch {}
     // Remove eventual chave antiga usada por versões anteriores
     try { localStorage.removeItem('usuarioLogado') } catch {}
     // Redireciona para a tela de login
