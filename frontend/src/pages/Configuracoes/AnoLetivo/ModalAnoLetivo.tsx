@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import '../../../styles/Forms.css'
 import '../../../styles/CadastrarUsuario.css'
 import '../../../styles/Feriados.css'
+import Modal from '../../../components/Modal'
 import { AnoLetivo, createAnoLetivo, updateAnoLetivo } from '../../../services/anoLetivo'
 import ErrorPopup from '../../../components/ErrorPopup'
 
@@ -17,7 +18,9 @@ const ModalAnoLetivo: React.FC<Props> = ({ anos, editando, onClose, onSaved }) =
   const [inicio, setInicio] = useState('')
   const [fim, setFim] = useState('')
   const [erro, setErro] = useState('')
-  const [semPermissao, setSemPermissao] = useState(false)
+
+  const [errosCampo, setErrosCampo] = useState({ descricao: '', inicio: '', fim: '' })
+
 
   useEffect(() => {
     setDescricao(editando?.descricao ?? '')
@@ -37,16 +40,19 @@ const ModalAnoLetivo: React.FC<Props> = ({ anos, editando, onClose, onSaved }) =
     })
   }
 
-  const podeSalvar =
-    descricao.trim() !== '' &&
-    inicio !== '' &&
-    fim !== '' &&
-    inicio <= fim &&
-    !sobrepoe()
+  const validar = () => {
+    const err = { descricao: '', inicio: '', fim: '' }
+    if (descricao.trim() === '') err.descricao = 'Descrição é obrigatória.'
+    if (inicio === '') err.inicio = 'Início é obrigatório.'
+    if (fim === '') err.fim = 'Fim é obrigatório.'
+    if (!err.inicio && !err.fim && inicio > fim) err.fim = 'Fim deve ser posterior ao início.'
+    if (!err.inicio && !err.fim && sobrepoe()) err.inicio = 'Período sobreposto.'
+    setErrosCampo(err)
+    return !err.descricao && !err.inicio && !err.fim
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!podeSalvar) return
+  const handleConfirm = async () => {
+    if (!validar()) return
     const dto = { descricao: descricao.trim(), data_inicio: inicio, data_fim: fim }
     try {
       let salvo: AnoLetivo
@@ -63,51 +69,56 @@ const ModalAnoLetivo: React.FC<Props> = ({ anos, editando, onClose, onSaved }) =
     }
   }
 
+  const podeSalvar =
+    descricao.trim() !== '' &&
+    inicio !== '' &&
+    fim !== '' &&
+    inicio <= fim &&
+    !sobrepoe()
+
   return (
-    <div className="modal-backdrop">
-      <form className="modal" onSubmit={handleSubmit}>
-        <h3>{editando ? 'Editar Ano Letivo' : 'Novo Ano Letivo'}</h3>
-        {erro && <div className="alerta erro">{erro}</div>}
-        <label className="rotulo">
-          Ano letivo
-          <input
-            type="text"
-            className="entrada"
-            value={descricao}
-            onChange={e => setDescricao(e.target.value)}
-          />
-        </label>
-        <label className="rotulo">
-          Início
-          <input
-            type="date"
-            className="entrada"
-            value={inicio}
-            onChange={e => setInicio(e.target.value)}
-          />
-        </label>
-        <label className="rotulo">
-          Fim
-          <input
-            type="date"
-            className="entrada"
-            value={fim}
-            onChange={e => setFim(e.target.value)}
-          />
-        </label>
-        <div className="modal-acoes">
-          <button type="button" className="btn secundario" onClick={onClose}>
-            Cancelar
-          </button>
-          <button type="submit" className="btn primario button" disabled={!podeSalvar}>
-            Salvar
-          </button>
-        </div>
-      </form>
-      {semPermissao && (
-        <ErrorPopup message="Sem permissão." onClose={() => setSemPermissao(false)} />
-      )}
-    </div>
+
+    <Modal
+      open={true}
+      title={editando ? 'Editar Ano Letivo' : 'Novo Ano Letivo'}
+      onClose={onClose}
+      onConfirm={handleConfirm}
+      confirmLabel="Salvar"
+      confirmDisabled={!podeSalvar}
+    >
+      {erro && <div className="alerta erro">{erro}</div>}
+      <label className="rotulo">
+        Ano letivo
+        <input
+          type="text"
+          className="entrada"
+          value={descricao}
+          onChange={e => setDescricao(e.target.value)}
+        />
+      </label>
+      {errosCampo.descricao && <p className="erro">{errosCampo.descricao}</p>}
+      <label className="rotulo">
+        Início
+        <input
+          type="date"
+          className="entrada"
+          value={inicio}
+          onChange={e => setInicio(e.target.value)}
+        />
+      </label>
+      {errosCampo.inicio && <p className="erro">{errosCampo.inicio}</p>}
+      <label className="rotulo">
+        Fim
+        <input
+          type="date"
+          className="entrada"
+          value={fim}
+          onChange={e => setFim(e.target.value)}
+        />
+      </label>
+      {errosCampo.fim && <p className="erro">{errosCampo.fim}</p>}
+    </Modal>
+
   )
 }
 
