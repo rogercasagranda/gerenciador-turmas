@@ -1,11 +1,9 @@
-// Serviço de acesso à API de Ano Letivo usando apenas
-// os campos { descricao, data_inicio, data_fim }
-// Cada função faz a chamada HTTP correspondente e lança
-// erro contendo o status em caso de falha.
+// Serviço de integração com API de Ano Letivo
+// Utiliza API_BASE definido em VITE_API_URL e token Bearer quando disponível
 
 import { API_BASE, getAuthToken } from './api'
 
-// Estrutura do ano letivo conforme API
+// Estrutura básica de Ano Letivo conforme backend
 export interface AnoLetivo {
   id: number
   descricao: string
@@ -13,7 +11,7 @@ export interface AnoLetivo {
   data_fim: string
 }
 
-// Monta cabeçalho padrão com token de autenticação
+// Monta cabeçalho padrão com JSON e Authorization quando houver token
 function buildHeaders(): HeadersInit {
   const token = getAuthToken()
   return {
@@ -22,52 +20,67 @@ function buildHeaders(): HeadersInit {
   }
 }
 
-// Lista todos os anos letivos
-export async function getAnoLetivos(): Promise<AnoLetivo[]> {
+// Trata resposta do backend retornando JSON em sucesso ou erro amigável
+async function handleResponse<T>(res: Response): Promise<T> {
+  if (res.ok) {
+    try {
+      return (await res.json()) as T
+    } catch {
+      return undefined as T
+    }
+  }
+
+  let message = `Erro HTTP ${res.status}`
+  try {
+    const payload = await res.json()
+    message = payload?.detail || payload?.message || message
+  } catch {}
+  throw new Error(message)
+}
+
+// Lista anos letivos
+export async function listAnoLetivo(): Promise<AnoLetivo[]> {
   const res = await fetch(`${API_BASE}/ano-letivo`, {
+    method: 'GET',
     headers: buildHeaders(),
   })
-  if (!res.ok) throw new Error(String(res.status))
-  return res.json()
+  return handleResponse<AnoLetivo[]>(res)
 }
 
-// Obtém um ano letivo específico
-export async function getAnoLetivo(id: number): Promise<AnoLetivo> {
-  const res = await fetch(`${API_BASE}/ano-letivo/${id}`, {
-    headers: buildHeaders(),
-  })
-  if (!res.ok) throw new Error(String(res.status))
-  return res.json()
-}
-
-// Cria um novo ano letivo
-export async function createAnoLetivo(dto: Omit<AnoLetivo, 'id'>): Promise<AnoLetivo> {
+// Cria ano letivo
+export async function createAnoLetivo(
+  body: Omit<AnoLetivo, 'id'>
+): Promise<AnoLetivo> {
   const res = await fetch(`${API_BASE}/ano-letivo`, {
     method: 'POST',
     headers: buildHeaders(),
-    body: JSON.stringify(dto),
+    body: JSON.stringify(body),
   })
-  if (!res.ok) throw new Error(String(res.status))
-  return res.json()
+  return handleResponse<AnoLetivo>(res)
 }
 
-// Atualiza um ano letivo existente
-export async function updateAnoLetivo(id: number, dto: Omit<AnoLetivo, 'id'>): Promise<AnoLetivo> {
+// Atualiza ano letivo
+export async function updateAnoLetivo(
+  id: number,
+  body: Omit<AnoLetivo, 'id'>
+): Promise<AnoLetivo> {
   const res = await fetch(`${API_BASE}/ano-letivo/${id}`, {
     method: 'PUT',
     headers: buildHeaders(),
-    body: JSON.stringify(dto),
+    body: JSON.stringify(body),
   })
-  if (!res.ok) throw new Error(String(res.status))
-  return res.json()
+  return handleResponse<AnoLetivo>(res)
 }
 
-// Remove um ano letivo
-export async function deleteAnoLetivo(id: number): Promise<void> {
+// Remove ano letivo
+export async function deleteAnoLetivo(id: number): Promise<unknown> {
   const res = await fetch(`${API_BASE}/ano-letivo/${id}`, {
     method: 'DELETE',
     headers: buildHeaders(),
   })
-  if (!res.ok) throw new Error(String(res.status))
+  return handleResponse(res)
 }
+
+// Backwards compatibility: export antigo nome utilizado em partes do app
+export { listAnoLetivo as getAnoLetivos }
 

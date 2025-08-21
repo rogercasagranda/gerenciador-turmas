@@ -2,10 +2,9 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { MemoryRouter } from 'react-router-dom'
-import App from '../../App'
+import App from '../../../App'
 import AnoLetivoPage from './AnoLetivo'
 
-// Utilitário simples para mockar fetch com base na URL
 function mockFetch(map: Record<string, (opts?: RequestInit) => any>) {
   global.fetch = vi.fn((input: RequestInfo, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input.toString()
@@ -21,7 +20,7 @@ afterEach(() => {
   sessionStorage.clear()
 })
 
-// --- RBAC ---
+// RBAC
 test('menu e rota protegidos por role', async () => {
   localStorage.setItem('auth_token', 'x')
   mockFetch({ '/usuarios/me': () => ({ ok: true, json: () => Promise.resolve({ tipo_perfil: 'professor' }) }) })
@@ -36,28 +35,26 @@ test('menu e rota protegidos por role', async () => {
   expect(screen.queryByText('Cadastro')).not.toBeInTheDocument()
 })
 
-// --- Validações do formulário ---
+// validações
 test('impede submit com campos vazios ou datas inválidas', async () => {
   mockFetch({ '/ano-letivo': () => ({ ok: true, json: () => Promise.resolve([]) }) })
   render(<AnoLetivoPage />)
-
-  const salvar = screen.getByRole('button', { name: 'Salvar' })
-  expect(salvar).toBeDisabled() // campos vazios
-
-  fireEvent.change(screen.getByLabelText('Ano Letivo'), { target: { value: 'Ano' } })
+  fireEvent.click(screen.getByRole('button', { name: '+ Novo Ano Letivo' }))
+  const salvar = await screen.findByRole('button', { name: 'Salvar' })
+  expect(salvar).toBeDisabled()
+  fireEvent.change(screen.getByLabelText('Ano letivo'), { target: { value: 'Ano' } })
   fireEvent.change(screen.getByLabelText('Início'), { target: { value: '2024-02-01' } })
   fireEvent.change(screen.getByLabelText('Fim'), { target: { value: '2024-01-01' } })
-  expect(salvar).toBeDisabled() // inicio > fim
-
+  expect(salvar).toBeDisabled()
   fireEvent.change(screen.getByLabelText('Fim'), { target: { value: '2024-12-31' } })
   await waitFor(() => expect(salvar).not.toBeDisabled())
 })
 
-// --- Mensagens de erro do backend ---
+// mensagens de erro
 test('exibe mensagens de erro 409/422/403', async () => {
   render(<AnoLetivoPage />)
-
-  const desc = screen.getByLabelText('Ano Letivo')
+  fireEvent.click(screen.getByRole('button', { name: '+ Novo Ano Letivo' }))
+  const desc = await screen.findByLabelText('Ano letivo')
   const inicio = screen.getByLabelText('Início')
   const fim = screen.getByLabelText('Fim')
   const salvar = screen.getByRole('button', { name: 'Salvar' })
