@@ -62,8 +62,8 @@ def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(
     existente = db.query(AnoLetivo).filter(AnoLetivo.descricao == payload.descricao).first()  # Verifica duplicidade de descrição
     if existente:                                                     # Se já houver mesma descrição
         raise HTTPException(status_code=409, detail="Ano letivo já cadastrado")  # Retorna 409 de conflito
-    if payload.data_inicio > payload.data_fim:                        # Valida ordem das datas
-        raise HTTPException(status_code=422, detail="data_inicio deve ser menor ou igual a data_fim")  # Retorna 422
+    if payload.inicio >= payload.fim:                                 # Valida ordem das datas
+        raise HTTPException(status_code=422, detail="inicio deve ser menor que fim")  # Retorna 422
     ano = AnoLetivo(**payload.dict())                                 # Cria instância do modelo
     db.add(ano)                                                       # Adiciona à sessão
     db.commit()                                                       # Persiste no banco
@@ -94,10 +94,10 @@ def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: S
         if existente:                                                # Se já houver outro com mesma descrição
 
             raise HTTPException(status_code=409, detail="Ano letivo já cadastrado")  # Retorna conflito
-    nova_inicio = payload.data_inicio or ano.data_inicio              # Determina nova data inicial
-    nova_fim = payload.data_fim or ano.data_fim                       # Determina nova data final
-    if nova_inicio > nova_fim:                                        # Valida ordem das datas
-        raise HTTPException(status_code=422, detail="data_inicio deve ser menor ou igual a data_fim")  # Retorna 422
+    nova_inicio = payload.inicio or ano.inicio                        # Determina nova data inicial
+    nova_fim = payload.fim or ano.fim                                 # Determina nova data final
+    if nova_inicio >= nova_fim:                                       # Valida ordem das datas
+        raise HTTPException(status_code=422, detail="inicio deve ser menor que fim")  # Retorna 422
     for field, value in payload.dict(exclude_unset=True).items():     # Percorre campos enviados
         setattr(ano, field, value)                                    # Atualiza atributos
     db.commit()                                                       # Persiste alterações
@@ -136,7 +136,7 @@ def criar_feriado(payload: FeriadoCreate, request: Request, db: Session = Depend
         raise HTTPException(status_code=422, detail="Origem deve ser 'ESCOLA'")  # Retorna 422
 
     ano = db.get(AnoLetivo, payload.ano_letivo_id)                    # Busca ano letivo
-    if not ano or not (ano.data_inicio <= payload.data <= ano.data_fim):  # Verifica se data está no período
+    if not ano or not (ano.inicio <= payload.data <= ano.fim):        # Verifica se data está no período
 
         raise HTTPException(status_code=422, detail="Data fora do período do ano letivo")  # Retorna 422
     existente = db.query(Feriado).filter_by(                          # Verifica duplicidade
@@ -161,7 +161,7 @@ def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request,
     if payload.data is not None:                                     # Se nova data informada
         ano = db.get(AnoLetivo, fer.ano_letivo_id)                   # Obtém ano letivo
 
-        if not (ano.data_inicio <= payload.data <= ano.data_fim):    # Verifica se data está no período
+        if not (ano.inicio <= payload.data <= ano.fim):              # Verifica se data está no período
 
             raise HTTPException(status_code=422, detail="Data fora do período do ano letivo")  # Retorna 422
         duplicado = db.query(Feriado).filter(                         # Verifica duplicidade com outros feriados
@@ -210,7 +210,7 @@ def importar_nacionais(payload: FeriadoImportarNacionais, request: Request, db: 
         for item in dados:                                           # Percorre feriados retornados
             data_item = date.fromisoformat(item["data"])            # Converte data para objeto date
 
-            if not (ano.data_inicio <= data_item <= ano.data_fim):    # Verifica se data pertence ao período
+            if not (ano.inicio <= data_item <= ano.fim):              # Verifica se data pertence ao período
                 continue                                             # Ignora data fora do período
 
             existente = db.query(Feriado).filter_by(                  # Verifica duplicidade
