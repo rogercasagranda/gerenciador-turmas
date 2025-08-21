@@ -7,3 +7,10 @@
 .modal { background: #fff; padding: 20px; border-radius: 10px; max-width: 420px; width: 100%; display: flex; flex-direction: column; gap: 16px; }
 
 .modal-acoes { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* Tabela de feriados */
+.holiday-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+.holiday-table th, .holiday-table td { padding: 8px; border-bottom: 1px solid var(--pp-border); text-align: left; }
+
+/* Resumo de importação */
+.resumo { font-size: 14px; }
