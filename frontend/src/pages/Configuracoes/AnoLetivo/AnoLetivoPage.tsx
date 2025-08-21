@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import ListPage from '../../../components/ListPage'
 import '../../../styles/CadastrarUsuario.css'
+
 import { AnoLetivo, getAnoLetivos } from '../../../services/anoLetivo'
 
 const formatar = (data: string) => new Date(data).toLocaleDateString('pt-BR')
@@ -23,12 +24,14 @@ const AnoLetivoPage: React.FC = () => {
       {!carregado && <p className="carregando">Carregando...</p>}
       {carregado && anos.length === 0 && <p>Nenhum ano letivo cadastrado.</p>}
       {anos.length > 0 && (
+
         <table className="holiday-table">
           <thead>
             <tr>
               <th>Descrição</th>
               <th>Início</th>
               <th>Fim</th>
+
               <th>Ações</th>
             </tr>
           </thead>
@@ -42,6 +45,7 @@ const AnoLetivoPage: React.FC = () => {
                   <button className="btn secundario" onClick={() => {}}>Editar</button>
                   <button className="btn perigo" onClick={() => {}}>Excluir</button>
                 </td>
+
               </tr>
             ))}
           </tbody>
