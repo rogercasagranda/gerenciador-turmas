@@ -21,7 +21,7 @@ const CadDisciplinas = React.lazy(() => import('../Cadastro/Disciplinas')) // Ca
 const CadTurnos = React.lazy(() => import('../Cadastro/Turnos')) // Cadastro de turnos
 const CadProfessores = React.lazy(() => import('../Cadastro/Professores')) // Cadastro de professores
 const CadResponsaveis = React.lazy(() => import('../Cadastro/Responsaveis')) // Cadastro de responsáveis
-const CadFeriados = React.lazy(() => import('../Cadastro/Feriados')) // Cadastro de feriados
+const CadFeriados = React.lazy(() => import('../Feriados/Feriados')) // Cadastro de feriados
 const CadAnoLetivo = React.lazy(() => import('../Cadastro/AnoLetivo')) // Cadastro de ano letivo
 
 const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
