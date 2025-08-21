@@ -1,51 +1,15 @@
-export type ThemeKey = 'roxo'|'vermelho'|'azul'|'verde'|'laranja'|'cinza'|'rosa'|'ciano'
+export type ThemeKey = 'default'|'roxo'|'vermelho'|'azul'|'verde'|'laranja'|'cinza'|'rosa'|'ciano'
 export type ThemeName = ThemeKey
 export type ModeKey  = 'light'|'dark'
 
 export const THEME_OPTIONS: ThemeName[] = ['roxo','vermelho','azul','verde','laranja','cinza','rosa','ciano']
 
-
-const THEME_KEY = 'pp.theme'
-const MODE_KEY  = 'pp.mode'
-const LEGACY_THEME_KEY = 'pp_theme'
-const LEGACY_MODE_KEY  = 'pp_mode'
-
-export function getStoredTheme(): ThemeName {
-  let theme = localStorage.getItem(THEME_KEY) as ThemeName | null
-  if (!theme) {
-    const legacy = localStorage.getItem(LEGACY_THEME_KEY) as ThemeName | null
-    if (legacy) {
-      theme = legacy as ThemeName
-      saveTheme(theme)
-      try { localStorage.removeItem(LEGACY_THEME_KEY) } catch {}
-    } else {
-      theme = 'roxo'
-    }
-  }
-  return theme
-}
-
-export function getStoredMode(): ModeKey {
-  let mode = localStorage.getItem(MODE_KEY) as ModeKey | null
-  if (!mode) {
-    const legacy = localStorage.getItem(LEGACY_MODE_KEY) as ModeKey | null
-    if (legacy) {
-      mode = legacy as ModeKey
-      saveMode(mode)
-      try { localStorage.removeItem(LEGACY_MODE_KEY) } catch {}
-    } else {
-      mode = 'light'
-    }
-  }
-  return mode
-}
-
 export function saveTheme(theme: ThemeName) {
-  localStorage.setItem(THEME_KEY, theme)
+  localStorage.setItem('theme', theme)
 }
 
 export function saveMode(mode: ModeKey) {
-  localStorage.setItem(MODE_KEY, mode)
+  localStorage.setItem('mode', mode)
 }
 
 export function applyTheme(theme: ThemeName, mode: ModeKey = 'light') {
@@ -56,8 +20,9 @@ export function applyTheme(theme: ThemeName, mode: ModeKey = 'light') {
 }
 
 export function loadThemeFromStorage(): { theme: ThemeName; mode: ModeKey } {
-  const theme = getStoredTheme()
-  const mode  = getStoredMode()
-  applyTheme(theme, mode)
+  const theme = (localStorage.getItem('theme') as ThemeName) || 'default'
+  const mode = (localStorage.getItem('mode') as ModeKey) || 'light'
+  document.documentElement.setAttribute('data-theme', theme)
+  document.documentElement.setAttribute('data-mode', mode)
   return { theme, mode }
 }
