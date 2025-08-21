@@ -1,6 +1,8 @@
 from datetime import datetime
+import os
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
@@ -11,7 +13,10 @@ from backend.models.permissoes import (
     PermissaoStatus,
 )
 from backend.models.tela import Tela
+from backend.models.usuarios import Usuarios as UsuariosModel
 from backend.routes.usuarios import token_data_from_request, to_canonical
+from backend.utils.pdf import generate_pdf
+from fastapi.responses import Response
 
 router = APIRouter(prefix="/acessos", tags=["Acessos"])
 
@@ -40,6 +45,57 @@ def listar_grupos_usuario(
         .all()
     )
     return [g[0] for g in grupos]
+
+
+@router.get("/grupos/{grupo_id}/usuarios/export")
+def exportar_usuarios_grupo(
+    grupo_id: int,
+    request: Request,
+    q: str | None = None,
+    db: Session = Depends(get_db),
+):
+    """Exporta os usuários pertencentes a um grupo em formato PDF."""
+    token = require_consultar(request)
+    grupo = db.query(Grupo).filter(Grupo.id == grupo_id).first()
+    if not grupo:
+        raise HTTPException(status_code=404, detail="Grupo não encontrado")
+    query = (
+        db.query(UsuariosModel)
+        .join(UsuarioGrupo, UsuarioGrupo.usuario_id == UsuariosModel.id_usuario)
+        .filter(UsuarioGrupo.grupo_id == grupo_id)
+    )
+    if q:
+        termo = f"%{q.lower()}%"
+        query = query.filter(
+            or_(
+                func.lower(UsuariosModel.nome).like(termo),
+                func.lower(UsuariosModel.email).like(termo),
+                func.lower(UsuariosModel.tipo_perfil).like(termo),
+            )
+        )
+    usuarios = query.all()
+
+    rows = []
+    for u in usuarios:
+        telefone = " ".join(filter(None, [u.ddi, u.ddd, u.numero_celular]))
+        rows.append([u.nome, u.email, (u.tipo_perfil or "").upper(), telefone])
+
+    columns = ["Nome", "E-mail", "Perfil", "Celular"]
+    orientation = "landscape" if len(columns) > 6 else "portrait"
+    pdf_bytes = generate_pdf(
+        title=f"Usuários do Grupo {grupo.nome}",
+        user=token.email,
+        columns=columns,
+        rows=rows,
+        orientation=orientation,
+        logo_path=os.getenv("SYSTEM_LOGO_PATH"),
+    )
+
+    return Response(
+        pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=usuarios_grupo.pdf"},
+    )
 
 
 class PermissaoTempOut(dict):
@@ -94,7 +150,6 @@ def export_usuario_temporarias(
 ):
     from io import StringIO
     import csv
-    from fastapi.responses import Response
 
     require_consultar(request)
     dados = listar_perm_temp(usuario_id, status, request, db)

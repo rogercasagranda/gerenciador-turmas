@@ -1,5 +1,7 @@
 # backend/routes/usuarios.py
 from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.responses import Response
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from jose import jwt, JWTError
@@ -8,6 +10,7 @@ import os, bcrypt, logging
 from backend.database import get_db
 from backend.models.usuarios import Usuarios as UsuariosModel
 from backend.utils.audit import registrar_log
+from backend.utils.pdf import generate_pdf
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
 ALGORITHM  = "HS256"
@@ -164,3 +167,50 @@ def obter_usuario(id_usuario: int, request: Request, db: Session = Depends(get_d
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
     registrar_log(db, token_data.id_usuario, "READ", "usuarios", id_usuario, f"Consultou usuário {id_usuario}")
     return user
+
+
+@router.get("/usuarios/export")
+def exportar_usuarios(
+    request: Request,
+    q: str | None = None,
+    format: str = "pdf",
+    db: Session = Depends(get_db),
+):
+    """Exporta usuários em PDF aplicando o mesmo filtro de consulta."""
+    token_data = require_perfil(request)
+    query = db.query(UsuariosModel)
+    if q:
+        termo = f"%{q.lower()}%"
+        query = query.filter(
+            or_(
+                func.lower(UsuariosModel.nome).like(termo),
+                func.lower(UsuariosModel.email).like(termo),
+                func.lower(UsuariosModel.tipo_perfil).like(termo),
+            )
+        )
+    usuarios = query.all()
+
+    if format != "pdf":
+        raise HTTPException(status_code=400, detail="Formato não suportado")
+
+    rows = []
+    for u in usuarios:
+        telefone = " ".join(filter(None, [u.ddi, u.ddd, u.numero_celular]))
+        rows.append([u.nome, u.email, (u.tipo_perfil or "").upper(), telefone])
+
+    columns = ["Nome", "E-mail", "Perfil", "Celular"]
+    orientation = "landscape" if len(columns) > 6 else "portrait"
+    pdf_bytes = generate_pdf(
+        title="Relatório de Usuários",
+        user=token_data.email,
+        columns=columns,
+        rows=rows,
+        orientation=orientation,
+        logo_path=os.getenv("SYSTEM_LOGO_PATH"),
+    )
+
+    return Response(
+        pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=usuarios.pdf"},
+    )
