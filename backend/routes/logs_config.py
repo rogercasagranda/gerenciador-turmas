@@ -17,7 +17,7 @@ class LogConfigOut(BaseModel):
     read_enabled: bool
     update_enabled: bool
     delete_enabled: bool
-    updated_by: str | None = None
+    updated_by_name: str
     updated_at: datetime
 
     class Config:
@@ -63,7 +63,7 @@ def listar_config(request: Request, db: Session = Depends(get_db)):
             read_enabled=cfg.read_enabled,
             update_enabled=cfg.update_enabled,
             delete_enabled=cfg.delete_enabled,
-            updated_by=nome,
+            updated_by_name=nome or "—",
             updated_at=cfg.updated_at,
         )
         for cfg, nome in rows
@@ -87,14 +87,19 @@ def atualizar_todos(data: LogConfigUpdate, request: Request, db: Session = Depen
     cfg.updated_by = token.id_usuario
     db.commit()
     db.refresh(cfg)
-    nome = db.query(Usuarios.nome).filter(Usuarios.id_usuario == cfg.updated_by).scalar()
+    cfg, nome = (
+        db.query(LogConfig, Usuarios.nome)
+        .outerjoin(Usuarios, LogConfig.updated_by == Usuarios.id_usuario)
+        .filter(LogConfig.id == cfg.id)
+        .first()
+    )
     return LogConfigOut(
         screen=cfg.screen,
         create_enabled=cfg.create_enabled,
         read_enabled=cfg.read_enabled,
         update_enabled=cfg.update_enabled,
         delete_enabled=cfg.delete_enabled,
-        updated_by=nome,
+        updated_by_name=nome or "—",
         updated_at=cfg.updated_at,
     )
 
@@ -116,13 +121,18 @@ def atualizar_config(screen: str, data: LogConfigUpdate, request: Request, db: S
     cfg.updated_by = token.id_usuario
     db.commit()
     db.refresh(cfg)
-    nome = db.query(Usuarios.nome).filter(Usuarios.id_usuario == cfg.updated_by).scalar()
+    cfg, nome = (
+        db.query(LogConfig, Usuarios.nome)
+        .outerjoin(Usuarios, LogConfig.updated_by == Usuarios.id_usuario)
+        .filter(LogConfig.id == cfg.id)
+        .first()
+    )
     return LogConfigOut(
         screen=cfg.screen,
         create_enabled=cfg.create_enabled,
         read_enabled=cfg.read_enabled,
         update_enabled=cfg.update_enabled,
         delete_enabled=cfg.delete_enabled,
-        updated_by=nome,
+        updated_by_name=nome or "—",
         updated_at=cfg.updated_at,
     )
