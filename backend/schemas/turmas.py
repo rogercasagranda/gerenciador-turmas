@@ -13,15 +13,15 @@ from typing import Optional                                       # Importa Opti
 class AnoLetivoBase(BaseModel):                                   # Classe base com campos comuns
 
     descricao: str = Field(..., min_length=3, description="Descrição do ano letivo")  # Descrição textual
-    data_inicio: date = Field(..., description="Data inicial do período")             # Data de início
-    data_fim: date = Field(..., description="Data final do período")                  # Data de término
+    inicio: date = Field(..., description="Data inicial do período")                  # Data de início
+    fim: date = Field(..., description="Data final do período")                      # Data de término
 
-    @field_validator("data_fim")
+    @field_validator("fim")
     @classmethod
     def validar_datas(cls, v, info):                               # Valida relação entre datas
-        data_inicio = info.data.get("data_inicio")                # Obtém data de início
-        if data_inicio and data_inicio > v:                        # Compara datas
-            raise ValueError("data_inicio deve ser menor ou igual a data_fim")  # Erro se inválido
+        inicio = info.data.get("inicio")                          # Obtém data de início
+        if inicio and inicio >= v:                                 # Compara datas
+            raise ValueError("inicio deve ser menor que fim")     # Erro se inválido
         return v                                                   # Retorna valor válido
 
 
@@ -33,15 +33,15 @@ class AnoLetivoCreate(AnoLetivoBase):                             # Schema para 
 
 class AnoLetivoUpdate(BaseModel):                                 # Schema para atualização
     descricao: Optional[str] = Field(None, min_length=3, description="Descrição do ano letivo")  # Descrição opcional
-    data_inicio: Optional[date] = Field(None, description="Data inicial do período")             # Data inicial opcional
-    data_fim: Optional[date] = Field(None, description="Data final do período")                  # Data final opcional
+    inicio: Optional[date] = Field(None, description="Data inicial do período")                  # Data inicial opcional
+    fim: Optional[date] = Field(None, description="Data final do período")                      # Data final opcional
 
-    @field_validator("data_fim")
+    @field_validator("fim")
     @classmethod
     def validar_datas(cls, v, info):                               # Valida relação entre datas
-        data_inicio = info.data.get("data_inicio")                # Obtém data de início
-        if data_inicio and v and data_inicio > v:                  # Verifica presença e ordem
-            raise ValueError("data_inicio deve ser menor ou igual a data_fim")  # Erro se inválido
+        inicio = info.data.get("inicio")                          # Obtém data de início
+        if inicio and v and inicio >= v:                           # Verifica presença e ordem
+            raise ValueError("inicio deve ser menor que fim")     # Erro se inválido
         return v                                                   # Retorna valor
 
 
