@@ -1,7 +1,7 @@
 /* ===== Consultar Usuários (respeita layout aprovado) ===== */
 /* Ajusta variáveis para seguir o tema global */
 :root {
-  --pp-purple-50: color-mix(in srgb, var(--color-primary) 15%, var(--bg));
+  --pp-purple-50: color-mix(in srgb, var(--primary-color) 15%, var(--bg));
   --pp-border: var(--border);
   --pp-text: var(--text);
   --pp-muted: color-mix(in srgb, var(--text) 60%, var(--bg));
@@ -22,7 +22,7 @@
 .tabela th { text-align: left; font-weight: 700; line-height: 1.35; color: var(--pp-text); padding: 9px 10px; border-bottom: 2px solid var(--pp-border); }
 .tabela td { padding: 9px 10px; border-bottom: 1px solid var(--pp-border); vertical-align: middle; line-height: 1.35; color: var(--pp-text); }
 .tabela tbody tr:nth-child(even) { background: var(--pp-purple-50); }
-.tabela tbody tr:hover { background: color-mix(in srgb, var(--color-primary) 20%, var(--pp-purple-50)); }
+.tabela tbody tr:hover { background: color-mix(in srgb, var(--primary-color) 20%, var(--pp-purple-50)); }
 
 .sem-registros { text-align: center; color: var(--pp-muted); padding: 16px; }
 

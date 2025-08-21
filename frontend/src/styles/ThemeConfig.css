@@ -8,10 +8,11 @@
 .theme-option {
   padding: 8px 16px;
   border: 1px solid #ccc;
-  background: #fff;
+  background: var(--primary-color);
   border-radius: 8px;
   cursor: pointer;
   text-transform: capitalize;
+  color: var(--text-color);
 }
 
 .theme-option.active {

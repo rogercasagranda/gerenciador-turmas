@@ -1,6 +1,6 @@
 :root {
-  --color-primary: #6D28D9;   /* valor padrão, será sobrescrito por data-theme */
-  --color-primary-contrast: #ffffff;
+  --primary-color: #6D28D9;   /* valor padrão, será sobrescrito por data-theme */
+  --text-color: #ffffff;
   --bg: #ffffff;
   --text: #111827;
   --surface: #f5f7fb;
@@ -8,10 +8,10 @@
   --btn-radius: .75rem;
   --btn-shadow: 0 2px 4px rgba(0,0,0,0.1);
   /* Variáveis legadas para o layout atual */
-  --pp-purple-700: var(--color-primary);
-  --pp-purple-900: color-mix(in srgb, var(--color-primary) 80%, black);
-  --pp-purple-100: color-mix(in srgb, var(--color-primary) 20%, white);
-  --pp-purple-50: color-mix(in srgb, var(--color-primary) 10%, white);
+  --pp-purple-700: var(--primary-color);
+  --pp-purple-900: color-mix(in srgb, var(--primary-color) 80%, black);
+  --pp-purple-100: color-mix(in srgb, var(--primary-color) 20%, white);
+  --pp-purple-50: color-mix(in srgb, var(--primary-color) 10%, white);
   --pp-surface: var(--surface);
   --pp-text: var(--text);
   --pp-border: var(--border);
@@ -29,19 +29,19 @@
 }
 
 /* Mapas de tema */
-:root[data-theme="roxo"]     { --color-primary: #6D28D9; --color-primary-contrast: #ffffff; }
-:root[data-theme="vermelho"] { --color-primary: #EF4444; --color-primary-contrast: #ffffff; }
-:root[data-theme="azul"]     { --color-primary: #3B82F6; --color-primary-contrast: #ffffff; }
-:root[data-theme="verde"]    { --color-primary: #10B981; --color-primary-contrast: #ffffff; }
-:root[data-theme="laranja"]  { --color-primary: #F59E0B; --color-primary-contrast: #111827; }
-:root[data-theme="cinza"]    { --color-primary: #6B7280; --color-primary-contrast: #ffffff; }
-:root[data-theme="rosa"]     { --color-primary: #EC4899; --color-primary-contrast: #ffffff; }
-:root[data-theme="ciano"]    { --color-primary: #06B6D4; --color-primary-contrast: #ffffff; }
+:root[data-theme="roxo"]     { --primary-color: #6D28D9; --text-color: #ffffff; }
+:root[data-theme="vermelho"] { --primary-color: #EF4444; --text-color: #ffffff; }
+:root[data-theme="azul"]     { --primary-color: #3B82F6; --text-color: #ffffff; }
+:root[data-theme="verde"]    { --primary-color: #10B981; --text-color: #ffffff; }
+:root[data-theme="laranja"]  { --primary-color: #F59E0B; --text-color: #111827; }
+:root[data-theme="cinza"]    { --primary-color: #6B7280; --text-color: #ffffff; }
+:root[data-theme="rosa"]     { --primary-color: #EC4899; --text-color: #ffffff; }
+:root[data-theme="ciano"]    { --primary-color: #06B6D4; --text-color: #ffffff; }
 
 /* Botões padrão que seguem o tema */
 .button {
-  background: var(--color-primary);
-  color: var(--color-primary-contrast);
+  background: var(--primary-color);
+  color: var(--text-color);
   border: 1px solid transparent;
   border-radius: var(--btn-radius);
   box-shadow: var(--btn-shadow);
@@ -49,12 +49,12 @@
   font-weight: 600;
 }
 .button:hover { filter: brightness(0.92); }
-.button:focus { outline: 2px solid color-mix(in srgb, var(--color-primary) 40%, #ffffff); outline-offset: 2px; }
+.button:focus { outline: 2px solid color-mix(in srgb, var(--primary-color) 40%, var(--text-color)); outline-offset: 2px; }
 
 /* Botão Sair: padrão vermelho, exceção em tema vermelho */
 .button-exit {
-  background: #EF4444;
-  color: #ffffff;
+  background: var(--primary-color);
+  color: var(--text-color);
   border: 1px solid transparent;
   border-radius: var(--btn-radius);
   box-shadow: var(--btn-shadow);
@@ -62,7 +62,7 @@
   font-weight: 700;
 }
 .button-exit:hover { filter: brightness(0.92); }
-:root[data-theme="vermelho"] .button-exit { background: #000000; }
+:root[data-theme="vermelho"] .button-exit { background: var(--primary-color); }
 
 /* Utilitários base (sem alterar layout existente) */
 .app-bg      { background: var(--bg);    color: var(--text); }
