@@ -88,7 +88,8 @@ export async function apiFetch(
 
   const res = await fetch(url, { ...init, headers })
 
-  if (res.status === 401 || res.status === 403) {
+  // 401 → token inválido/expirado: limpa token e força login
+  if (res.status === 401) {
     clearAuthToken()
     window.dispatchEvent(new Event("auth:unauthorized"))
   }
@@ -109,7 +110,10 @@ export async function apiFetch(
   if (!res.ok) {
     const msg =
       (data && (data.detail || data.message)) || res.statusText || "Erro na requisição"
-    throw new Error(msg)
+    const err: any = new Error(msg)
+    err.status = res.status
+    err.payload = data
+    throw err
   }
 
   return data
@@ -235,7 +239,7 @@ async function apiRequest<T = unknown>(
           payload = undefined
         }
 
-        if (res.status === 401 || res.status === 403) {
+        if (res.status === 401) {
           const detail = typeof payload?.detail === "string" ? payload.detail.toLowerCase() : ""
           if (!payload || detail.includes("token")) {
             logoutControlled()
@@ -264,9 +268,8 @@ async function apiRequest<T = unknown>(
   }
 }
 
-// Alias público exposto aos componentes
-// Permite chamadas como apiFetch('/rota', { method: 'POST', body: {...} })
-export { apiRequest as apiFetch }
+// Exporta também a versão mais completa para usos avançados
+export { apiRequest }
 
 // ============================================================
 // Endpoints específicos utilizados pelo Portal do Professor

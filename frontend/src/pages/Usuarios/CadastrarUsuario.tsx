@@ -4,7 +4,8 @@ import '../../styles/CadastrarUsuario.css'
 import '../../styles/Forms.css'
 import useDirtyForm from '@/hooks/useDirtyForm'
 
-import { apiFetch, getAuthToken } from '@/services/api'
+import { API_BASE, apiFetch, getAuthToken } from '@/services/api'
+import { safeAlert } from '@/utils/safeAlert'
 
 
 type MeuPerfil = { id_usuario?: number; tipo_perfil?: string; is_master?: boolean }
@@ -101,7 +102,7 @@ const CadastrarUsuario: React.FC = () => {
           const p = toCanonical(m.tipo_perfil || '')
           const isMaster = Boolean(m.is_master || p === 'master')
           const autorizado = isMaster || PERFIS_PERMITIDOS.has(p)
-          if (!autorizado) { navigate('/home'); return }
+          if (!autorizado) { safeAlert('ACESSO NEGADO'); return }
           setMeuId(m.id_usuario)
           setMeuPerfil(p)
           setSouMaster(isMaster)
@@ -116,7 +117,7 @@ const CadastrarUsuario: React.FC = () => {
           const id = claims?.sub ? Number(claims.sub) : undefined
           const isMaster = p === 'master'
           const autorizado = isMaster || PERFIS_PERMITIDOS.has(p)
-          if (!autorizado) { navigate('/home'); return }
+          if (!autorizado) { safeAlert('ACESSO NEGADO'); return }
           setMeuId(id)
           setMeuPerfil(p)
           setSouMaster(isMaster)
@@ -152,6 +153,7 @@ const CadastrarUsuario: React.FC = () => {
 
       .catch((e) => {
         if (e?.response?.status === 401) navigate('/login')
+        else if (e?.response?.status === 403) safeAlert('ACESSO NEGADO')
         else setErro(e?.response?.data?.detail || 'Falha ao carregar usuário.')
       })
       .finally(() => setCarregandoEdicao(false))
@@ -188,7 +190,11 @@ const CadastrarUsuario: React.FC = () => {
     } catch (err: any) {
 
       if (err?.response?.status === 401) navigate('/login')
-      else setErro(err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
+      else if (err?.response?.status === 403) safeAlert('ACESSO NEGADO')
+      else
+        setErro(
+          err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'),
+        )
 
     } finally {
       setEnviando(false)
@@ -218,8 +224,9 @@ const CadastrarUsuario: React.FC = () => {
       navigate('/usuarios/consultar')
 
     } catch (e: any) {
-      if (e?.response?.status === 401) navigate('/login')
-      else setErro(e?.response?.data?.detail || 'Falha ao excluir usuário.')
+      if (e?.status === 401) navigate('/login')
+      else if (e?.status === 403) safeAlert('ACESSO NEGADO')
+      else setErro(e?.payload?.detail || 'Falha ao excluir usuário.')
 
     }
   }

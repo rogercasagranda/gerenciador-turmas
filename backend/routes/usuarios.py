@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from jose import jwt, JWTError
-import os, bcrypt
+import os, bcrypt, logging
 
 from backend.database import get_db
 from backend.models.usuarios import Usuarios as UsuariosModel
@@ -27,6 +27,8 @@ def to_canonical(perfil: str | None) -> str:
     return p
 
 router = APIRouter(prefix="", tags=["Usuarios"])
+
+logger = logging.getLogger(__name__)
 
 class UsuarioOut(BaseModel):
     id_usuario: int
@@ -83,7 +85,9 @@ def token_data_from_request(request: Request) -> TokenData:
 def require_perfil(request: Request) -> TokenData:
     token_data = token_data_from_request(request)
     perfil = to_canonical(token_data.tipo_perfil)
-    if perfil not in ALLOWED_PERFIS:
+    autorizado = perfil in ALLOWED_PERFIS
+    logger.info(f"[AUTH] user={token_data.email} perfil={perfil} autorizado={autorizado}")
+    if not autorizado:
         raise HTTPException(status_code=403, detail="Sem permissão para acessar usuários.")
     token_data.tipo_perfil = perfil
     return token_data
