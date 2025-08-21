@@ -189,7 +189,7 @@ const EditarUsuario: React.FC = () => {                                   // Def
             </button>
             <button
               type="button"
-              className="btn secundario"
+              className="button"
               onClick={() => {
                 if (!isDirty || confirmIfDirty()) navigate('/usuarios/consultar')
               }}
