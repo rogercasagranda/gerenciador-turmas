@@ -13,8 +13,6 @@ import os                                                              # Importa
 import json                                                            # Serializa payloads para log
 
 from typing import Generator                                           # Utilizado nas dependências de banco
-from jose import jwt, JWTError                                         # JWT para autenticação
-from pydantic import BaseModel, EmailStr                               # Modelos Pydantic utilizados abaixo
 
 from backend.models import AnoLetivo                                   # Modelo de AnoLetivo
 from backend.models.turma import Turma                                 # Modelo de Turma para verificar dependências
@@ -27,6 +25,7 @@ from backend.schemas.turmas import (                                   # Importa
 )
 
 from backend.utils.audit import registrar_log                          # Função para auditoria
+from backend.services.permissions import check_permission              # Verificação de permissões
 
 # As demais rotas do projeto já são registradas na raiz (sem prefixo).
 # Para manter consistência e atender ao frontend, removemos o prefixo
@@ -38,80 +37,24 @@ router = APIRouter(tags=["Calendário"])               # Instancia roteador sem 
 # Base para chamadas externas de feriados
 FERIADOS_API_BASE = os.getenv("FERIADOS_API_BASE", "").rstrip("/")
 
-# Configuração de JWT
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
-ALGORITHM = "HS256"
-
-
-class TokenData(BaseModel):
-    id_usuario: int
-    email: EmailStr
-    tipo_perfil: str | None = None
-
-
-def to_canonical(perfil: str | None) -> str:
-    """Normaliza descrições de perfil."""
-    p = (perfil or "").strip().lower()
-    if p.startswith("diretor"):
-        return "diretor"
-    if p.startswith("coordenador"):
-        return "coordenador"
-    if p.startswith("professor"):
-        return "professor"
-    if p in {"aluno", "aluna"}:
-        return "aluno"
-    return p
-
-
-def token_data_from_request(request: Request) -> TokenData:
-    auth = request.headers.get("Authorization", "")
-    if not auth.lower().startswith("bearer "):
-        raise HTTPException(status_code=401, detail="Token ausente.")
-    token = auth.split(" ", 1)[1]
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        sub = payload.get("sub")
-        id_usuario = payload.get("id_usuario")
-        tipo_perfil = payload.get("tipo_perfil")
-        if sub is None or id_usuario is None:
-            raise HTTPException(status_code=401, detail="Token inválido.")
-        return TokenData(id_usuario=int(id_usuario), email=str(sub), tipo_perfil=tipo_perfil)
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido.")
-
-
 def get_db_dep() -> Generator[Session, None, None]:
     """Importa ``get_db`` apenas quando necessário."""
     from backend.database import get_db as _get_db
     yield from _get_db()
 
 # ------------------------------------------------------
-# Controle de acesso
-# ------------------------------------------------------
-WRITE_ACCESS = {"master", "diretor"}                                 # Perfis com permissão de escrita
-READ_COORD = WRITE_ACCESS | {"secretaria", "coordenador", "professor"}  # Perfis com leitura ampliada
-READ_RESTRITO = READ_COORD | {"aluno", "responsavel"}                 # Perfis com leitura restrita
-
-def require_role(request: Request, allowed: set[str]):                # Função auxiliar de autorização
-    token = token_data_from_request(request)                          # Extrai dados do token
-    perfil = to_canonical(token.tipo_perfil)                          # Normaliza o perfil
-    if perfil not in allowed:                                         # Verifica se tem permissão
-        raise HTTPException(status_code=403, detail="Não autorizado") # Retorna 403 se proibido
-    return token                                                      # Retorna dados do token quando autorizado
-
-# ------------------------------------------------------
 # Endpoints de Ano Letivo
 # ------------------------------------------------------
 @router.get("/ano-letivo", response_model=list[AnoLetivoOut])         # Lista todos os anos letivos
 def listar_anos(request: Request, db: Session = Depends(get_db_dep)):
-    require_role(request, READ_RESTRITO)                              # Exige qualquer perfil autenticado
+    check_permission(request, db, "/cadastro/ano-letivo", "view")
     anos = db.query(AnoLetivo).all()                                  # Consulta anos existentes
     return anos                                                       # Retorna lista simples
 
 @router.post("/ano-letivo", response_model=AnoLetivoOut, status_code=status.HTTP_201_CREATED)  # Cria ano letivo
 
 def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(get_db_dep)):
-    token = require_role(request, WRITE_ACCESS)                       # Exige perfis com permissão de escrita
+    token = check_permission(request, db, "/cadastro/ano-letivo", "create")
     existente = db.query(AnoLetivo).filter(                           # Verifica duplicidade de descrição (case-insens)
         func.lower(AnoLetivo.descricao) == payload.descricao.lower()
     ).first()
@@ -138,7 +81,7 @@ def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(
 @router.get("/ano-letivo/{ano_id}", response_model=AnoLetivoOut)  # Obtém ano letivo específico
 
 def obter_ano(ano_id: int, request: Request, db: Session = Depends(get_db_dep)):
-    require_role(request, READ_RESTRITO)                              # Permite leitura ampla
+    check_permission(request, db, "/cadastro/ano-letivo", "view")
     ano = db.get(AnoLetivo, ano_id)                                   # Busca registro
     if not ano:                                                       # Se não encontrado
         raise HTTPException(status_code=404, detail="Ano letivo não encontrado")  # Retorna 404
@@ -147,7 +90,7 @@ def obter_ano(ano_id: int, request: Request, db: Session = Depends(get_db_dep)):
 @router.put("/ano-letivo/{ano_id}", response_model=AnoLetivoOut)      # Atualiza ano letivo
 
 def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: Session = Depends(get_db_dep)):
-    token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
+    token = check_permission(request, db, "/cadastro/ano-letivo", "update")
 
     ano = db.get(AnoLetivo, ano_id)                                   # Busca registro
     if not ano:                                                       # Se inexistente
@@ -184,7 +127,7 @@ def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: S
 @router.delete("/ano-letivo/{ano_id}")                               # Remove ano letivo
 
 def remover_ano(ano_id: int, request: Request, db: Session = Depends(get_db_dep)):
-    token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
+    token = check_permission(request, db, "/cadastro/ano-letivo", "delete")
 
     ano = db.get(AnoLetivo, ano_id)                                   # Busca registro
     if not ano:                                                       # Se inexistente
@@ -206,14 +149,14 @@ def remover_ano(ano_id: int, request: Request, db: Session = Depends(get_db_dep)
 # ------------------------------------------------------
 @router.get("/feriados", response_model=list[FeriadoOut])            # Lista feriados por ano letivo
 def listar_feriados(anoLetivoId: int, request: Request, db: Session = Depends(get_db_dep)):
-    require_role(request, READ_RESTRITO)                              # Permite leitura a todos os perfis
+    check_permission(request, db, "/cadastro/feriados", "view")
     feriados = db.query(Feriado).filter(Feriado.ano_letivo_id == anoLetivoId).all()  # Consulta feriados
     return feriados                                                  # Retorna lista simples
 
 @router.post("/feriados", response_model=FeriadoOut, status_code=status.HTTP_201_CREATED)  # Cria feriado escolar
 
 def criar_feriado(payload: FeriadoCreate, request: Request, db: Session = Depends(get_db_dep)):
-    token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
+    token = check_permission(request, db, "/cadastro/feriados", "create")
 
     if payload.origem != "ESCOLA":                                    # Valida origem
         raise HTTPException(status_code=422, detail="Origem deve ser 'ESCOLA'")  # Retorna 422
@@ -240,7 +183,7 @@ def criar_feriado(payload: FeriadoCreate, request: Request, db: Session = Depend
 @router.put("/feriados/{feriado_id}", response_model=FeriadoOut)  # Atualiza feriado
 
 def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request, db: Session = Depends(get_db_dep)):
-    token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
+    token = check_permission(request, db, "/cadastro/feriados", "update")
 
     fer = db.get(Feriado, feriado_id)                                 # Busca registro
     if not fer:                                                       # Se inexistente
@@ -274,7 +217,7 @@ def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request,
 @router.delete("/feriados/{feriado_id}")                             # Remove feriado
 
 def remover_feriado(feriado_id: int, request: Request, db: Session = Depends(get_db_dep)):
-    token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
+    token = check_permission(request, db, "/cadastro/feriados", "delete")
 
     fer = db.get(Feriado, feriado_id)                                 # Busca registro
     if not fer:                                                       # Se inexistente
@@ -290,7 +233,7 @@ def remover_feriado(feriado_id: int, request: Request, db: Session = Depends(get
 @router.post("/feriados/importar-nacionais", response_model=list[FeriadoOut])  # Importa feriados nacionais
 
 def importar_nacionais(payload: FeriadoImportarNacionais, request: Request, db: Session = Depends(get_db_dep)):
-    token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
+    token = check_permission(request, db, "/cadastro/feriados", "create")
 
 
     ano = db.get(AnoLetivo, payload.ano_letivo_id)                    # Busca ano letivo

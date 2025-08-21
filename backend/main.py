@@ -65,6 +65,7 @@ from backend.routers.logs_config import router as logs_config_router  # Importa 
 from backend.routes.turmas import router as turmas_router            # Importa rotas do módulo de turmas
 from backend.routes.calendario import router as calendario_router    # Importa rotas de calendário escolar
 from backend.routes.telas import router as telas_router              # Importa rotas de telas oficiais
+from backend.routes.me import router as me_router                    # Importa rotas de informações do usuário
 
 # ======================================================
 # Configura logger da aplicação
@@ -134,6 +135,7 @@ app.include_router(logs_config_router)               # Registra rotas de configu
 app.include_router(turmas_router)                    # Registra rotas de turmas e afins
 app.include_router(calendario_router)                # Registra rotas de calendário (ano letivo e afins)
 app.include_router(telas_router)                     # Registra rota de listagem de telas
+app.include_router(me_router)                        # Registra rotas do usuário autenticado
 
 # ======================================================
 # Evento de inicialização do servidor
