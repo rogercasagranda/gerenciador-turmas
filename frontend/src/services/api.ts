@@ -264,9 +264,7 @@ async function apiRequest<T = unknown>(
   }
 }
 
-// Alias público exposto aos componentes
-// Permite chamadas como apiFetch('/rota', { method: 'POST', body: {...} })
-export { apiRequest as apiFetch }
+  // Alias removido para evitar export duplicado de apiFetch
 
 // ============================================================
 // Endpoints específicos utilizados pelo Portal do Professor
