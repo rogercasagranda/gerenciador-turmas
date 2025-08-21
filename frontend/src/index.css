@@ -11,11 +11,11 @@
 
 a {
   font-weight: 500;
-  color: var(--color-primary);
+  color: var(--primary-color);
   text-decoration: inherit;
 }
 a:hover {
-  color: color-mix(in srgb, var(--color-primary) 80%, black);
+  color: color-mix(in srgb, var(--primary-color) 80%, black);
 }
 
 body {

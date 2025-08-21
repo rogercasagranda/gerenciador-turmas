@@ -1,6 +1,6 @@
 /* ===== Cadastrar/Alterar Usuário (respeita layout aprovado) ===== */
 :root {
-  --pp-purple-50: color-mix(in srgb, var(--color-primary) 15%, var(--bg));
+  --pp-purple-50: color-mix(in srgb, var(--primary-color) 15%, var(--bg));
   --pp-border: var(--border);
   --pp-text: var(--text);
   --pp-muted: color-mix(in srgb, var(--text) 60%, var(--bg));
@@ -24,7 +24,7 @@
 .campo.curto { max-width: 140px; }
 .rotulo { font-size: 13px; color: var(--pp-muted); }
 .entrada { height: 38px; padding: 8px 10px; border: 1px solid var(--pp-border); border-radius: 10px; }
-.entrada:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 40%, transparent); }
+.entrada:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 40%, transparent); }
 
 /* Ações */
 .acoes { display: flex; gap: 10px; justify-content: flex-end; }
@@ -57,7 +57,7 @@
 /* Abas utilizadas na tela de feriados */
 .tabs { display: flex; gap: 8px; margin: 12px 0; border-bottom: 1px solid var(--pp-border); }
 .tab { background: none; border: none; padding: 8px 12px; cursor: pointer; color: var(--pp-text); }
-.tab.ativo { border-bottom: 2px solid var(--color-primary); font-weight: 600; }
+.tab.ativo { border-bottom: 2px solid var(--primary-color); font-weight: 600; }
 
 /* Tabelas de feriados */
 .holiday-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
