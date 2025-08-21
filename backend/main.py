@@ -199,6 +199,13 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # --------------------------------------------------
     # Valida senha com bcrypt
     # --------------------------------------------------
+    if not usuario.senha_hash:                                             # Verifica ausência de senha local
+        logger.warning(f"⛔ Usuário sem senha local configurada: {email}")  # Registra ausência de senha
+        from fastapi.responses import JSONResponse                         # Importa resposta JSON específica
+        return JSONResponse(                                               # Retorna 403 com código e mensagem
+            status_code=403,
+            content={"code": "NO_LOCAL_PASSWORD", "message": "Cadastro não possui senha local, utilize o login com Google"}
+        )
     if not bcrypt.checkpw(senha.encode("utf-8"), usuario.senha_hash.encode("utf-8")):  # Compara hash
         logger.warning(f"❌ Senha incorreta para o e-mail: {email}")                     # Registra senha incorreta
         raise HTTPException(                                                            # Retorna 401 padronizado
