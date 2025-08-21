@@ -19,3 +19,35 @@ class LogConfig(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     updated_by_user = relationship("Usuarios", foreign_keys=[updated_by])
+
+    @property
+    def create(self) -> bool:
+        return self.create_enabled
+
+    @create.setter
+    def create(self, value: bool) -> None:
+        self.create_enabled = value
+
+    @property
+    def read(self) -> bool:
+        return self.read_enabled
+
+    @read.setter
+    def read(self, value: bool) -> None:
+        self.read_enabled = value
+
+    @property
+    def update(self) -> bool:
+        return self.update_enabled
+
+    @update.setter
+    def update(self, value: bool) -> None:
+        self.update_enabled = value
+
+    @property
+    def delete(self) -> bool:
+        return self.delete_enabled
+
+    @delete.setter
+    def delete(self, value: bool) -> None:
+        self.delete_enabled = value
