@@ -34,6 +34,6 @@ typing_extensions==4.14.1
 urllib3==2.5.0
 uvicorn==0.35.0
 psycopg2-binary==2.9.10
-python-jose==3.5.0
+python-jose>=3.4.0
 alembic==1.14.0
 pydantic[email]==2.11.7
