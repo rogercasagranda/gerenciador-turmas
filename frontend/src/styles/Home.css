@@ -221,6 +221,13 @@ body { /* Aplica ao corpo do documento */
   text-align: center;             /* Centraliza o conteúdo */
 }
 
+.home-footer a {
+  color: #fff;
+  text-decoration: underline;
+  display: block;
+  margin-top: 4px;
+}
+
 /* ===== Responsividade ===== */
 
 /* Quebra para tablets e celulares */

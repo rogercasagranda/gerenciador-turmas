@@ -5,7 +5,9 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 // Importa páginas
 import LoginPageWrapper from './pages/Login/LoginPageWrapper'
 import Home from './pages/Home/Home'
+
 import PoliticaDeCookies from './pages/PoliticaDeCookies'
+
 
 // Componente principal da aplicação
 const App: React.FC = () => {
@@ -31,6 +33,9 @@ const App: React.FC = () => {
 
       {/* Rotas de configuração */}
       <Route path="/config/*" element={<Home />} />
+
+      {/* Página institucional: Política de Cookies */}
+      <Route path="/politica-de-cookies" element={<PoliticaDeCookies />} />
 
       {/* Fallback opcional para rotas desconhecidas */}
       <Route path="*" element={<Navigate to="/login" replace />} />
