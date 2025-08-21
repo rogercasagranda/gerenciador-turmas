@@ -4,13 +4,23 @@
    deve ser feita em um novo arquivo de estilos e nunca aqui.
    Versão travada: v1 (snapshot atual) 
    ======================================================================== */
+/* Fundo degradê que ocupa toda a tela */
+body {
+  margin: 0; /* Remove margens padrão */
+  min-height: 100vh; /* Garante altura mínima da viewport */
+  background: linear-gradient(135deg, #e6e6fa, #98fb98); /* Degradê lavanda para manjericão */
+  background-attachment: fixed; /* Mantém o fundo fixo */
+  background-size: cover; /* Cobre toda a área visível */
+  background-repeat: no-repeat; /* Evita repetição do degradê */
+}
+
 /* Container principal da tela de login */
 .login-container {
   display: flex; /* Usa flexbox para centralizar conteúdo */
   justify-content: center; /* Centraliza horizontalmente */
   align-items: center; /* Centraliza verticalmente */
-  height: 100vh; /* Ocupa toda a altura da tela */
-  background: linear-gradient(135deg, #e6e6fa, #98fb98); /* Degradê lavanda para manjericão */
+  min-height: 100vh; /* Ocupa toda a altura da tela */
+  width: 100%; /* Garante largura total */
 }
 
 /* Formulário de login */
