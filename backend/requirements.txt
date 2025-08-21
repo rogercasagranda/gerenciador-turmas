@@ -37,3 +37,4 @@ psycopg2-binary==2.9.10
 python-jose>=3.4.0
 alembic==1.14.0
 pydantic[email]==2.11.7
+openpyxl==3.1.5

@@ -27,11 +27,13 @@ export const API_BASE: string = (() => {
 // Obtém token do localStorage (persistente) ou sessionStorage (sessão)
 export function getAuthToken(): string | null {
   // Tenta obter do armazenamento persistente
-  const fromLocal = localStorage.getItem("authToken")
-  // Retorna token do localStorage se existir
+  const fromLocal =
+    localStorage.getItem("authToken") || localStorage.getItem("auth_token")
   if (fromLocal) return fromLocal
-  // Retorna token do sessionStorage como fallback
-  return sessionStorage.getItem("authToken")
+  return (
+    sessionStorage.getItem("authToken") ||
+    sessionStorage.getItem("auth_token")
+  )
 }
 
 // Salva token conforme “Continuar conectado” (true → localStorage, false → sessionStorage)

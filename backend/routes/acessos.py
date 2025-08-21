@@ -2,9 +2,16 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import os
 
+import os
+from datetime import datetime
+from io import BytesIO, StringIO
+import csv
+
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import func, or_
+from fastapi.responses import Response
+from sqlalchemy import func, or_, cast, String
 from sqlalchemy.orm import Session
+from openpyxl import Workbook
 
 from backend.database import get_db
 from backend.models.permissoes import (
@@ -16,14 +23,18 @@ from backend.models.permissoes import (
 )
 from backend.models.tela import Tela
 from backend.models.usuarios import Usuarios as UsuariosModel
+from backend.models.sessao import Sessao
 from backend.routes.usuarios import token_data_from_request, to_canonical
 from backend.utils.pdf import generate_pdf
-from fastapi.responses import Response
 from backend.schemas.permissoes_temp import PermissaoTempIn, PermissaoTempOut
 from backend.schemas.grupo_permissoes import (
     GrupoOut,
     GrupoPermissaoIn,
     GrupoPermissaoOut,
+)
+from backend.schemas.usuarios_por_grupo import (
+    UsuarioGrupoOut,
+    UsuariosPorGrupoResponse,
 )
 
 BRAZIL_TZ = ZoneInfo("America/Sao_Paulo")
@@ -73,6 +84,207 @@ def listar_grupos(
     require_admin(request)
     grupos = db.query(Grupo).filter(Grupo.nome != "Master").all()
     return grupos
+
+
+@router.get("/usuarios-por-grupo", response_model=UsuariosPorGrupoResponse)
+def usuarios_por_grupo(
+    request: Request,
+    group_ids: str | None = None,
+    perfil: str | None = None,
+    status: str | None = None,
+    q: str | None = None,
+    page: int = 1,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+):
+    require_consultar(request)
+
+    query = (
+        db.query(UsuariosModel)
+        .join(UsuarioGrupo, UsuarioGrupo.usuario_id == UsuariosModel.id_usuario)
+    )
+
+    if group_ids:
+        ids = [int(i) for i in group_ids.split(",") if i]
+        if ids:
+            query = query.filter(UsuarioGrupo.grupo_id.in_(ids))
+
+    if perfil:
+        query = query.filter(
+            func.lower(UsuariosModel.tipo_perfil) == to_canonical(perfil)
+        )
+
+    if status:
+        ativo = status.lower() == "ativo"
+        query = query.filter(UsuariosModel.ativo == ativo)
+
+    if q:
+        termo = f"%{q.lower()}%"
+        query = query.filter(
+            or_(
+                func.lower(UsuariosModel.nome).like(termo),
+                func.lower(UsuariosModel.email).like(termo),
+                cast(UsuariosModel.id_usuario, String).like(termo),
+            )
+        )
+
+    total = query.distinct().count()
+    usuarios = (
+        query.distinct().order_by(UsuariosModel.nome)
+        .offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
+
+    items: list[UsuarioGrupoOut] = []
+    for u in usuarios:
+        grupos = [
+            g[0]
+            for g in (
+                db.query(Grupo.nome)
+                .join(UsuarioGrupo, UsuarioGrupo.grupo_id == Grupo.id)
+                .filter(UsuarioGrupo.usuario_id == u.id_usuario)
+                .all()
+            )
+        ]
+        ultimo = (
+            db.query(func.max(Sessao.data_login))
+            .filter(Sessao.id_usuario == u.id_usuario)
+            .scalar()
+        )
+        items.append(
+            UsuarioGrupoOut(
+                id_usuario=u.id_usuario,
+                nome=u.nome,
+                email=u.email,
+                perfil=u.tipo_perfil,
+                grupos=grupos,
+                ultimo_acesso=ultimo,
+                status="Ativo" if u.ativo else "Inativo",
+            )
+        )
+
+    return UsuariosPorGrupoResponse(items=items, total=total, page=page, limit=limit)
+
+
+@router.get("/export/usuarios-por-grupo")
+def exportar_usuarios_por_grupo(
+    request: Request,
+    format: str = "csv",
+    group_ids: str | None = None,
+    perfil: str | None = None,
+    status: str | None = None,
+    q: str | None = None,
+    db: Session = Depends(get_db),
+):
+    token = require_consultar(request)
+
+    query = (
+        db.query(UsuariosModel)
+        .join(UsuarioGrupo, UsuarioGrupo.usuario_id == UsuariosModel.id_usuario)
+    )
+
+    if group_ids:
+        ids = [int(i) for i in group_ids.split(",") if i]
+        if ids:
+            query = query.filter(UsuarioGrupo.grupo_id.in_(ids))
+
+    if perfil:
+        query = query.filter(
+            func.lower(UsuariosModel.tipo_perfil) == to_canonical(perfil)
+        )
+
+    if status:
+        ativo = status.lower() == "ativo"
+        query = query.filter(UsuariosModel.ativo == ativo)
+
+    if q:
+        termo = f"%{q.lower()}%"
+        query = query.filter(
+            or_(
+                func.lower(UsuariosModel.nome).like(termo),
+                func.lower(UsuariosModel.email).like(termo),
+                cast(UsuariosModel.id_usuario, String).like(termo),
+            )
+        )
+
+    usuarios = query.distinct().order_by(UsuariosModel.nome).all()
+
+    rows: list[list[str]] = []
+    for u in usuarios:
+        grupos = [
+            g[0]
+            for g in (
+                db.query(Grupo.nome)
+                .join(UsuarioGrupo, UsuarioGrupo.grupo_id == Grupo.id)
+                .filter(UsuarioGrupo.usuario_id == u.id_usuario)
+                .all()
+            )
+        ]
+        ultimo = (
+            db.query(func.max(Sessao.data_login))
+            .filter(Sessao.id_usuario == u.id_usuario)
+            .scalar()
+        )
+        rows.append(
+            [
+                u.nome,
+                u.email,
+                u.tipo_perfil or "",
+                ", ".join(grupos),
+                ultimo.isoformat() if ultimo else "",
+                "Ativo" if u.ativo else "Inativo",
+            ]
+        )
+
+    columns = [
+        "Nome",
+        "Email",
+        "Perfil",
+        "Grupos",
+        "Último acesso",
+        "Status",
+    ]
+
+    if format == "csv":
+        buf = StringIO()
+        writer = csv.writer(buf)
+        writer.writerow(columns)
+        writer.writerows(rows)
+        return Response(
+            buf.getvalue(),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=usuarios_por_grupo.csv"},
+        )
+    if format == "xlsx":
+        wb = Workbook()
+        ws = wb.active
+        ws.append(columns)
+        for r in rows:
+            ws.append(r)
+        buf = BytesIO()
+        wb.save(buf)
+        return Response(
+            buf.getvalue(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=usuarios_por_grupo.xlsx"},
+        )
+    if format == "pdf":
+        pdf_bytes = generate_pdf(
+            title="Usuários por Grupo",
+            user=token.email,
+            columns=columns,
+            rows=rows,
+            orientation="landscape",
+            logo_path=os.getenv("SYSTEM_LOGO_PATH"),
+        )
+        return Response(
+            pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": "attachment; filename=usuarios_por_grupo.pdf"},
+        )
+
+    raise HTTPException(status_code=400, detail="Formato não suportado")
 
 
 @router.get("/grupos/{grupo_id}/usuarios/export")
