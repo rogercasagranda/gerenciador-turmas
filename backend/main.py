@@ -111,7 +111,9 @@ def root():
 # ======================================================
 app.add_middleware(                                  # Adiciona middleware de CORS
     CORSMiddleware,                                  # Define a classe do middleware
-    allow_origins=["*"],                             # Libera origens
+    allow_origins=[
+        "https://gerenciador-turmas-f.onrender.com",
+    ],                                               # Domínios permitidos (adicione staging se necessário)
     allow_credentials=True,                          # Permite envio de cookies/credenciais
     allow_methods=["*"],                             # Libera todos os métodos HTTP
     allow_headers=["*"],                             # Libera todos os headers
