@@ -11,29 +11,29 @@ from typing import Optional                                       # Importa Opti
 # Schemas para Ano Letivo com período único
 # ------------------------------------------------------
 class AnoLetivoBase(BaseModel):                                   # Classe base com campos comuns
-
     descricao: str = Field(..., min_length=3, description="Descrição do ano letivo")  # Descrição textual
-    inicio: date = Field(..., description="Data inicial do período")                  # Data de início
-    fim: date = Field(..., description="Data final do período")                      # Data de término
+    data_inicio: date = Field(..., alias="inicio", description="Data inicial do período")  # Data de início
+    data_fim: date = Field(..., alias="fim", description="Data final do período")          # Data de término
 
-
-
+    model_config = {"populate_by_name": True}                     # Permite usar nomes de campos ou aliases
 
 
 class AnoLetivoCreate(AnoLetivoBase):                             # Schema para criação
     pass                                                          # Nenhum campo adicional
 
 
-
 class AnoLetivoUpdate(BaseModel):                                 # Schema para atualização
     descricao: Optional[str] = Field(None, min_length=3, description="Descrição do ano letivo")  # Descrição opcional
-    inicio: Optional[date] = Field(None, description="Data inicial do período")                  # Data inicial opcional
-    fim: Optional[date] = Field(None, description="Data final do período")                      # Data final opcional
+    data_inicio: Optional[date] = Field(None, alias="inicio", description="Data inicial do período")  # Data inicial opcional
+    data_fim: Optional[date] = Field(None, alias="fim", description="Data final do período")          # Data final opcional
+
+    model_config = {"populate_by_name": True}                     # Permite usar nomes de campos ou aliases
+
 
 class AnoLetivoOut(AnoLetivoBase):                                # Schema de resposta
     id: int                                                       # Identificador do ano letivo
 
-    model_config = {"from_attributes": True}                     # Permite criação a partir do ORM
+    model_config = {"from_attributes": True, "populate_by_name": True}  # Permite criação a partir do ORM
 
 
 # ------------------------------------------------------
