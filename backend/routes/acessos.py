@@ -10,6 +10,7 @@ from backend.database import get_db
 from backend.models.permissoes import (
     Grupo,
     UsuarioGrupo,
+    GrupoPermissao,
     UsuarioPermissaoTemp,
     PermissaoStatus,
 )
@@ -19,6 +20,11 @@ from backend.routes.usuarios import token_data_from_request, to_canonical
 from backend.utils.pdf import generate_pdf
 from fastapi.responses import Response
 from backend.schemas.permissoes_temp import PermissaoTempIn, PermissaoTempOut
+from backend.schemas.grupo_permissoes import (
+    GrupoOut,
+    GrupoPermissaoIn,
+    GrupoPermissaoOut,
+)
 
 BRAZIL_TZ = ZoneInfo("America/Sao_Paulo")
 
@@ -31,6 +37,14 @@ def require_consultar(request: Request):
     token = token_data_from_request(request)
     perfil = to_canonical(token.tipo_perfil)
     if perfil in FORBIDDEN_PROFILES:
+        raise HTTPException(status_code=403, detail="Perfil sem acesso")
+    return token
+
+
+def require_admin(request: Request):
+    token = token_data_from_request(request)
+    perfil = to_canonical(token.tipo_perfil)
+    if perfil not in {"master", "diretor"}:
         raise HTTPException(status_code=403, detail="Perfil sem acesso")
     return token
 
@@ -49,6 +63,16 @@ def listar_grupos_usuario(
         .all()
     )
     return [g[0] for g in grupos]
+
+
+@router.get("/grupos", response_model=list[GrupoOut])
+def listar_grupos(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    require_admin(request)
+    grupos = db.query(Grupo).filter(Grupo.nome != "Master").all()
+    return grupos
 
 
 @router.get("/grupos/{grupo_id}/usuarios/export")
@@ -99,6 +123,72 @@ def exportar_usuarios_grupo(
         pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": "attachment; filename=usuarios_grupo.pdf"},
+    )
+
+
+@router.get("/grupos/{grupo_id}/permissoes", response_model=list[GrupoPermissaoOut])
+def listar_permissoes_grupo(
+    grupo_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    require_admin(request)
+    grupo = db.query(Grupo).filter(Grupo.id == grupo_id).first()
+    if not grupo:
+        raise HTTPException(status_code=404, detail="Grupo não encontrado")
+    perms = (
+        db.query(GrupoPermissao)
+        .filter(GrupoPermissao.grupo_id == grupo_id)
+        .all()
+    )
+    return perms
+
+
+@router.post("/grupos/{grupo_id}/permissoes", response_model=list[GrupoPermissaoOut])
+def salvar_permissoes_grupo(
+    grupo_id: int,
+    permissoes: list[GrupoPermissaoIn] | GrupoPermissaoIn,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    require_admin(request)
+    grupo = db.query(Grupo).filter(Grupo.id == grupo_id).first()
+    if not grupo:
+        raise HTTPException(status_code=404, detail="Grupo não encontrado")
+    if not isinstance(permissoes, list):
+        permissoes = [permissoes]
+    tela_ids = [p.tela_id for p in permissoes]
+    telas = db.query(Tela).filter(Tela.id.in_(tela_ids)).all()
+    telas_map = {t.id: t for t in telas}
+    has_secretaria = (
+        db.query(UsuarioGrupo)
+        .join(UsuariosModel, UsuariosModel.id_usuario == UsuarioGrupo.usuario_id)
+        .filter(UsuarioGrupo.grupo_id == grupo_id)
+        .filter(func.lower(UsuariosModel.tipo_perfil).like("secretaria%"))
+        .first()
+        is not None
+    )
+    if has_secretaria:
+        for p in permissoes:
+            tela = telas_map.get(p.tela_id)
+            if tela and tela.restrita_professor:
+                raise HTTPException(status_code=400, detail="Tela restrita a professores")
+    db.query(GrupoPermissao).filter(GrupoPermissao.grupo_id == grupo_id).delete()
+    for p in permissoes:
+        if p.tela_id not in telas_map:
+            raise HTTPException(status_code=404, detail=f"Tela {p.tela_id} não encontrada")
+        db.add(
+            GrupoPermissao(
+                grupo_id=grupo_id,
+                tela_id=p.tela_id,
+                operacoes={k: v for k, v in p.operacoes.items() if v},
+            )
+        )
+    db.commit()
+    return (
+        db.query(GrupoPermissao)
+        .filter(GrupoPermissao.grupo_id == grupo_id)
+        .all()
     )
 
 
