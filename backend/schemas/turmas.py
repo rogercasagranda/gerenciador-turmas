@@ -4,7 +4,7 @@
 # Cada linha contém um comentário explicativo
 # ======================================================
 from datetime import date, time                                   # Importa tipos de data e hora
-from pydantic import BaseModel, Field, field_validator             # Importa BaseModel e utilidades do Pydantic
+from pydantic import BaseModel, Field                              # Importa BaseModel e utilidades do Pydantic
 from typing import Optional                                       # Importa Optional para campos opcionais
 
 # ------------------------------------------------------
@@ -16,13 +16,7 @@ class AnoLetivoBase(BaseModel):                                   # Classe base 
     inicio: date = Field(..., description="Data inicial do período")                  # Data de início
     fim: date = Field(..., description="Data final do período")                      # Data de término
 
-    @field_validator("fim")
-    @classmethod
-    def validar_datas(cls, v, info):                               # Valida relação entre datas
-        inicio = info.data.get("inicio")                          # Obtém data de início
-        if inicio and inicio >= v:                                 # Compara datas
-            raise ValueError("inicio deve ser menor que fim")     # Erro se inválido
-        return v                                                   # Retorna valor válido
+
 
 
 
@@ -35,15 +29,6 @@ class AnoLetivoUpdate(BaseModel):                                 # Schema para 
     descricao: Optional[str] = Field(None, min_length=3, description="Descrição do ano letivo")  # Descrição opcional
     inicio: Optional[date] = Field(None, description="Data inicial do período")                  # Data inicial opcional
     fim: Optional[date] = Field(None, description="Data final do período")                      # Data final opcional
-
-    @field_validator("fim")
-    @classmethod
-    def validar_datas(cls, v, info):                               # Valida relação entre datas
-        inicio = info.data.get("inicio")                          # Obtém data de início
-        if inicio and v and inicio >= v:                           # Verifica presença e ordem
-            raise ValueError("inicio deve ser menor que fim")     # Erro se inválido
-        return v                                                   # Retorna valor
-
 
 class AnoLetivoOut(AnoLetivoBase):                                # Schema de resposta
     id: int                                                       # Identificador do ano letivo
