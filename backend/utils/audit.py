@@ -18,19 +18,17 @@ def registrar_log(
 ) -> None:
     """Registra uma entrada na tabela de auditoria."""
 
-    # Ignora ações de leitura para reduzir ruído nos logs
-    if acao.upper() == "READ":
+    action = acao.lower()
+    if action not in {"create", "read", "update", "delete"}:
+        action = "read"
+
+    global_cfg = db.query(LogConfig).filter(LogConfig.screen == "__all__").first()
+    if global_cfg and not getattr(global_cfg, f"{action}_enabled"):
+        return
+    entidade_cfg = db.query(LogConfig).filter(LogConfig.screen == entidade).first()
+    if entidade_cfg and not getattr(entidade_cfg, f"{action}_enabled"):
         return
 
-    # Verifica se logging está habilitado globalmente ou para a entidade
-    global_cfg = db.query(LogConfig).filter(LogConfig.entidade == "__all__").first()
-    if global_cfg and not global_cfg.habilitado:
-        return
-    entidade_cfg = db.query(LogConfig).filter(LogConfig.entidade == entidade).first()
-    if entidade_cfg and not entidade_cfg.habilitado:
-        return
-
-    # Obtém e-mail do usuário executor para detalhar o evento
     usuario = db.query(Usuarios).filter(Usuarios.id_usuario == id_usuario).first()
     email_executor = usuario.email if usuario else str(id_usuario)
     if descricao:

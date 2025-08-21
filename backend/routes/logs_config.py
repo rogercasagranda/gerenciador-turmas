@@ -7,19 +7,28 @@ from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models.logauditoria import LogAuditoria
 from backend.models.logconfig import LogConfig
+from backend.models.usuarios import Usuarios
 from backend.routes.usuarios import token_data_from_request, to_canonical
 
 
 class LogConfigOut(BaseModel):
-    entidade: str
-    habilitado: bool
+    screen: str
+    create_enabled: bool
+    read_enabled: bool
+    update_enabled: bool
+    delete_enabled: bool
+    updated_by: str | None = None
+    updated_at: datetime
 
     class Config:
         from_attributes = True
 
 
 class LogConfigUpdate(BaseModel):
-    habilitado: bool
+    create_enabled: bool
+    read_enabled: bool
+    update_enabled: bool
+    delete_enabled: bool
 
 
 router = APIRouter(prefix="", tags=["ConfigLogs"])
@@ -32,7 +41,7 @@ def listar_entidades(request: Request, db: Session = Depends(get_db)):
     if perfil != "master":
         raise HTTPException(status_code=403, detail="Sem permissão para listar telas")
     telas_logs = [t[0] for t in db.query(LogAuditoria.entidade).distinct().all()]
-    telas_cfg = [t[0] for t in db.query(LogConfig.entidade).distinct().all()]
+    telas_cfg = [t[0] for t in db.query(LogConfig.screen).distinct().all()]
     return list({*telas_logs, *telas_cfg})
 
 
@@ -42,57 +51,78 @@ def listar_config(request: Request, db: Session = Depends(get_db)):
     perfil = to_canonical(token.tipo_perfil)
     if perfil != "master":
         raise HTTPException(status_code=403, detail="Sem permissão para configurar logs")
-    return db.query(LogConfig).all()
+    rows = (
+        db.query(LogConfig, Usuarios.nome)
+        .outerjoin(Usuarios, LogConfig.updated_by == Usuarios.id_usuario)
+        .all()
+    )
+    return [
+        LogConfigOut(
+            screen=cfg.screen,
+            create_enabled=cfg.create_enabled,
+            read_enabled=cfg.read_enabled,
+            update_enabled=cfg.update_enabled,
+            delete_enabled=cfg.delete_enabled,
+            updated_by=nome,
+            updated_at=cfg.updated_at,
+        )
+        for cfg, nome in rows
+    ]
 
 
-@router.put("/logs/config/all")
+@router.put("/logs/config/all", response_model=LogConfigOut)
 def atualizar_todos(data: LogConfigUpdate, request: Request, db: Session = Depends(get_db)):
     token = token_data_from_request(request)
     perfil = to_canonical(token.tipo_perfil)
     if perfil != "master":
         raise HTTPException(status_code=403, detail="Sem permissão para configurar logs")
-    cfg = db.query(LogConfig).filter(LogConfig.entidade == "__all__").first()
-    if cfg:
-        cfg.habilitado = data.habilitado
-    else:
-        cfg = LogConfig(entidade="__all__", habilitado=data.habilitado)
+    cfg = db.query(LogConfig).filter(LogConfig.screen == "__all__").first()
+    if not cfg:
+        cfg = LogConfig(screen="__all__")
         db.add(cfg)
+    cfg.create_enabled = data.create_enabled
+    cfg.read_enabled = data.read_enabled
+    cfg.update_enabled = data.update_enabled
+    cfg.delete_enabled = data.delete_enabled
+    cfg.updated_by = token.id_usuario
     db.commit()
-    return {"habilitado": cfg.habilitado}
+    db.refresh(cfg)
+    nome = db.query(Usuarios.nome).filter(Usuarios.id_usuario == cfg.updated_by).scalar()
+    return LogConfigOut(
+        screen=cfg.screen,
+        create_enabled=cfg.create_enabled,
+        read_enabled=cfg.read_enabled,
+        update_enabled=cfg.update_enabled,
+        delete_enabled=cfg.delete_enabled,
+        updated_by=nome,
+        updated_at=cfg.updated_at,
+    )
 
 
-@router.put("/logs/config/{entidade}")
-def atualizar_config(entidade: str, data: LogConfigUpdate, request: Request, db: Session = Depends(get_db)):
+@router.put("/logs/config/{screen}", response_model=LogConfigOut)
+def atualizar_config(screen: str, data: LogConfigUpdate, request: Request, db: Session = Depends(get_db)):
     token = token_data_from_request(request)
     perfil = to_canonical(token.tipo_perfil)
     if perfil != "master":
         raise HTTPException(status_code=403, detail="Sem permissão para configurar logs")
-    cfg = db.query(LogConfig).filter(LogConfig.entidade == entidade).first()
-    if cfg:
-        cfg.habilitado = data.habilitado
-    else:
-        cfg = LogConfig(entidade=entidade, habilitado=data.habilitado)
+    cfg = db.query(LogConfig).filter(LogConfig.screen == screen).first()
+    if not cfg:
+        cfg = LogConfig(screen=screen)
         db.add(cfg)
+    cfg.create_enabled = data.create_enabled
+    cfg.read_enabled = data.read_enabled
+    cfg.update_enabled = data.update_enabled
+    cfg.delete_enabled = data.delete_enabled
+    cfg.updated_by = token.id_usuario
     db.commit()
-    return {"entidade": entidade, "habilitado": cfg.habilitado}
-
-
-@router.delete("/logs")
-def excluir_logs(
-    request: Request,
-    data_inicio: datetime | None = None,
-    data_fim: datetime | None = None,
-    db: Session = Depends(get_db),
-):
-    token = token_data_from_request(request)
-    perfil = to_canonical(token.tipo_perfil)
-    if perfil != "master":
-        raise HTTPException(status_code=403, detail="Sem permissão para excluir logs")
-    query = db.query(LogAuditoria)
-    if data_inicio:
-        query = query.filter(LogAuditoria.data_evento >= data_inicio)
-    if data_fim:
-        query = query.filter(LogAuditoria.data_evento <= data_fim)
-    removidos = query.delete()
-    db.commit()
-    return {"removidos": removidos}
+    db.refresh(cfg)
+    nome = db.query(Usuarios.nome).filter(Usuarios.id_usuario == cfg.updated_by).scalar()
+    return LogConfigOut(
+        screen=cfg.screen,
+        create_enabled=cfg.create_enabled,
+        read_enabled=cfg.read_enabled,
+        update_enabled=cfg.update_enabled,
+        delete_enabled=cfg.delete_enabled,
+        updated_by=nome,
+        updated_at=cfg.updated_at,
+    )
