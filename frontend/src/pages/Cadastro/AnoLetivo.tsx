@@ -98,7 +98,7 @@ const AnoLetivoPage: React.FC = () => {
     <FormPage title="Cadastro de Ano Letivo">
       {/* Botão para iniciar novo cadastro */}
       <div className="acoes">
-        <button className="btn primario" onClick={limpar}>Novo</button>
+        <button className="btn primario button" onClick={limpar}>Novo</button>
       </div>
 
       {/* Tabela de anos cadastrados */}
