@@ -197,7 +197,7 @@ useEffect(() => {
         </div>
 
         {/* Botão do Google funcional */}
-        <button type="button" className="google-button" onClick={handleGoogleLogin}>
+        <button type="button" className="button google-button" onClick={handleGoogleLogin}>
           <img
             src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
             alt="Google logo"
@@ -210,7 +210,7 @@ useEffect(() => {
       {showPopup && (
         <div className="popup-erro">
           <p>{popupMessage}</p>
-          <button onClick={() => window.location.reload()}>Fechar</button>
+          <button className="button" onClick={() => window.location.reload()}>Fechar</button>
           <span className="contador">{countdown} segundos</span>
         </div>
       )}

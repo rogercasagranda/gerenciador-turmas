@@ -99,7 +99,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
       {/* Renderiza botão do menu hambúrguer */}
       <button
         type="button" // Define tipo de botão
-        className={`hamburger-btn${open ? " is-active" : ""}`} // Define classes para estado visual do botão
+        className={`button hamburger-btn${open ? " is-active" : ""}`} // Define classes para estado visual do botão
         aria-label={ariaLabel} // Define rótulo acessível para leitores de tela
         aria-controls="mobile-drawer" // Associa botão ao drawer pelo id
         aria-expanded={open} // Informa estado de expansão para acessibilidade

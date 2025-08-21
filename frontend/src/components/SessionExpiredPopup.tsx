@@ -37,7 +37,7 @@ const SessionExpiredPopup: React.FC = () => {
   return (
     <div className="popup popup-vermelho">
       <p>Sua sessão expirou. Faça login novamente.</p>
-      <button className="botao-fechar" onClick={fechar}>
+      <button className="button botao-fechar" onClick={fechar}>
         Fechar ({contador} segundos)
       </button>
     </div>

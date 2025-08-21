@@ -18,7 +18,6 @@ export function getStoredTheme(): ThemeName {
       saveTheme(theme)
       try { localStorage.removeItem(LEGACY_THEME_KEY) } catch {}
     } else {
-      console.warn('[tema] chave ausente, usando padrão')
       theme = 'roxo'
     }
   }
@@ -34,7 +33,6 @@ export function getStoredMode(): ModeKey {
       saveMode(mode)
       try { localStorage.removeItem(LEGACY_MODE_KEY) } catch {}
     } else {
-      console.warn('[tema] chave ausente, usando padrão')
       mode = 'light'
     }
   }
@@ -57,7 +55,6 @@ export function applyTheme(theme: ThemeName, mode: ModeKey = 'light') {
   if (root.getAttribute('data-mode') !== mode) {
     root.setAttribute('data-mode', mode)
   }
-  console.info('[tema] aplicado:', theme, mode)
 }
 
 export function loadThemeFromStorage(): { theme: ThemeName; mode: ModeKey } {
