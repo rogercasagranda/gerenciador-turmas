@@ -69,6 +69,17 @@ const CadastrarUsuario: React.FC = () => {
   const navigate = useNavigate()
 
 
+  // Obtém headers com JWT ou redireciona para login
+  const authHeaders = () => {
+    const t = getAuthToken()
+    if (!t) {
+      navigate('/login')
+      return null
+    }
+    return { Authorization: `Bearer ${t}` }
+  }
+
+
   const { isDirty, setDirty, confirmIfDirty } = useDirtyForm()
 
   // >>> NOVO: dados do usuário logado (robusto)
@@ -81,10 +92,11 @@ const CadastrarUsuario: React.FC = () => {
     const check = async () => {
       try {
 
-        const token = getAuthToken()
-        if (!token) { navigate('/login'); return }
-        try {
-          const m = await apiFetch('/usuarios/me') as MeuPerfil
+        const headers = authHeaders()
+        if (!headers) return
+        const r = await fetch(`${API_BASE}/usuarios/me`, { headers })
+        if (r.ok) {
+          const m = (await r.json()) as MeuPerfil
 
           const p = toCanonical(m.tipo_perfil || '')
           const isMaster = Boolean(m.is_master || p === 'master')
@@ -93,7 +105,11 @@ const CadastrarUsuario: React.FC = () => {
           setMeuId(m.id_usuario)
           setMeuPerfil(p)
           setSouMaster(isMaster)
-        } catch {
+
+        } else if (r.status === 401) {
+          navigate('/login')
+          return
+        } else {
 
           const claims = getClaimsFromToken()
           const p = toCanonical((claims?.role || claims?.perfil || claims?.tipo_perfil || '').toString())
@@ -106,18 +122,25 @@ const CadastrarUsuario: React.FC = () => {
           setSouMaster(isMaster)
         }
 
-        try { await apiFetch('/usuarios/log-perfil') } catch {}
+        try { await fetch(`${API_BASE}/usuarios/log-perfil`, { headers }) } catch {}
       } catch {}
     }
     check()
-  }, [navigate])
+  }, [API_BASE, navigate])
+
 
   // Se entrou com ?id, carrega dados para editar
   useEffect(() => {
     if (!idEdicao) return
+    const headers = authHeaders()
+    if (!headers) return
     setCarregandoEdicao(true); setErro(''); setSucesso('')
-    apiFetch(`/usuarios/${idEdicao}`)
-      .then((u: any) => {
+
+    axios
+      .get(`${API_BASE}/usuarios/${idEdicao}`, { headers })
+      .then((res) => {
+        const u = res.data
+
         setNome(u.nome)
         setEmail(u.email)
         setPerfil(toCanonical(u.tipo_perfil))
@@ -127,10 +150,13 @@ const CadastrarUsuario: React.FC = () => {
         setDirty(false)
       })
 
-      .catch((e: any) => setErro(e?.message || 'Falha ao carregar usuário.'))
-
+      .catch((e) => {
+        if (e?.response?.status === 401) navigate('/login')
+        else setErro(e?.response?.data?.detail || 'Falha ao carregar usuário.')
+      })
       .finally(() => setCarregandoEdicao(false))
-  }, [idEdicao])
+  }, [API_BASE, idEdicao, navigate])
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -139,25 +165,19 @@ const CadastrarUsuario: React.FC = () => {
     if (!email.trim()) { setErro('O e-mail é obrigatório.'); return }
     if (!numeroCelular.trim()) { setErro('O número de celular é obrigatório.'); return }
 
-    try {
+    const headers = authHeaders()
+    if (!headers) return
+    const jsonHeaders: Record<string, string> = { ...headers, 'Content-Type': 'application/json' }
 
+    try {
       setEnviando(true)
       const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
 
       if (idEdicao) {
-
-        await apiFetch(`/usuarios/${idEdicao}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        })
+        await axios.put(`${API_BASE}/usuarios/${idEdicao}`, body, { headers: jsonHeaders })
         setSucesso('Usuário atualizado com sucesso.')
       } else {
-        await apiFetch('/usuarios', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        })
+        await axios.post(`${API_BASE}/usuarios`, body, { headers: jsonHeaders })
 
         setSucesso('Usuário cadastrado com sucesso.')
         setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
@@ -167,7 +187,8 @@ const CadastrarUsuario: React.FC = () => {
       setTimeout(() => navigate('/usuarios/consultar'), 700)
     } catch (err: any) {
 
-      setErro(err?.message || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
+      if (err?.response?.status === 401) navigate('/login')
+      else setErro(err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
 
     } finally {
       setEnviando(false)
@@ -188,14 +209,17 @@ const CadastrarUsuario: React.FC = () => {
     if (!primeira) return
     const segunda = window.confirm('Confirme novamente: deseja realmente excluir?')
     if (!segunda) return
+    const headers = authHeaders()
+    if (!headers) return
     try {
 
       await apiFetch(`/usuarios/${idEdicao}`, { method: 'DELETE' })
       alert('Usuário excluído com sucesso.')
       navigate('/usuarios/consultar')
-    } catch (e:any) {
 
-      setErro(e?.message || 'Falha ao excluir usuário.')
+    } catch (e: any) {
+      if (e?.response?.status === 401) navigate('/login')
+      else setErro(e?.response?.data?.detail || 'Falha ao excluir usuário.')
 
     }
   }

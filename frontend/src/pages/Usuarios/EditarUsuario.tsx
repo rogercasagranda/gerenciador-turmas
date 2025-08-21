@@ -40,17 +40,27 @@ const EditarUsuario: React.FC = () => {                                   // Def
 
   useEffect(() => {                                                        // Efeito de carregamento
     setErro('')                                                            // Limpa erro
-    apiFetch(`/usuarios/${id}`)                                           // GET /usuarios/{id}
-      .then((u: any) => {
+
+    const token = getAuthToken()                                          // Lê token
+    if (!token) { navigate('/login'); return }                            // Sem token -> login
+    const headers: Record<string, string> = { Authorization: `Bearer ${token}` }
+
+    axios.get(`${API_BASE}/usuarios/${id}`, { headers })                  // GET /usuarios/{id}
+      .then((res) => {
+        const u = res.data
         u.tipo_perfil = toCanonical(u.tipo_perfil)
         setUsuario(u)
         setDirty(false)
-      })
-      .catch((e: any) => {
-        const msg = e?.message || 'Falha ao carregar usuário.'
-        setErro(msg)
-      })
-  }, [id, setDirty])                                                      // Dependências
+      })                                // Guarda usuário
+      .catch((e) => {                                                     // Trata erro
+        if (e?.response?.status === 401) navigate('/login')
+        else {
+          const msg = e?.response?.data?.detail || 'Falha ao carregar usuário.' // Extrai mensagem
+          setErro(msg)                                                      // Define erro
+        }
+      })                                                                  // Finaliza then/catch
+  }, [API_BASE, id, navigate, setDirty])                                                      // Dependências
+
 
   const handleSubmit = async (e: React.FormEvent) => {                    // Define envio
     e.preventDefault()                                                    // Previne reload
@@ -61,6 +71,12 @@ const EditarUsuario: React.FC = () => {                                   // Def
     if (!usuario.nome.trim()) { setErro('O nome é obrigatório.'); return }         // Valida nome
     if (!usuario.email.trim()) { setErro('O e-mail é obrigatório.'); return }      // Valida e-mail
     if (!usuario.numero_celular.trim()) { setErro('O número de celular é obrigatório.'); return } // Valida número
+
+
+    const token = getAuthToken()                                          // Lê token
+    if (!token) { navigate('/login'); return }                            // Sem token -> login
+    const headers: Record<string, string> = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+
 
     try {                                                                 // Tenta enviar
       setEnviando(true)                                                   // Marca envio
@@ -81,8 +97,13 @@ const EditarUsuario: React.FC = () => {                                   // Def
       setDirty(false)
       setTimeout(() => navigate('/usuarios/consultar'), 800)             // Redireciona
     } catch (err: any) {                                                  // Em erro
-      const msg = err?.message || 'Falha ao atualizar usuário.'
-      setErro(msg)                                                        // Define erro
+
+      if (err?.response?.status === 401) navigate('/login')
+      else {
+        const msg = err?.response?.data?.detail || 'Falha ao atualizar usuário.' // Extrai mensagem
+        setErro(msg)                                                        // Define erro
+      }
+
     } finally {                                                           // Sempre executa
       setEnviando(false)                                                  // Desmarca envio
     }                                                                     // Finaliza try/catch
