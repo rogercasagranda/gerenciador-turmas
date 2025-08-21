@@ -32,8 +32,9 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 # Importa FastAPI e utilidades
 # ======================================================
 from fastapi import FastAPI, Request, HTTPException, Depends   # Importa classes e funções da FastAPI
-from fastapi.responses import RedirectResponse, JSONResponse   # Importa respostas JSON e redirecionamentos
+from fastapi.responses import RedirectResponse, JSONResponse, FileResponse   # Importa respostas JSON, redirecionamentos e arquivos
 from fastapi.middleware.cors import CORSMiddleware              # Importa CORS middleware para liberar origens
+from fastapi.staticfiles import StaticFiles                     # Importa utilitário para servir arquivos estáticos
 
 # ======================================================
 # Importa utilitários de configuração e modelos
@@ -379,3 +380,22 @@ def google_callback(request: Request):
     except Exception:                                        # Captura exceções não previstas
         logger.exception("❌ Erro inesperado na callback do Google")  # Registra stacktrace
         raise HTTPException(status_code=500, detail="Erro interno no servidor")  # Retorna 500
+
+
+# ======================================================
+# Servir frontend estático e fallback para SPA
+# ======================================================
+
+# Monta a pasta de assets gerados pelo build do React
+app.mount(
+    "/assets",
+    StaticFiles(directory="frontend/dist/assets", check_dir=False),
+    name="assets",
+)
+
+
+# Fallback para qualquer rota não atendida pelo backend
+@app.get("/{full_path:path}")
+async def spa_fallback(full_path: str):
+    index_path = os.path.join("frontend", "dist", "index.html")
+    return FileResponse(index_path, media_type="text/html")
