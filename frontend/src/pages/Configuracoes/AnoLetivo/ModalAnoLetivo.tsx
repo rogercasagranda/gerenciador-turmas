@@ -4,6 +4,7 @@ import '../../../styles/CadastrarUsuario.css'
 import '../../../styles/Feriados.css'
 import Modal from '../../../components/Modal'
 import { AnoLetivo, createAnoLetivo, updateAnoLetivo } from '../../../services/anoLetivo'
+import ErrorPopup from '../../../components/ErrorPopup'
 
 interface Props {
   anos: AnoLetivo[]
@@ -17,7 +18,9 @@ const ModalAnoLetivo: React.FC<Props> = ({ anos, editando, onClose, onSaved }) =
   const [inicio, setInicio] = useState('')
   const [fim, setFim] = useState('')
   const [erro, setErro] = useState('')
+
   const [errosCampo, setErrosCampo] = useState({ descricao: '', inicio: '', fim: '' })
+
 
   useEffect(() => {
     setDescricao(editando?.descricao ?? '')
@@ -61,7 +64,7 @@ const ModalAnoLetivo: React.FC<Props> = ({ anos, editando, onClose, onSaved }) =
       const msg = String(err.message)
       if (msg.includes('409')) setErro('Descrição duplicada.')
       else if (msg.includes('422')) setErro('Datas inválidas.')
-      else if (msg.includes('403')) setErro('Sem permissão.')
+      else if (msg.includes('403')) setSemPermissao(true)
       else setErro('Falha ao salvar ano letivo.')
     }
   }
@@ -74,6 +77,7 @@ const ModalAnoLetivo: React.FC<Props> = ({ anos, editando, onClose, onSaved }) =
     !sobrepoe()
 
   return (
+
     <Modal
       open={true}
       title={editando ? 'Editar Ano Letivo' : 'Novo Ano Letivo'}
@@ -114,6 +118,7 @@ const ModalAnoLetivo: React.FC<Props> = ({ anos, editando, onClose, onSaved }) =
       </label>
       {errosCampo.fim && <p className="erro">{errosCampo.fim}</p>}
     </Modal>
+
   )
 }
 
