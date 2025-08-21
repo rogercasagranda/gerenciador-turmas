@@ -12,7 +12,6 @@ import { API_BASE } from '@/services/api'
 const CadastrarUsuario = React.lazy(() => import('../Usuarios/CadastrarUsuario'))
 const ConsultarUsuario  = React.lazy(() => import('../Usuarios/ConsultarUsuario'))
 const Logs = React.lazy(() => import('../Logs/Logs'))
-const LogsConfig = React.lazy(() => import('../Logs/LogsConfig'))
 const ConfigurarTema = React.lazy(() => import('../Configuracoes/ConfigurarTema'))
 const ConfigAnoLetivo = React.lazy(() => import('../Configuracoes/AnoLetivo/AnoLetivoPage'))
 // Páginas de cadastro diversas
@@ -193,21 +192,6 @@ const Home: React.FC = () => {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <ConfigAnoLetivo />
-        </Suspense>
-      )
-    }
-
-    if (path.includes('/config/logs/config')) {
-      if (!isMaster) {
-        return (
-          <section className="home-welcome">
-            <h2>Sem permissão para configurar logs</h2>
-          </section>
-        )
-      }
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <LogsConfig />
         </Suspense>
       )
     }
@@ -393,11 +377,11 @@ const Home: React.FC = () => {
                       <span className={`caret ${submenuLogsAberto ? 'caret--up' : 'caret--down'}`} />
                     </button>
                     <div className={`submenu ${submenuLogsAberto ? 'submenu--open' : ''}`}>
-                      <button className="submenu-link" onClick={() => navigate('/config/logs')}>
-                        Verificar logs
+                      <button className="submenu-link" onClick={() => navigate('/config/logs?tab=overview')}>
+                        Visão geral
                       </button>
-                      <button className="submenu-link" onClick={() => navigate('/config/logs/config')}>
-                        Configurar logs
+                      <button className="submenu-link" onClick={() => navigate('/config/logs?tab=config')}>
+                        Configurar
                       </button>
                     </div>
                   </div>
