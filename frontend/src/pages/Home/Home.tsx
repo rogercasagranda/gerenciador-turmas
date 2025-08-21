@@ -13,7 +13,7 @@ const CadastrarUsuario = React.lazy(() => import('../Usuarios/CadastrarUsuario')
 const ConsultarUsuario  = React.lazy(() => import('../Usuarios/ConsultarUsuario'))
 const Logs = React.lazy(() => import('../Logs/Logs'))
 const LogsConfig = React.lazy(() => import('../Logs/LogsConfig'))
-const ThemeConfig = React.lazy(() => import('../Config/ThemeConfig'))
+const ConfigurarTema = React.lazy(() => import('../Configuracoes/ConfigurarTema'))
 // Páginas de cadastro diversas
 const CadTurmas = React.lazy(() => import('../Cadastro/Turmas')) // Cadastro de turmas
 const CadAlunos = React.lazy(() => import('../Cadastro/Alunos')) // Cadastro de alunos
@@ -219,7 +219,7 @@ const Home: React.FC = () => {
     if (path.includes('/config/tema')) {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <ThemeConfig />
+          <ConfigurarTema />
         </Suspense>
       )
     }
