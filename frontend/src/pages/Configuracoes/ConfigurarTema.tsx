@@ -16,7 +16,7 @@ const ConfigurarTema: React.FC = () => {
   const handleSalvar = () => {
     applyTheme(selectedTheme, selectedMode)
     setShowToast(true)
-    setTimeout(() => setShowToast(false), 3000)
+    setTimeout(() => setShowToast(false), 2000)
   }
 
   return (
