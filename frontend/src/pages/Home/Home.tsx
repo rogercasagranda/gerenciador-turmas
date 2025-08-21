@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import '../../styles/Home.css'
 import '../../styles/Home.lock.css'
 import { loadThemeFromStorage } from '../../theme/utils'
-import { API_BASE } from '@/services/api'
+import { apiFetch, getAuthToken } from '@/services/api'
 
 // Carrega páginas internas com import dinâmico
 const CadastrarUsuario = React.lazy(() => import('../Usuarios/CadastrarUsuario'))
@@ -54,17 +54,11 @@ const Home: React.FC = () => {
 
   // Verifica sessão ativa ao montar
   useEffect(() => {
-    const tokenLocal   = localStorage.getItem('auth_token')
-    const tokenSession = sessionStorage.getItem('auth_token')
-    const token = tokenLocal || tokenSession
+    const token = getAuthToken()
     if (!token) { navigate('/login'); return }
 
-    fetch(`${API_BASE}/usuarios/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => {
-        if (r.status === 401) { navigate('/login'); return null }
-        return r.ok ? r.json() : null
-      })
-      .then(data => {
+    apiFetch('/usuarios/me')
+      .then((data: any) => {
         if (!data) return
         const perfil = toCanonical(data.tipo_perfil)
         const autorizado = data.is_master || PERFIS_PERMITIDOS.has(perfil)

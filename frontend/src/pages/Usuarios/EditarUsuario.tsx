@@ -1,8 +1,7 @@
 // Importa React e hooks
 import React, { useEffect, useState } from 'react'                        // Importa React/useState/useEffect
-import axios from 'axios'                                                 // Importa axios
 import { useNavigate, useParams } from 'react-router-dom' // Navegação
-import { API_BASE, getAuthToken } from '@/services/api'
+import { apiFetch } from '@/services/api'
 import '../../styles/CadastrarUsuario.css'                                 // Reaproveita CSS do cadastro
 import '../../styles/Forms.css'
 import useDirtyForm from '@/hooks/useDirtyForm'
@@ -41,22 +40,17 @@ const EditarUsuario: React.FC = () => {                                   // Def
 
   useEffect(() => {                                                        // Efeito de carregamento
     setErro('')                                                            // Limpa erro
-    const token = getAuthToken()                                          // Lê token
-    const headers: Record<string, string> = {}                             // Prepara headers
-    if (token) headers['Authorization'] = `Bearer ${token}`               // Injeta Bearer
-
-    axios.get(`${API_BASE}/usuarios/${id}`, { headers })                  // GET /usuarios/{id}
-      .then((res) => {
-        const u = res.data
+    apiFetch(`/usuarios/${id}`)                                           // GET /usuarios/{id}
+      .then((u: any) => {
         u.tipo_perfil = toCanonical(u.tipo_perfil)
         setUsuario(u)
         setDirty(false)
-      })                                // Guarda usuário
-      .catch((e) => {                                                     // Trata erro
-        const msg = e?.response?.data?.detail || 'Falha ao carregar usuário.' // Extrai mensagem
-        setErro(msg)                                                      // Define erro
-      })                                                                  // Finaliza then/catch
-  }, [API_BASE, id, setDirty])                                                      // Dependências
+      })
+      .catch((e: any) => {
+        const msg = e?.message || 'Falha ao carregar usuário.'
+        setErro(msg)
+      })
+  }, [id, setDirty])                                                      // Dependências
 
   const handleSubmit = async (e: React.FormEvent) => {                    // Define envio
     e.preventDefault()                                                    // Previne reload
@@ -68,26 +62,26 @@ const EditarUsuario: React.FC = () => {                                   // Def
     if (!usuario.email.trim()) { setErro('O e-mail é obrigatório.'); return }      // Valida e-mail
     if (!usuario.numero_celular.trim()) { setErro('O número de celular é obrigatório.'); return } // Valida número
 
-    const token = getAuthToken()                                          // Lê token
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' } // Define headers
-    if (token) headers['Authorization'] = `Bearer ${token}`               // Injeta Bearer
-
     try {                                                                 // Tenta enviar
       setEnviando(true)                                                   // Marca envio
-      await axios.put(`${API_BASE}/usuarios/${usuario.id}`, {             // PUT /usuarios/{id}
-        nome: usuario.nome,                                               // Nome
-        email: usuario.email,                                             // E-mail
-        tipo_perfil: usuario.tipo_perfil,                                 // Perfil
-        ddi: usuario.ddi,                                                 // DDI
-        ddd: usuario.ddd,                                                 // DDD
-        numero_celular: usuario.numero_celular,                           // Número
-      }, { headers })                                                     // Headers
+      await apiFetch(`/usuarios/${usuario.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: usuario.nome,
+          email: usuario.email,
+          tipo_perfil: usuario.tipo_perfil,
+          ddi: usuario.ddi,
+          ddd: usuario.ddd,
+          numero_celular: usuario.numero_celular,
+        }),
+      })
 
       setSucesso('Usuário atualizado com sucesso.')                       // Mensagem de sucesso
       setDirty(false)
       setTimeout(() => navigate('/usuarios/consultar'), 800)             // Redireciona
     } catch (err: any) {                                                  // Em erro
-      const msg = err?.response?.data?.detail || 'Falha ao atualizar usuário.' // Extrai mensagem
+      const msg = err?.message || 'Falha ao atualizar usuário.'
       setErro(msg)                                                        // Define erro
     } finally {                                                           // Sempre executa
       setEnviando(false)                                                  // Desmarca envio

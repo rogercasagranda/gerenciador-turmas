@@ -3,7 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import '../../styles/CadastrarUsuario.css'
 import '../../styles/Forms.css'
 import useDirtyForm from '@/hooks/useDirtyForm'
-import { getAuthToken, apiFetch } from '@/services/api'
+
+import { apiFetch, getAuthToken } from '@/services/api'
+
 
 type MeuPerfil = { id_usuario?: number; tipo_perfil?: string; is_master?: boolean }
 
@@ -65,12 +67,7 @@ const CadastrarUsuario: React.FC = () => {
   const [carregandoEdicao, setCarregandoEdicao] = useState(false)
 
   const navigate = useNavigate()
-  const token = getAuthToken()
 
-  // Redireciona imediatamente se não houver token
-  useEffect(() => {
-    if (!token) navigate('/login')
-  }, [token, navigate])
 
   const { isDirty, setDirty, confirmIfDirty } = useDirtyForm()
 
@@ -83,10 +80,12 @@ const CadastrarUsuario: React.FC = () => {
   useEffect(() => {
     const check = async () => {
       try {
-        const tk = getAuthToken()
-        if (!tk) { navigate('/login'); return }
+
+        const token = getAuthToken()
+        if (!token) { navigate('/login'); return }
         try {
-          const m = await apiFetch<MeuPerfil>('/usuarios/me')
+          const m = await apiFetch('/usuarios/me') as MeuPerfil
+
           const p = toCanonical(m.tipo_perfil || '')
           const isMaster = Boolean(m.is_master || p === 'master')
           const autorizado = isMaster || PERFIS_PERMITIDOS.has(p)
@@ -95,7 +94,7 @@ const CadastrarUsuario: React.FC = () => {
           setMeuPerfil(p)
           setSouMaster(isMaster)
         } catch {
-          // fallback: token payload
+
           const claims = getClaimsFromToken()
           const p = toCanonical((claims?.role || claims?.perfil || claims?.tipo_perfil || '').toString())
           const id = claims?.sub ? Number(claims.sub) : undefined
@@ -106,7 +105,7 @@ const CadastrarUsuario: React.FC = () => {
           setMeuPerfil(p)
           setSouMaster(isMaster)
         }
-        // Sempre registra no log do backend o perfil/id que acessou
+
         try { await apiFetch('/usuarios/log-perfil') } catch {}
       } catch {}
     }
@@ -127,7 +126,9 @@ const CadastrarUsuario: React.FC = () => {
         setNumeroCelular(u.numero_celular)
         setDirty(false)
       })
-      .catch((e: any) => setErro(e?.payload?.detail || 'Falha ao carregar usuário.'))
+
+      .catch((e: any) => setErro(e?.message || 'Falha ao carregar usuário.'))
+
       .finally(() => setCarregandoEdicao(false))
   }, [idEdicao])
 
@@ -139,16 +140,25 @@ const CadastrarUsuario: React.FC = () => {
     if (!numeroCelular.trim()) { setErro('O número de celular é obrigatório.'); return }
 
     try {
-      const tk = getAuthToken()
-      if (!tk) { navigate('/login'); return }
+
       setEnviando(true)
       const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
 
       if (idEdicao) {
-        await apiFetch(`/usuarios/${idEdicao}`, { method: 'PUT', body })
+
+        await apiFetch(`/usuarios/${idEdicao}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
         setSucesso('Usuário atualizado com sucesso.')
       } else {
-        await apiFetch('/usuarios', { method: 'POST', body })
+        await apiFetch('/usuarios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+
         setSucesso('Usuário cadastrado com sucesso.')
         setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
       }
@@ -156,7 +166,9 @@ const CadastrarUsuario: React.FC = () => {
       setDirty(false)
       setTimeout(() => navigate('/usuarios/consultar'), 700)
     } catch (err: any) {
-      setErro(err?.payload?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
+
+      setErro(err?.message || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
+
     } finally {
       setEnviando(false)
     }
@@ -177,13 +189,14 @@ const CadastrarUsuario: React.FC = () => {
     const segunda = window.confirm('Confirme novamente: deseja realmente excluir?')
     if (!segunda) return
     try {
-      const tk = getAuthToken()
-      if (!tk) { navigate('/login'); return }
+
       await apiFetch(`/usuarios/${idEdicao}`, { method: 'DELETE' })
       alert('Usuário excluído com sucesso.')
       navigate('/usuarios/consultar')
     } catch (e:any) {
-      setErro(e?.payload?.detail || 'Falha ao excluir usuário.')
+
+      setErro(e?.message || 'Falha ao excluir usuário.')
+
     }
   }
 
