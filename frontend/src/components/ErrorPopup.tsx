@@ -20,7 +20,7 @@ const ErrorPopup: React.FC<ErrorPopupProps> = ({ message, onClose }) => {
   return (
     <div className="error-overlay">
       <div className="error-popup">
-        <button className="error-close-button" onClick={onClose}>×</button>
+        <button className="button error-close-button" onClick={onClose}>×</button>
         <p>{message}</p>
       </div>
     </div>
