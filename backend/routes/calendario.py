@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status  # Import
 from sqlalchemy.orm import Session                                      # Importa sessão do SQLAlchemy
 import requests                                                         # Importa requests para chamadas HTTP
 from datetime import date                                               # Importa date para manipulação de datas
+import os                                                              # Importa os para variáveis de ambiente
 
 from backend.database import get_db                                    # Dependência de banco de dados
 from backend.models import AnoLetivo                                   # Modelo de AnoLetivo
@@ -27,6 +28,9 @@ from backend.routes.usuarios import token_data_from_request, to_canonical  # Uti
 # "/api/ano-letivo". Assim, agora eles podem ser acessados diretamente
 # em "/ano-letivo", alinhando backend e frontend.
 router = APIRouter(tags=["Calendário"])               # Instancia roteador sem prefixo
+
+# Base para chamadas externas de feriados
+FERIADOS_API_BASE = os.getenv("FERIADOS_API_BASE", "").rstrip("/")
 
 # ------------------------------------------------------
 # Controle de acesso
@@ -198,7 +202,8 @@ def importar_nacionais(payload: FeriadoImportarNacionais, request: Request, db: 
     inseridos: list[Feriado] = []                                     # Lista para armazenar feriados criados
     for ano_civil in payload.anos:                                    # Percorre anos informados
         try:
-            resp = requests.get("http://localhost:8000/feriados/nacionais", params={"ano": ano_civil}, timeout=5)  # Chama stub
+            url = f"{FERIADOS_API_BASE}/feriados/nacionais"
+            resp = requests.get(url, params={"ano": ano_civil}, timeout=5)
             dados = resp.json() if resp.status_code == 200 else []    # Lê dados retornados
         except Exception:                                            # Em caso de erro de requisição
             dados = []                                               # Considera lista vazia

@@ -76,13 +76,7 @@ const ConsultarUsuario: React.FC = () => {
       }
 
       setCarregando(true)
-      let r;
-      try {
-        r = await axios.get<Usuario[]>(`${API_BASE}/usuarios`, { headers })
-      } catch (err:any) {
-        const alt = API_BASE.includes('127.0.0.1') ? API_BASE.replace('127.0.0.1','localhost') : API_BASE.replace('localhost','127.0.0.1')
-        r = await axios.get<Usuario[]>(`${alt}/usuarios`, { headers })
-      }
+      const r = await axios.get<Usuario[]>(`${API_BASE}/usuarios`, { headers })
       setLista(r.data || [])
       setErro('')
     } catch (e: any) {
