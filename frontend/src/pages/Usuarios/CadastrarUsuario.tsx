@@ -275,7 +275,7 @@ const CadastrarUsuario: React.FC = () => {
             <div className="form-actions">
               <button
                 type="button"
-                className="btn secundario"
+                className="button"
                 onClick={() => {
                   if (!isDirty || confirmIfDirty()) navigate('/usuarios/consultar')
                 }}
@@ -290,7 +290,7 @@ const CadastrarUsuario: React.FC = () => {
               {podeExcluir && (
                 <button
                   type="button"
-                  className="btn perigo"
+                  className="button"
                   onClick={handleExcluir}
                   aria-label="Excluir usuário"
                   title="Excluir usuário"

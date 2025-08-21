@@ -4,13 +4,13 @@
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
 
 /* Conteúdo do modal */
-.modal { background: #fff; padding: 20px; border-radius: 10px; max-width: 420px; width: 100%; display: flex; flex-direction: column; gap: 16px; }
+.modal { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 20px; border-radius: 10px; max-width: 420px; width: 100%; display: flex; flex-direction: column; gap: 16px; }
 
 .modal-acoes { display: flex; gap: 10px; justify-content: flex-end; }
 
 /* Tabela de feriados */
 .holiday-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-.holiday-table th, .holiday-table td { padding: 8px; border-bottom: 1px solid var(--pp-border); text-align: left; }
+.holiday-table th, .holiday-table td { padding: 8px; border-bottom: 1px solid var(--border); text-align: left; color: var(--text); }
 
 /* Resumo de importação */
 .resumo { font-size: 14px; }

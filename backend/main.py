@@ -32,7 +32,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 # Importa FastAPI e utilidades
 # ======================================================
 from fastapi import FastAPI, Request, HTTPException, Depends   # Importa classes e funções da FastAPI
-from fastapi.responses import RedirectResponse                  # Importa RedirectResponse para redirecionamentos
+from fastapi.responses import RedirectResponse, JSONResponse   # Importa respostas JSON e redirecionamentos
 from fastapi.middleware.cors import CORSMiddleware              # Importa CORS middleware para liberar origens
 
 # ======================================================
@@ -91,6 +91,8 @@ app = FastAPI()                                      # Cria instância principal
 # responde com uma mensagem padrão. Isso evita que usuários recebam
 # um erro "Not Found" caso a URL do frontend não esteja disponível.
 FRONTEND_URL = os.getenv("FRONTEND_URL")
+COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN")
+IS_PROD = os.getenv("ENVIRONMENT", "").lower() == "production"
 
 
 @app.get("/")
@@ -190,7 +192,6 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     usuario = db.query(Usuarios).filter(Usuarios.email == email).first()  # Busca usuário por e-mail
     if not usuario:                                                       # Verifica inexistência
         logger.warning(f"⛔ Usuário não pré-cadastrado (LOCAL): {email}")  # Registra pré-cadastro ausente
-        from fastapi.responses import JSONResponse                         # Importa resposta JSON específica
         return JSONResponse(                                               # Retorna 403 com código e mensagem
             status_code=403,
             content={"code": "USER_NOT_FOUND", "message": "Cadastro não encontrado, procure a secretaria da sua escola"}
@@ -201,7 +202,6 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # --------------------------------------------------
     if not usuario.senha_hash:                                             # Verifica ausência de senha local
         logger.warning(f"⛔ Usuário sem senha local configurada: {email}")  # Registra ausência de senha
-        from fastapi.responses import JSONResponse                         # Importa resposta JSON específica
         return JSONResponse(                                               # Retorna 403 com código e mensagem
             status_code=403,
             content={"code": "NO_LOCAL_PASSWORD", "message": "Cadastro não possui senha local, utilize o login com Google"}
@@ -226,13 +226,35 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
         "tipo_perfil": usuario.tipo_perfil,
     }
     token = create_access_token(token_payload)
-    return {
-        "message": "Login realizado com sucesso",
-        "token": token,
-        "email": email,
-        "id_usuario": usuario.id_usuario,
-        "tipo_perfil": usuario.tipo_perfil,
-    }  # Retorna token e dados básicos do usuário
+    response = JSONResponse(
+        {
+            "message": "Login realizado com sucesso",
+            "token": token,
+            "email": email,
+            "id_usuario": usuario.id_usuario,
+            "tipo_perfil": usuario.tipo_perfil,
+        }
+    )
+    response.set_cookie(
+        key="pp_sess",
+        value=token,
+        httponly=True,
+        secure=IS_PROD,
+        samesite="Lax",
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/",
+        domain=COOKIE_DOMAIN,
+    )
+    return response  # Retorna token e dados básicos do usuário com cookie
+
+# ======================================================
+# Rota de logout: remove cookie de sessão
+# ======================================================
+@app.post("/logout")
+def logout():
+    response = JSONResponse({"message": "Logout realizado com sucesso"})
+    response.delete_cookie("pp_sess", path="/", domain=COOKIE_DOMAIN)
+    return response
 
 # ======================================================
 # (As rotas /google-login e /google-callback permanecem como no seu código aprovado)

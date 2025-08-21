@@ -14,11 +14,11 @@ const UsuariosIndex: React.FC = () => {
       <h2>Gerenciar Usuários</h2>
 
       <div className="usuario-botoes">
-        <button onClick={() => navigate('/usuarios/cadastrar')}>
+        <button className="button" onClick={() => navigate('/usuarios/cadastrar')}>
           ➕ Cadastrar Usuário
         </button>
 
-        <button onClick={() => navigate('/usuarios/consultar')}>
+        <button className="button" onClick={() => navigate('/usuarios/consultar')}>
           🔍 Consultar Usuários
         </button>
       </div>

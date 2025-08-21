@@ -1,6 +1,8 @@
 // Página de cadastro de feriados
 import React, { useEffect, useState } from 'react'
+
 import FormPage from '../../components/FormPage'
+
 import '../../styles/CadastrarUsuario.css'
 import '../../styles/Feriados.css'
 import '../../styles/Forms.css'
@@ -28,10 +30,10 @@ const Feriados: React.FC = () => {
   const [data, setData] = useState('')
   const [descricao, setDescricao] = useState('')
   const [erro, setErro] = useState('')
-
   // Estados da importação
   const [importAberto, setImportAberto] = useState(false)
   const [linhas, setLinhas] = useState<LinhaImportada[]>([])
+
 
   // Busca anos e feriados
   useEffect(() => {
@@ -65,6 +67,7 @@ const Feriados: React.FC = () => {
     setData('')
     setDescricao('')
     setErro('')
+
     setFormAberto(true)
   }
 
@@ -74,6 +77,7 @@ const Feriados: React.FC = () => {
     try {
       await createFeriado({ ano_letivo_id: Number(anoId), data, descricao, origem: 'ESCOLA' })
       setFormAberto(false)
+
       // Recarrega anos/feriados
       const a = await getAnoLetivos()
       setAnos(a)
@@ -82,6 +86,7 @@ const Feriados: React.FC = () => {
       if (msg.includes('409')) setErro('Feriado já cadastrado.')
       else if (msg.includes('422')) setErro('Dados inválidos.')
       else setErro('Falha ao salvar feriado.')
+
     }
   }
 
@@ -128,6 +133,7 @@ const Feriados: React.FC = () => {
     reader.readAsText(file)
   }
 
+
   const salvarImport = async () => {
     for (const l of linhas.filter(l => !l.erro)) {
       await createFeriado({ ano_letivo_id: l.ano, data: l.data, descricao: l.descricao, origem: 'ESCOLA' })
@@ -135,11 +141,13 @@ const Feriados: React.FC = () => {
     setImportAberto(false)
     const a = await getAnoLetivos()
     setAnos(a)
+
   }
 
   const total = linhas.length
   const validas = linhas.filter(l => !l.erro).length
   const erros = total - validas
+
 
   return (
     <FormPage title="Cadastro de Feriados">
@@ -147,6 +155,7 @@ const Feriados: React.FC = () => {
         <button className="btn secundario" onClick={() => { setLinhas([]); setImportAberto(true) }}>Importar Feriados</button>
         <button className="btn primario" onClick={abrirNovo}>+ Novo Feriado</button>
       </div>
+
 
       {carregado && feriados.length === 0 && <p>Nenhum feriado cadastrado.</p>}
 
@@ -165,7 +174,9 @@ const Feriados: React.FC = () => {
                 <td>{formatar(f.data)}</td>
                 <td>{f.descricao}</td>
                 <td>
+
                   <button className="btn perigo" onClick={() => excluir(f.id)}>Excluir</button>
+
                 </td>
               </tr>
             ))}
@@ -196,8 +207,10 @@ const Feriados: React.FC = () => {
               <input type="text" className="entrada" value={descricao} onChange={e => setDescricao(e.target.value)} />
             </label>
             <div className="modal-acoes">
+
               <button type="button" className="btn secundario" onClick={() => setFormAberto(false)}>Cancelar</button>
               <button type="submit" className="btn primario" disabled={!anoId || !data || !descricao.trim()}>Salvar</button>
+
             </div>
           </form>
         </div>
@@ -235,13 +248,17 @@ const Feriados: React.FC = () => {
               </>
             )}
             <div className="modal-acoes">
+res
               <button className="btn secundario" type="button" onClick={() => setImportAberto(false)}>Cancelar</button>
               <button className="btn primario" type="button" onClick={salvarImport} disabled={validas === 0}>Salvar</button>
+
             </div>
           </div>
         </div>
       )}
+
     </FormPage>
+
   )
 }
 

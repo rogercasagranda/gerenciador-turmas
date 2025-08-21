@@ -40,3 +40,8 @@ html, body, #root {
   margin: 0;
   padding: 0;
 }
+
+/* Stretch the login container so its background covers the full screen */
+.pp-page--login .login-container {
+  width: 100%;
+}

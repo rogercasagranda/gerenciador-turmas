@@ -14,6 +14,7 @@ const ConsultarUsuario  = React.lazy(() => import('../Usuarios/ConsultarUsuario'
 const Logs = React.lazy(() => import('../Logs/Logs'))
 const LogsConfig = React.lazy(() => import('../Logs/LogsConfig'))
 const ConfigurarTema = React.lazy(() => import('../Configuracoes/ConfigurarTema'))
+const ConfigAnoLetivo = React.lazy(() => import('../Configuracoes/AnoLetivo/AnoLetivoPage'))
 // Páginas de cadastro diversas
 const CadTurmas = React.lazy(() => import('../Cadastro/Turmas')) // Cadastro de turmas
 const CadAlunos = React.lazy(() => import('../Cadastro/Alunos')) // Cadastro de alunos
@@ -22,7 +23,9 @@ const CadTurnos = React.lazy(() => import('../Cadastro/Turnos')) // Cadastro de 
 const CadProfessores = React.lazy(() => import('../Cadastro/Professores')) // Cadastro de professores
 const CadResponsaveis = React.lazy(() => import('../Cadastro/Responsaveis')) // Cadastro de responsáveis
 const CadFeriados = React.lazy(() => import('../Feriados/Feriados')) // Cadastro de feriados
+
 const CadAnoLetivo = React.lazy(() => import('../Cadastro/AnoLetivo')) // Cadastro de ano letivo
+
 
 const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
 
@@ -182,6 +185,14 @@ const Home: React.FC = () => {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <ConsultarUsuario />
+        </Suspense>
+      )
+    }
+
+    if (path.includes('/config/ano-letivo')) {
+      return (
+        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+          <ConfigAnoLetivo />
         </Suspense>
       )
     }
@@ -363,6 +374,9 @@ const Home: React.FC = () => {
                 <button className="submenu-link" onClick={() => navigate('/config/tema')}>
                   Configurar Tema
                 </button>
+                <button className="submenu-link" onClick={() => navigate('/config/ano-letivo')}>
+                  Ano Letivo
+                </button>
                 {isMaster && (
                   <div
                     className="nav-item"
@@ -401,6 +415,7 @@ const Home: React.FC = () => {
       {/* Rodapé */}
       <footer className="home-footer" role="contentinfo">
         <span>© {new Date().getFullYear()} Portal do Professor</span>
+        <a href="/politica-de-cookies">Política de Cookies</a>
       </footer>
     </div>
   )
