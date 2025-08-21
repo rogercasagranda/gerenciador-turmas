@@ -7,6 +7,7 @@ import LoginPageWrapper from './pages/Login/LoginPageWrapper'
 import Home from './pages/Home/Home'
 
 import PoliticaDeCookies from './pages/PoliticaDeCookies'
+import RouteGuard from './routes/RouteGuard'
 
 
 // Componente principal da aplicação
@@ -22,17 +23,18 @@ const App: React.FC = () => {
       {/* Política de Cookies */}
       <Route path="/politica-de-cookies" element={<PoliticaDeCookies />} />
 
+
       {/* Página principal Home */}
-      <Route path="/home" element={<Home />} />
+      <Route path="/home" element={<RouteGuard><Home /></RouteGuard>} />
 
       {/* Rotas de cadastro; montam a Home para exibir conteúdo interno */}
-      <Route path="/cadastro/*" element={<Home />} />
+      <Route path="/cadastro/*" element={<RouteGuard><Home /></RouteGuard>} />
 
       {/* Garante que qualquer rota de Usuários monte a Home e carregue o conteúdo dentro dela */}
-      <Route path="/usuarios/*" element={<Home />} />
+      <Route path="/usuarios/*" element={<RouteGuard><Home /></RouteGuard>} />
 
       {/* Rotas de configuração */}
-      <Route path="/config/*" element={<Home />} />
+      <Route path="/config/*" element={<RouteGuard><Home /></RouteGuard>} />
 
       {/* Página institucional: Política de Cookies */}
       <Route path="/politica-de-cookies" element={<PoliticaDeCookies />} />

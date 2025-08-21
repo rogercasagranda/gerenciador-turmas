@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import axios from 'axios'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import '../../styles/CadastrarUsuario.css'
 import '../../styles/Forms.css'
 import useDirtyForm from '@/hooks/useDirtyForm'
-import { API_BASE, getAuthToken } from '@/services/api'
+import { apiFetch, getAuthToken } from '@/services/api'
 
 type MeuPerfil = { id_usuario?: number; tipo_perfil?: string; is_master?: boolean }
 
@@ -66,11 +65,6 @@ const CadastrarUsuario: React.FC = () => {
   const [carregandoEdicao, setCarregandoEdicao] = useState(false)
 
   const navigate = useNavigate()
-  const token = getAuthToken()
-  const headers: Record<string, string> = useMemo(
-    () => (token ? { Authorization: `Bearer ${token}` } : {}),
-    [token]
-  )
 
   const { isDirty, setDirty, confirmIfDirty } = useDirtyForm()
 
@@ -85,10 +79,8 @@ const CadastrarUsuario: React.FC = () => {
       try {
         const token = getAuthToken()
         if (!token) { navigate('/login'); return }
-        // tenta /me
-        const r = await fetch(`${API_BASE}/usuarios/me`, { headers })
-        if (r.ok) {
-          const m = (await r.json()) as MeuPerfil
+        try {
+          const m = await apiFetch('/usuarios/me') as MeuPerfil
           const p = toCanonical(m.tipo_perfil || '')
           const isMaster = Boolean(m.is_master || p === 'master')
           const autorizado = isMaster || PERFIS_PERMITIDOS.has(p)
@@ -96,8 +88,7 @@ const CadastrarUsuario: React.FC = () => {
           setMeuId(m.id_usuario)
           setMeuPerfil(p)
           setSouMaster(isMaster)
-        } else {
-          // fallback: token payload
+        } catch {
           const claims = getClaimsFromToken()
           const p = toCanonical((claims?.role || claims?.perfil || claims?.tipo_perfil || '').toString())
           const id = claims?.sub ? Number(claims.sub) : undefined
@@ -108,20 +99,18 @@ const CadastrarUsuario: React.FC = () => {
           setMeuPerfil(p)
           setSouMaster(isMaster)
         }
-        // Sempre registra no log do backend o perfil/id que acessou
-        try { await fetch(`${API_BASE}/usuarios/log-perfil`, { headers }) } catch {}
+        try { await apiFetch('/usuarios/log-perfil') } catch {}
       } catch {}
     }
     check()
-  }, [API_BASE, headers, navigate])
+  }, [navigate])
 
   // Se entrou com ?id, carrega dados para editar
   useEffect(() => {
     if (!idEdicao) return
     setCarregandoEdicao(true); setErro(''); setSucesso('')
-    axios.get(`${API_BASE}/usuarios/${idEdicao}`, { headers })
-      .then((res) => {
-        const u = res.data
+    apiFetch(`/usuarios/${idEdicao}`)
+      .then((u: any) => {
         setNome(u.nome)
         setEmail(u.email)
         setPerfil(toCanonical(u.tipo_perfil))
@@ -130,9 +119,9 @@ const CadastrarUsuario: React.FC = () => {
         setNumeroCelular(u.numero_celular)
         setDirty(false)
       })
-      .catch((e) => setErro(e?.response?.data?.detail || 'Falha ao carregar usuário.'))
+      .catch((e: any) => setErro(e?.message || 'Falha ao carregar usuário.'))
       .finally(() => setCarregandoEdicao(false))
-  }, [API_BASE, headers, idEdicao])
+  }, [idEdicao])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -141,28 +130,34 @@ const CadastrarUsuario: React.FC = () => {
     if (!email.trim()) { setErro('O e-mail é obrigatório.'); return }
     if (!numeroCelular.trim()) { setErro('O número de celular é obrigatório.'); return }
 
-    const jsonHeaders: Record<string, string> = { ...headers, 'Content-Type': 'application/json' }
+    try {
+      setEnviando(true)
+      const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
 
-      try {
-        setEnviando(true)
-        const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
-
-        if (idEdicao) {
-          await axios.put(`${API_BASE}/usuarios/${idEdicao}`, body, { headers: jsonHeaders })
-          setSucesso('Usuário atualizado com sucesso.')
-        } else {
-          await axios.post(`${API_BASE}/usuarios`, body, { headers: jsonHeaders })
-          setSucesso('Usuário cadastrado com sucesso.')
-          setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
-        }
-
-        setDirty(false)
-        setTimeout(() => navigate('/usuarios/consultar'), 700)
-      } catch (err: any) {
-        setErro(err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
-      } finally {
-        setEnviando(false)
+      if (idEdicao) {
+        await apiFetch(`/usuarios/${idEdicao}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        setSucesso('Usuário atualizado com sucesso.')
+      } else {
+        await apiFetch('/usuarios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        setSucesso('Usuário cadastrado com sucesso.')
+        setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
       }
+
+      setDirty(false)
+      setTimeout(() => navigate('/usuarios/consultar'), 700)
+    } catch (err: any) {
+      setErro(err?.message || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
+    } finally {
+      setEnviando(false)
+    }
   }
 
   // Lógica do botão Excluir: apenas master/diretor e sem autoexclusão
@@ -180,11 +175,11 @@ const CadastrarUsuario: React.FC = () => {
     const segunda = window.confirm('Confirme novamente: deseja realmente excluir?')
     if (!segunda) return
     try {
-      await axios.delete(`${API_BASE}/usuarios/${idEdicao}`, { headers })
+      await apiFetch(`/usuarios/${idEdicao}`, { method: 'DELETE' })
       alert('Usuário excluído com sucesso.')
       navigate('/usuarios/consultar')
     } catch (e:any) {
-      setErro(e?.response?.data?.detail || 'Falha ao excluir usuário.')
+      setErro(e?.message || 'Falha ao excluir usuário.')
     }
   }
 

@@ -58,6 +58,49 @@ export function clearAuthToken(): void {
 }
 
 // ============================================================
+// Fetch centralizado com anexação automática de Authorization
+// ============================================================
+
+export async function apiFetch(
+  input: string,
+  init: RequestInit = {},
+): Promise<any> {
+  const token = getAuthToken()
+  const headers = new Headers(init.headers || {})
+  if (token) headers.set("Authorization", `Bearer ${token}`)
+
+  const url = `${API_BASE}${input.startsWith("/") ? "" : "/"}${input}`
+
+  const res = await fetch(url, { ...init, headers })
+
+  if (res.status === 401 || res.status === 403) {
+    clearAuthToken()
+    window.dispatchEvent(new Event("auth:unauthorized"))
+  }
+
+  const text = await res.text()
+  const ct = res.headers.get("content-type") || ""
+  let data: any = null
+  if (ct.includes("application/json") && text) {
+    try {
+      data = JSON.parse(text)
+    } catch {
+      data = null
+    }
+  } else {
+    data = text
+  }
+
+  if (!res.ok) {
+    const msg =
+      (data && (data.detail || data.message)) || res.statusText || "Erro na requisição"
+    throw new Error(msg)
+  }
+
+  return data
+}
+
+// ============================================================
 // Utilitário de requisições (fetch) com headers e tratamento de erros
 // ============================================================
 
