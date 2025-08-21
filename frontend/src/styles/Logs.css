@@ -95,6 +95,39 @@
   text-align: left; /* alinha texto à esquerda */
 }
 
+.logs-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 24px 0;
+}
+
+.logs-tab {
+  padding: 8px 16px;
+  background: var(--pp-purple-100);
+  color: var(--pp-purple-900);
+  border: 1px solid var(--pp-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.logs-tab.active {
+  background: var(--pp-purple-700);
+  color: #fff;
+}
+
+.logs-tab:focus {
+  outline: 2px solid var(--pp-purple-700);
+  outline-offset: 2px;
+}
+
+.paginacao {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
 /* ===== Configuração de logs ===== */
 .logs-config-container {
   padding: 1rem; /* mantém espaçamento similar ao restante */

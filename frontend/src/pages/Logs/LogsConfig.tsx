@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import useDirtyForm from '@/hooks/useDirtyForm'
 import { cadastrarConfig } from '@/services/logs'
 import '../../styles/Logs.css'
@@ -6,14 +6,22 @@ import '../../styles/Logs.css'
 const CRUD_OPTIONS = ['CREATE', 'READ', 'UPDATE', 'DELETE'] as const
 export type CrudAction = (typeof CRUD_OPTIONS)[number]
 
-const LogsConfig: React.FC = () => {
-  const [tela, setTela] = useState('')
+interface Props {
+  initialScreen?: string
+}
+
+const LogsConfig: React.FC<Props> = ({ initialScreen }) => {
+  const [tela, setTela] = useState(initialScreen || '')
   const [crud, setCrud] = useState<CrudAction[]>([])
   const [mensagem, setMensagem] = useState('')
   const [tipoMsg, setTipoMsg] = useState<'sucesso' | 'erro' | ''>('')
   const [touched, setTouched] = useState(false)
 
   const { setDirty } = useDirtyForm()
+
+  useEffect(() => {
+    setTela(initialScreen || '')
+  }, [initialScreen])
 
   const toggleCrud = (acao: CrudAction) => {
     setTouched(true)
