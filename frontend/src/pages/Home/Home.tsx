@@ -7,6 +7,7 @@ import '../../styles/Home.css'
 import '../../styles/Home.lock.css'
 import { loadThemeFromStorage } from '../../theme/utils'
 import { apiFetch, getAuthToken } from '@/services/api'
+import { safeAlert } from '@/utils/safeAlert'
 
 // Carrega páginas internas com import dinâmico
 const CadastrarUsuario = React.lazy(() => import('../Usuarios/CadastrarUsuario'))
@@ -38,6 +39,15 @@ const toCanonical = (perfil: string) => {
   return p
 }
 
+// Decodifica payload do JWT quando chamada à API falha
+const getClaimsFromToken = () => {
+  const token = getAuthToken()
+  if (!token) return null
+  const parts = token.split('.')
+  if (parts.length !== 3) return null
+  try { return JSON.parse(atob(parts[1])) } catch { return null }
+}
+
 const Home: React.FC = () => {
   // Estado do drawer e submenu
   const [drawerAberto, setDrawerAberto] = useState(false)
@@ -67,7 +77,15 @@ const Home: React.FC = () => {
         try { localStorage.setItem('user_id', String(data.id_usuario)) } catch {}
         loadThemeFromStorage()
       })
-      .catch(() => {})
+      .catch(() => {
+        const claims = getClaimsFromToken()
+        const perfil = toCanonical(
+          (claims?.role || claims?.perfil || claims?.tipo_perfil || '') as string,
+        )
+        const isMaster = perfil === 'master'
+        setPodeUsuarios(isMaster || PERFIS_PERMITIDOS.has(perfil))
+        setIsMaster(isMaster)
+      })
   }, [navigate])
 
   // Fecha drawer a cada navegação
@@ -93,10 +111,10 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const path = getPath()
-    if (path.includes('/cadastro') && !podeUsuarios) navigate('/home') // Protege rotas de cadastro
-    if (path.includes('/usuarios') && !podeUsuarios) navigate('/home') // Protege rotas de usuários
-    if (path.includes('/config/logs') && !isMaster) navigate('/home') // Protege área restrita de logs
-  }, [location.pathname, location.hash, podeUsuarios, isMaster, navigate])
+    if (path.includes('/cadastro') && !podeUsuarios) safeAlert('ACESSO NEGADO')
+    if (path.includes('/usuarios') && !podeUsuarios) safeAlert('ACESSO NEGADO')
+    if (path.includes('/config/logs') && !isMaster) safeAlert('ACESSO NEGADO')
+  }, [location.pathname, location.hash, podeUsuarios, isMaster])
 
   // Renderiza conteúdo interno
   const renderConteudo = () => {
