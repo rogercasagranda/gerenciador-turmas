@@ -401,6 +401,7 @@ const Home: React.FC = () => {
       {/* Rodapé */}
       <footer className="home-footer" role="contentinfo">
         <span>© {new Date().getFullYear()} Portal do Professor</span>
+        <a href="/politica-de-cookies">Política de Cookies</a>
       </footer>
     </div>
   )
