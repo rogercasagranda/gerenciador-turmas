@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
-import { API_BASE } from '@/services/api'
+import { API_BASE, getAuthToken } from '@/services/api'
 import '../../styles/Logs.css'
 import useDirtyForm from '@/hooks/useDirtyForm'
 
@@ -28,8 +28,7 @@ const Logs: React.FC = () => {
     if (entidade) params.entidade = entidade
     if (dataInicio) params.data_inicio = dataInicio
     if (dataFim) params.data_fim = dataFim
-    const token =
-      localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+    const token = getAuthToken()
     axios
       .get<LogItem[]>(`${API_BASE}/logs`, {
         params,
