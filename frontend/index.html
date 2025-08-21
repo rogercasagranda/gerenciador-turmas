@@ -6,10 +6,6 @@
       <script>
         (function () {
           var root = document.documentElement;
-          var THEME_KEY = 'pp.theme';
-          var MODE_KEY = 'pp.mode';
-          var LEGACY_THEME_KEY = 'pp_theme';
-          var LEGACY_MODE_KEY = 'pp_mode';
           var COLORS = {
             roxo: '#6D28D9',
             vermelho: '#EF4444',
@@ -20,31 +16,8 @@
             rosa: '#EC4899',
             ciano: '#06B6D4'
           };
-
-          var theme = localStorage.getItem(THEME_KEY);
-          if (!theme) {
-            var legacyTheme = localStorage.getItem(LEGACY_THEME_KEY);
-            if (legacyTheme) {
-              theme = legacyTheme;
-              localStorage.setItem(THEME_KEY, theme);
-              try { localStorage.removeItem(LEGACY_THEME_KEY); } catch (e) {}
-            } else {
-              theme = 'roxo';
-            }
-          }
-
-          var mode = localStorage.getItem(MODE_KEY);
-          if (!mode) {
-            var legacyMode = localStorage.getItem(LEGACY_MODE_KEY);
-            if (legacyMode) {
-              mode = legacyMode;
-              localStorage.setItem(MODE_KEY, mode);
-              try { localStorage.removeItem(LEGACY_MODE_KEY); } catch (e) {}
-            } else {
-              mode = 'light';
-            }
-          }
-
+          var theme = localStorage.getItem('theme') || 'roxo';
+          var mode = localStorage.getItem('mode') || 'light';
           root.setAttribute('data-theme', theme);
           root.setAttribute('data-mode', mode);
           var meta = document.querySelector('meta[name="theme-color"]');

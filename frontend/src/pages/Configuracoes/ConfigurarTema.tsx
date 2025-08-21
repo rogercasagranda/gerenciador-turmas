@@ -48,7 +48,7 @@ const ConfigurarTema: React.FC = () => {
         </label>
       </div>
 
-      <div className="theme-preview" data-theme={selectedTheme} data-mode={selectedMode}>
+      <div className="theme-preview" data-preview-theme={selectedTheme} data-preview-mode={selectedMode}>
         <div className="preview-header"></div>
         <button className="button">Botão Primário</button>
       </div>

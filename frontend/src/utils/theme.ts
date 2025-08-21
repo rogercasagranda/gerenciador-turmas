@@ -1,2 +1,2 @@
-export { loadThemeFromStorage } from '../theme/utils';
+export { applyTheme, loadThemeFromStorage } from '../theme/utils';
 

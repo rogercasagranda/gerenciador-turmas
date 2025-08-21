@@ -1,6 +1,7 @@
 {
   "name": "Portal do Professor",
   "short_name": "Professor",
+  "version": "1.0.1",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

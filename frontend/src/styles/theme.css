@@ -1,17 +1,21 @@
 :root {
-  --primary-color: #6D28D9;   /* valor padrão, será sobrescrito por data-theme */
-  --text-color: #ffffff;
-  --bg: #ffffff;
-  --text: #111827;
-  --surface: #f5f7fb;
-  --border: #e5e7eb;
+  --bg: #f6f6f8;
+  --surface: #ffffff;
+  --text: #1b1b1f;
+  --muted-text: #4a4a55;
+  --primary: #6a1b9a;
+  --on-primary: #ffffff;
+  --border: #e2e2e8;
   --btn-radius: .75rem;
   --btn-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  /* Variáveis legadas para o layout atual */
-  --pp-purple-700: var(--primary-color);
-  --pp-purple-900: color-mix(in srgb, var(--primary-color) 80%, black);
-  --pp-purple-100: color-mix(in srgb, var(--primary-color) 20%, white);
-  --pp-purple-50: color-mix(in srgb, var(--primary-color) 10%, white);
+
+  /* aliases for legacy variables */
+  --primary-color: var(--primary);
+  --text-color: var(--on-primary);
+  --pp-purple-700: var(--primary);
+  --pp-purple-900: color-mix(in srgb, var(--primary) 80%, black);
+  --pp-purple-100: color-mix(in srgb, var(--primary) 20%, white);
+  --pp-purple-50: color-mix(in srgb, var(--primary) 10%, white);
   --pp-surface: var(--surface);
   --pp-text: var(--text);
   --pp-border: var(--border);
@@ -20,51 +24,75 @@
   --pp-shadow: var(--btn-shadow);
 }
 
-/* Dark mode (aplicar junto com data-mode="dark") */
-:root[data-mode="dark"] {
-  --bg: #0f172a;
-  --text: #e5e7eb;
-  --surface: #111827;
-  --border: #1f2937;
+[data-mode="dark"] {
+  --bg: #0f1115;
+  --surface: #161923;
+  --text: #e6e8ee;
+  --muted-text: #b6b9c3;
+  --primary: #8a2be2;
+  --on-primary: #0c0c10;
+  --border: #232736;
 }
 
-/* Mapas de tema */
-:root[data-theme="roxo"]     { --primary-color: #6D28D9; --text-color: #ffffff; }
-:root[data-theme="vermelho"] { --primary-color: #EF4444; --text-color: #ffffff; }
-:root[data-theme="azul"]     { --primary-color: #3B82F6; --text-color: #ffffff; }
-:root[data-theme="verde"]    { --primary-color: #10B981; --text-color: #ffffff; }
-:root[data-theme="laranja"]  { --primary-color: #F59E0B; --text-color: #111827; }
-:root[data-theme="cinza"]    { --primary-color: #6B7280; --text-color: #ffffff; }
-:root[data-theme="rosa"]     { --primary-color: #EC4899; --text-color: #ffffff; }
-:root[data-theme="ciano"]    { --primary-color: #06B6D4; --text-color: #ffffff; }
+/* theme maps */
+[data-theme="roxo"]     { --primary: #6D28D9; --on-primary: #ffffff; }
+[data-theme="vermelho"] { --primary: #EF4444; --on-primary: #ffffff; }
+[data-theme="azul"]     { --primary: #3B82F6; --on-primary: #ffffff; }
+[data-theme="verde"]    { --primary: #10B981; --on-primary: #ffffff; }
+[data-theme="laranja"]  { --primary: #F59E0B; --on-primary: #111827; }
+[data-theme="cinza"]    { --primary: #6B7280; --on-primary: #ffffff; }
+[data-theme="rosa"]     { --primary: #EC4899; --on-primary: #ffffff; }
+[data-theme="ciano"]    { --primary: #06B6D4; --on-primary: #ffffff; }
 
-/* Botões padrão que seguem o tema */
-.button {
-  background: var(--primary-color);
-  color: var(--text-color);
+html, body, #root {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.card, .menu, .header {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.button, .button-primary {
+  background: var(--primary);
+  color: var(--on-primary);
   border: 1px solid transparent;
   border-radius: var(--btn-radius);
-  box-shadow: var(--btn-shadow);
+  box-shadow: var(--pp-shadow);
   padding: .75rem 1rem;
   font-weight: 600;
 }
-.button:hover { filter: brightness(0.92); }
-.button:focus { outline: 2px solid color-mix(in srgb, var(--primary-color) 40%, var(--text-color)); outline-offset: 2px; }
 
-/* Botão Sair: padrão vermelho, exceção em tema vermelho */
+.button:hover, .button-primary:hover {
+  filter: brightness(0.92);
+}
+
+.button:focus, .button-primary:focus {
+  outline: 2px solid color-mix(in srgb, var(--primary) 40%, var(--on-primary));
+  outline-offset: 2px;
+}
+
 .button-exit {
-  background: var(--primary-color);
-  color: var(--text-color);
+  background: var(--primary);
+  color: var(--on-primary);
   border: 1px solid transparent;
   border-radius: var(--btn-radius);
-  box-shadow: var(--btn-shadow);
+  box-shadow: var(--pp-shadow);
   padding: .5rem .875rem;
   font-weight: 700;
 }
-.button-exit:hover { filter: brightness(0.92); }
-:root[data-theme="vermelho"] .button-exit { background: var(--primary-color); }
 
-/* Utilitários base (sem alterar layout existente) */
+.button-exit:hover {
+  filter: brightness(0.92);
+}
+
+[data-theme="vermelho"] .button-exit {
+  background: var(--primary);
+}
+
 .app-bg      { background: var(--bg);    color: var(--text); }
 .app-surface { background: var(--surface); }
 .app-border  { border: 1px solid var(--border); }
+
