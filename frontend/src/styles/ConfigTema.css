@@ -13,9 +13,30 @@
   cursor: pointer;
 }
 
+.theme-swatch.indigo { background: #6366F1; }
+.theme-swatch.purple { background: #8B5CF6; }
+.theme-swatch.blue   { background: #3B82F6; }
+.theme-swatch.green  { background: #10B981; }
+.theme-swatch.orange { background: #F59E0B; }
+.theme-swatch.red    { background: #EF4444; }
+.theme-swatch.gray   { background: #6B7280; }
+.theme-swatch.pink   { background: #EC4899; }
+.theme-swatch.teal   { background: #14B8A6; }
+.theme-swatch.yellow { background: #EAB308; }
+
 .theme-swatch.selected {
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.mode-toggle {
+  margin-top: 16px;
+}
+
+.mode-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .theme-preview {
@@ -24,7 +45,33 @@
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--surface);
+  color: var(--text);
 }
+
+.theme-preview[data-mode='light'] {
+  --bg: #ffffff;
+  --text: #111827;
+  --surface: #f5f7fb;
+  --border: #e5e7eb;
+}
+
+.theme-preview[data-mode='dark'] {
+  --bg: #0f172a;
+  --text: #e5e7eb;
+  --surface: #111827;
+  --border: #1f2937;
+}
+
+.theme-preview[data-theme='indigo']  { --color-primary: #6366F1; --on-primary: #ffffff; }
+.theme-preview[data-theme='purple']  { --color-primary: #8B5CF6; --on-primary: #ffffff; }
+.theme-preview[data-theme='blue']    { --color-primary: #3B82F6; --on-primary: #ffffff; }
+.theme-preview[data-theme='green']   { --color-primary: #10B981; --on-primary: #ffffff; }
+.theme-preview[data-theme='orange']  { --color-primary: #F59E0B; --on-primary: #111111; }
+.theme-preview[data-theme='red']     { --color-primary: #EF4444; --on-primary: #ffffff; }
+.theme-preview[data-theme='gray']    { --color-primary: #6B7280; --on-primary: #ffffff; }
+.theme-preview[data-theme='pink']    { --color-primary: #EC4899; --on-primary: #ffffff; }
+.theme-preview[data-theme='teal']    { --color-primary: #14B8A6; --on-primary: #ffffff; }
+.theme-preview[data-theme='yellow']  { --color-primary: #EAB308; --on-primary: #111111; }
 
 .theme-preview .preview-header {
   height: 44px;
