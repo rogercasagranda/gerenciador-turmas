@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models.usuarios import Usuarios
-from backend.utils.audit import registrar_log
+from backend.utils.audit import registrar_log, log_403
 import os
 import logging
 from jose import jwt, JWTError
@@ -46,15 +46,6 @@ def _claims(request: Request) -> dict:
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido")
 
-@router.get("/log-perfil")
-def log_perfil(request: Request):
-    "Apenas decodifica o token, LOGA o perfil/ID e devolve."
-    claims = _claims(request)
-    perfil = _canon(claims.get("role") or claims.get("perfil") or claims.get("tipo_perfil"))
-    uid = claims.get("sub")
-    logger.info("Acesso de usuário id=%s perfil=%s", uid, perfil)
-    return {"id": uid, "perfil": perfil}
-
 @router.delete("/{id_usuario}")
 def excluir_usuario(id_usuario: int, request: Request, db: Session = Depends(get_db)):
     claims = _claims(request)
@@ -67,6 +58,7 @@ def excluir_usuario(id_usuario: int, request: Request, db: Session = Depends(get
 
     my_role = _canon(claims.get("role") or claims.get("perfil") or claims.get("tipo_perfil"))
     if not my_role:
+        log_403(db, me_id, None, request.url.path, "perfil ausente no token")
         raise HTTPException(status_code=403, detail="Perfil não encontrado no token")
 
     alvo = db.query(Usuarios).filter(Usuarios.id_usuario == id_usuario).first()
@@ -76,11 +68,19 @@ def excluir_usuario(id_usuario: int, request: Request, db: Session = Depends(get
     alvo_role = _canon(alvo.tipo_perfil)
 
     # LOG detalhado da tentativa
-    logger.info("Tentativa de exclusão: executor id=%s perfil=%s -> alvo id=%s perfil=%s", me_id, my_role, alvo.id_usuario, alvo_role)
+    logger.info(
+        "Tentativa de exclusão: executor id=%s perfil=%s -> alvo id=%s perfil=%s",
+        me_id,
+        my_role,
+        alvo.id_usuario,
+        alvo_role,
+    )
 
     if my_role not in {"MASTER", "DIRETOR"}:
+        log_403(db, me_id, my_role, request.url.path, "perfil sem permissão")
         raise HTTPException(status_code=403, detail="Sem permissão para excluir usuários")
     if alvo_role == "MASTER" and my_role != "MASTER":
+        log_403(db, me_id, my_role, request.url.path, "apenas MASTER pode excluir outro MASTER")
         raise HTTPException(status_code=403, detail="Apenas MASTER pode excluir outro MASTER")
     if me_id == alvo.id_usuario:
         raise HTTPException(status_code=409, detail="Não é permitido excluir o próprio usuário")

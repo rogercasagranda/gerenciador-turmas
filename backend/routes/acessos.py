@@ -12,6 +12,7 @@ from fastapi.responses import Response
 from sqlalchemy import func, or_, cast, String
 from sqlalchemy.orm import Session
 from openpyxl import Workbook
+import logging, hashlib
 
 from backend.database import get_db
 from backend.models.permissoes import (
@@ -24,8 +25,9 @@ from backend.models.permissoes import (
 from backend.models.tela import Tela
 from backend.models.usuarios import Usuarios as UsuariosModel
 from backend.models.sessao import Sessao
-from backend.routes.usuarios import token_data_from_request, to_canonical
+from backend.routes.usuarios import token_data_from_request, to_canonical, TokenData
 from backend.utils.pdf import generate_pdf
+from backend.utils.audit import registrar_log, log_403
 from backend.schemas.permissoes_temp import PermissaoTempIn, PermissaoTempOut
 from backend.schemas.grupo_permissoes import (
     GrupoOut,
@@ -39,23 +41,39 @@ from backend.schemas.usuarios_por_grupo import (
 
 BRAZIL_TZ = ZoneInfo("America/Sao_Paulo")
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/acessos", tags=["Acessos"])
 
 FORBIDDEN_PROFILES = {"aluno", "responsavel"}
 
 
-def require_consultar(request: Request):
+def require_consultar(request: Request, db: Session) -> TokenData:
     token = token_data_from_request(request)
     perfil = to_canonical(token.tipo_perfil)
     if perfil in FORBIDDEN_PROFILES:
+        log_403(db, token.id_usuario, perfil, request.url.path, "perfil sem acesso")
+        logger.warning(
+            "403 denied: user_id=%s perfil=%s path=%s",
+            token.id_usuario,
+            perfil,
+            request.url.path,
+        )
         raise HTTPException(status_code=403, detail="Perfil sem acesso")
     return token
 
 
-def require_admin(request: Request):
+def require_admin(request: Request, db: Session) -> TokenData:
     token = token_data_from_request(request)
     perfil = to_canonical(token.tipo_perfil)
     if perfil not in {"master", "diretor"}:
+        log_403(db, token.id_usuario, perfil, request.url.path, "perfil sem acesso")
+        logger.warning(
+            "403 denied: user_id=%s perfil=%s path=%s",
+            token.id_usuario,
+            perfil,
+            request.url.path,
+        )
         raise HTTPException(status_code=403, detail="Perfil sem acesso")
     return token
 
@@ -66,7 +84,7 @@ def listar_grupos_usuario(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    require_consultar(request)
+    require_consultar(request, db)
     grupos = (
         db.query(Grupo.nome)
         .join(UsuarioGrupo, UsuarioGrupo.grupo_id == Grupo.id)
@@ -81,7 +99,7 @@ def listar_grupos(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    require_admin(request)
+    require_admin(request, db)
     grupos = db.query(Grupo).filter(Grupo.nome != "Master").all()
     return grupos
 
@@ -97,7 +115,7 @@ def usuarios_por_grupo(
     limit: int = 50,
     db: Session = Depends(get_db),
 ):
-    require_consultar(request)
+    token = require_consultar(request, db)
 
     query = (
         db.query(UsuariosModel)
@@ -177,7 +195,7 @@ def exportar_usuarios_por_grupo(
     q: str | None = None,
     db: Session = Depends(get_db),
 ):
-    token = require_consultar(request)
+    token = require_consultar(request, db)
 
     query = (
         db.query(UsuariosModel)
@@ -295,7 +313,7 @@ def exportar_usuarios_grupo(
     db: Session = Depends(get_db),
 ):
     """Exporta os usuários pertencentes a um grupo em formato PDF."""
-    token = require_consultar(request)
+    token = require_consultar(request, db)
     grupo = db.query(Grupo).filter(Grupo.id == grupo_id).first()
     if not grupo:
         raise HTTPException(status_code=404, detail="Grupo não encontrado")
@@ -344,7 +362,7 @@ def listar_permissoes_grupo(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    require_admin(request)
+    require_admin(request, db)
     grupo = db.query(Grupo).filter(Grupo.id == grupo_id).first()
     if not grupo:
         raise HTTPException(status_code=404, detail="Grupo não encontrado")
@@ -363,7 +381,7 @@ def salvar_permissoes_grupo(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    require_admin(request)
+    require_admin(request, db)
     grupo = db.query(Grupo).filter(Grupo.id == grupo_id).first()
     if not grupo:
         raise HTTPException(status_code=404, detail="Grupo não encontrado")
@@ -416,7 +434,7 @@ def criar_perm_temp(
     db: Session = Depends(get_db),
 ):
     """Cria permissões temporárias para um usuário."""
-    require_consultar(request)
+    token = require_consultar(request, db)
     user = (
         db.query(UsuariosModel)
         .filter(UsuariosModel.id_usuario == usuario_id)
@@ -440,7 +458,16 @@ def criar_perm_temp(
         .all()
     )
     for e in expiradas:
+        old = e.status
         e.status = PermissaoStatus.EXPIRADA
+        registrar_log(
+            db,
+            token.id_usuario,
+            "status",
+            request.url.path,
+            e.id,
+            f"{old.value}->{e.status.value}",
+        )
     resultados: list[PermissaoTempOut] = []
     for perm in permissoes:
         tela = db.query(Tela).filter(Tela.id == perm.tela_id).first()
@@ -497,7 +524,7 @@ def revogar_perm_temp(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    require_consultar(request)
+    token = require_consultar(request, db)
     perm = (
         db.query(UsuarioPermissaoTemp)
         .filter(
@@ -508,9 +535,18 @@ def revogar_perm_temp(
     )
     if not perm:
         raise HTTPException(status_code=404, detail="Permissão não encontrada")
+    old = perm.status
     perm.status = PermissaoStatus.REVOGADA
     perm.fim = datetime.now(BRAZIL_TZ)
     db.commit()
+    registrar_log(
+        db,
+        token.id_usuario,
+        "status",
+        request.url.path,
+        perm.id,
+        f"{old.value}->{perm.status.value}",
+    )
     db.refresh(perm)
     return PermissaoTempOut.model_validate(perm)
 
@@ -522,7 +558,7 @@ def listar_perm_temp(
     request: Request = None,
     db: Session = Depends(get_db),
 ):
-    require_consultar(request)
+    token = require_consultar(request, db)
     now = datetime.now(BRAZIL_TZ)
     expiradas = (
         db.query(UsuarioPermissaoTemp)
@@ -534,7 +570,16 @@ def listar_perm_temp(
         .all()
     )
     for e in expiradas:
+        old = e.status
         e.status = PermissaoStatus.EXPIRADA
+        registrar_log(
+            db,
+            token.id_usuario,
+            "status",
+            request.url.path,
+            e.id,
+            f"{old.value}->{e.status.value}",
+        )
     if expiradas:
         db.commit()
     q = (
@@ -573,7 +618,7 @@ def export_usuario_temporarias(
     from io import StringIO
     import csv
 
-    require_consultar(request)
+    token = require_consultar(request, db)
     dados = listar_perm_temp(usuario_id, status, request, db)
     if format != "csv":
         raise HTTPException(status_code=400, detail="Formato não suportado")
@@ -589,6 +634,14 @@ def export_usuario_temporarias(
             p["status"],
         ])
     content = output.getvalue()
+    sha = hashlib.sha256(content.encode("utf-8")).hexdigest()
+    registrar_log(
+        db,
+        token.id_usuario,
+        "export",
+        request.url.path,
+        descricao=f"tipo=csv usuario={usuario_id} status={status} hash={sha}",
+    )
     return Response(
         content,
         media_type="text/csv",

@@ -19,14 +19,14 @@ def registrar_log(
     """Registra uma entrada na tabela de auditoria."""
 
     action = acao.lower()
-    if action not in {"create", "read", "update", "delete"}:
-        action = "read"
+    crud_actions = {"create", "read", "update", "delete"}
+    config_action = action if action in crud_actions else "read"
 
     global_cfg = db.query(LogConfig).filter(LogConfig.screen == "__all__").first()
-    if global_cfg and not getattr(global_cfg, f"{action}_enabled"):
+    if global_cfg and not getattr(global_cfg, f"{config_action}_enabled"):
         return
     entidade_cfg = db.query(LogConfig).filter(LogConfig.screen == entidade).first()
-    if entidade_cfg and not getattr(entidade_cfg, f"{action}_enabled"):
+    if entidade_cfg and not getattr(entidade_cfg, f"{config_action}_enabled"):
         return
 
     usuario = db.query(Usuarios).filter(Usuarios.id_usuario == id_usuario).first()
@@ -46,3 +46,9 @@ def registrar_log(
     )
     db.add(log)
     db.commit()
+
+
+def log_403(db: Session, id_usuario: int, perfil: str | None, path: str, motivo: str) -> None:
+    """Registra tentativa negada (403) com informações básicas."""
+    desc = f"perfil={perfil} motivo={motivo}"
+    registrar_log(db, id_usuario, "forbidden", path, descricao=desc)
