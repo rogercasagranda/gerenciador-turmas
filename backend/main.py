@@ -142,8 +142,8 @@ async def startup_event():  # Declara função assíncrona de inicialização
     Base.metadata.create_all(bind=engine)
     # Assegura registro global de logs habilitado por padrão
     with SessionLocal() as db:
-        if not db.query(LogConfig).filter(LogConfig.entidade == "__all__").first():
-            db.add(LogConfig(entidade="__all__", habilitado=True))
+        if not db.query(LogConfig).filter(LogConfig.screen == "__all__").first():
+            db.add(LogConfig(screen="__all__", create_enabled=True, read_enabled=True, update_enabled=True, delete_enabled=True))
             db.commit()
 
     logger.info("✅ Backend iniciado com sucesso")  # Log único de inicialização
