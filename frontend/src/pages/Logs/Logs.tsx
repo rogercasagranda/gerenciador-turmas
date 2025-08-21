@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
-
-import axios from 'axios'
-import { API_BASE, getAuthToken } from '@/services/api'
-
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { apiFetch } from '@/services/api'
+import LogsConfig from './LogsConfig'
+import LogsOverview from './LogsOverview'
 import '../../styles/Logs.css'
 
 type Tab = 'config' | 'overview'
+type LogItem = Record<string, any>
 
 const Logs: React.FC = () => {
   const [searchParams] = useSearchParams()
@@ -14,10 +15,15 @@ const Logs: React.FC = () => {
   const screenParam = searchParams.get('screen') || ''
   const [tab, setTab] = useState<Tab>(tabParam)
 
+  const [usuario, setUsuario] = useState('')
+  const [entidade, setEntidade] = useState('')
+  const [dataInicio, setDataInicio] = useState('')
+  const [dataFim, setDataFim] = useState('')
+  const [logs, setLogs] = useState<LogItem[]>([])
+
   useEffect(() => {
     setTab(tabParam)
   }, [tabParam])
-
 
   const carregar = () => {
     const params: Record<string, string> = {}
@@ -25,15 +31,16 @@ const Logs: React.FC = () => {
     if (entidade) params.entidade = entidade
     if (dataInicio) params.data_inicio = dataInicio
     if (dataFim) params.data_fim = dataFim
-    const token = getAuthToken()
-    axios
-      .get<LogItem[]>(`${API_BASE}/logs`, {
-        params,
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      })
-      .then((r) => setLogs(r.data))
+    const qs = new URLSearchParams(params).toString()
+    apiFetch(`/logs${qs ? `?${qs}` : ''}`)
+      .then((r: any) => setLogs(r))
       .catch(() => setLogs([]))
+  }
 
+  const changeTab = (next: Tab) => {
+    const params = new URLSearchParams(searchParams)
+    params.set('tab', next)
+    navigate({ search: params.toString() })
   }
 
   const handleEdit = (screen: string) => {

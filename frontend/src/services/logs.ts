@@ -1,4 +1,4 @@
-import { API_BASE, getAuthToken } from './api'
+import { apiFetch } from './api'
 
 
 export interface LogConfigPayload {
@@ -7,22 +7,14 @@ export interface LogConfigPayload {
 }
 
 export async function cadastrarConfig(data: LogConfigPayload): Promise<void> {
-  const token = getAuthToken()
-  const res = await fetch(`${API_BASE}/logs/config`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(data),
-  })
-  if (!res.ok) {
-    let msg = 'Erro ao salvar configuração'
-    try {
-      const payload = await res.json()
-      msg = payload?.detail || msg
-    } catch {}
-    throw new Error(msg)
+  try {
+    await apiFetch('/logs/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+  } catch (e: any) {
+    throw new Error(e?.message || 'Erro ao salvar configuração')
   }
 }
 

@@ -2,11 +2,11 @@ import '../../styles/ConsultarUsuario.lock.css'
 import '../../styles/ConsultarUsuario.css'
 // Importa React e hooks
 import React, { useEffect, useMemo, useState } from 'react'
-// Importa HTTP client
-import axios from 'axios'
 // Importa navegação
 import { useNavigate } from 'react-router-dom'
+
 import { API_BASE, getAuthToken } from '@/services/api'
+
 
 // Define tipo do usuário retornado pela API
 type Usuario = {
@@ -51,6 +51,7 @@ const ConsultarUsuario: React.FC = () => {
   const navigate = useNavigate()
 
 
+
   // Função utilitária: monta headers de autenticação
   const authHeaders = () => {
     const token = getAuthToken()
@@ -69,32 +70,26 @@ const ConsultarUsuario: React.FC = () => {
       if (!headers) return
 
       // Valida perfil (tolerante a 422/500; só 401 derruba sessão)
-      try {
-        const m = await axios.get<MeuPerfil>(`${API_BASE}/usuarios/me`, { headers })
-        const p = toCanonical(m.data.tipo_perfil || '')
-        const autorizado = m.data.is_master || PERFIS_PERMITIDOS.has(p)
-        if (!autorizado) { navigate('/home'); return }
-      } catch (e:any) {
-        if (e?.response?.status === 401) { navigate('/login'); return }
-      }
 
-      setCarregando(true)
-      const r = await axios.get<Usuario[]>(`${API_BASE}/usuarios`, { headers })
-      setLista(r.data || [])
-      setErro('')
-    } catch (e: any) {
-      if (e?.response?.status === 401) {
-        navigate('/login')
-      } else {
+      try {
+        const me = await apiFetch('/usuarios/me') as MeuPerfil
+        const p = toCanonical(me.tipo_perfil || '')
+        const autorizado = me.is_master || PERFIS_PERMITIDOS.has(p)
+        if (!autorizado) { navigate('/home'); return }
+
+        setCarregando(true)
+        const r = await apiFetch('/usuarios') as Usuario[]
+        setLista(Array.isArray(r) ? r : [])
+        setErro('')
+      } catch (e: any) {
         setErro('Falha ao carregar usuários.')
+      } finally {
+        setCarregando(false)
       }
-    } finally {
-      setCarregando(false)
     }
-  }
-  carregar()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [API_BASE])
+    carregar()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Lista filtrada (nome, email ou perfil)
   const filtrada = useMemo(() => {

@@ -57,6 +57,64 @@ export function clearAuthToken(): void {
   sessionStorage.removeItem("authToken")
 }
 
+// Remove apenas o token armazenado (local ou sessão)
+function clearCurrentAuthToken(): void {
+  if (localStorage.getItem("authToken") !== null) {
+    localStorage.removeItem("authToken")
+  } else if (sessionStorage.getItem("authToken") !== null) {
+    sessionStorage.removeItem("authToken")
+  }
+}
+
+// Logout controlado: limpa token atual e redireciona para login
+function logoutControlled(): void {
+  clearCurrentAuthToken()
+  window.location.href = "/login"
+}
+
+// ============================================================
+// Fetch centralizado com anexação automática de Authorization
+// ============================================================
+
+export async function apiFetch(
+  input: string,
+  init: RequestInit = {},
+): Promise<any> {
+  const token = getAuthToken()
+  const headers = new Headers(init.headers || {})
+  if (token) headers.set("Authorization", `Bearer ${token}`)
+
+  const url = `${API_BASE}${input.startsWith("/") ? "" : "/"}${input}`
+
+  const res = await fetch(url, { ...init, headers })
+
+  if (res.status === 401 || res.status === 403) {
+    clearAuthToken()
+    window.dispatchEvent(new Event("auth:unauthorized"))
+  }
+
+  const text = await res.text()
+  const ct = res.headers.get("content-type") || ""
+  let data: any = null
+  if (ct.includes("application/json") && text) {
+    try {
+      data = JSON.parse(text)
+    } catch {
+      data = null
+    }
+  } else {
+    data = text
+  }
+
+  if (!res.ok) {
+    const msg =
+      (data && (data.detail || data.message)) || res.statusText || "Erro na requisição"
+    throw new Error(msg)
+  }
+
+  return data
+}
+
 // ============================================================
 // Utilitário de requisições (fetch) com headers e tratamento de erros
 // ============================================================
@@ -168,16 +226,24 @@ async function apiRequest<T = unknown>(
     const contentType = res.headers.get("content-type") || ""
     const isJson = contentType.includes("application/json")
 
-    // Se resposta não OK, tenta extrair payload de erro e lança
-    if (!res.ok) {
-      let payload: ApiErrorPayload | undefined
-      try {
-        payload = isJson ? await res.json() : undefined
-      } catch {
-        payload = undefined
+      // Se resposta não OK, trata conforme status
+      if (!res.ok) {
+        let payload: ApiErrorPayload | undefined
+        try {
+          payload = isJson ? await res.json() : undefined
+        } catch {
+          payload = undefined
+        }
+
+        if (res.status === 401 || res.status === 403) {
+          const detail = typeof payload?.detail === "string" ? payload.detail.toLowerCase() : ""
+          if (!payload || detail.includes("token")) {
+            logoutControlled()
+          }
+        }
+
+        raiseHttpError(res, payload)
       }
-      raiseHttpError(res, payload)
-    }
 
     // Se OK e for JSON, retorna objeto tipado T; caso contrário, retorna como any (texto/blob se necessário)
     if (isJson) {
@@ -197,6 +263,10 @@ async function apiRequest<T = unknown>(
     clearTimeout(timeoutId)
   }
 }
+
+// Alias público exposto aos componentes
+// Permite chamadas como apiFetch('/rota', { method: 'POST', body: {...} })
+export { apiRequest as apiFetch }
 
 // ============================================================
 // Endpoints específicos utilizados pelo Portal do Professor

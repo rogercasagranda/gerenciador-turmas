@@ -1,8 +1,7 @@
 // Importa React e hooks
 import React, { useEffect, useState } from 'react'                        // Importa React/useState/useEffect
-import axios from 'axios'                                                 // Importa axios
 import { useNavigate, useParams } from 'react-router-dom' // Navegação
-import { API_BASE, getAuthToken } from '@/services/api'
+import { apiFetch } from '@/services/api'
 import '../../styles/CadastrarUsuario.css'                                 // Reaproveita CSS do cadastro
 import '../../styles/Forms.css'
 import useDirtyForm from '@/hooks/useDirtyForm'
@@ -41,6 +40,7 @@ const EditarUsuario: React.FC = () => {                                   // Def
 
   useEffect(() => {                                                        // Efeito de carregamento
     setErro('')                                                            // Limpa erro
+
     const token = getAuthToken()                                          // Lê token
     if (!token) { navigate('/login'); return }                            // Sem token -> login
     const headers: Record<string, string> = { Authorization: `Bearer ${token}` }
@@ -61,6 +61,7 @@ const EditarUsuario: React.FC = () => {                                   // Def
       })                                                                  // Finaliza then/catch
   }, [API_BASE, id, navigate, setDirty])                                                      // Dependências
 
+
   const handleSubmit = async (e: React.FormEvent) => {                    // Define envio
     e.preventDefault()                                                    // Previne reload
     if (!usuario) return                                                  // Se sem usuário retorna
@@ -71,30 +72,38 @@ const EditarUsuario: React.FC = () => {                                   // Def
     if (!usuario.email.trim()) { setErro('O e-mail é obrigatório.'); return }      // Valida e-mail
     if (!usuario.numero_celular.trim()) { setErro('O número de celular é obrigatório.'); return } // Valida número
 
+
     const token = getAuthToken()                                          // Lê token
     if (!token) { navigate('/login'); return }                            // Sem token -> login
     const headers: Record<string, string> = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 
+
     try {                                                                 // Tenta enviar
       setEnviando(true)                                                   // Marca envio
-      await axios.put(`${API_BASE}/usuarios/${usuario.id}`, {             // PUT /usuarios/{id}
-        nome: usuario.nome,                                               // Nome
-        email: usuario.email,                                             // E-mail
-        tipo_perfil: usuario.tipo_perfil,                                 // Perfil
-        ddi: usuario.ddi,                                                 // DDI
-        ddd: usuario.ddd,                                                 // DDD
-        numero_celular: usuario.numero_celular,                           // Número
-      }, { headers })                                                     // Headers
+      await apiFetch(`/usuarios/${usuario.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: usuario.nome,
+          email: usuario.email,
+          tipo_perfil: usuario.tipo_perfil,
+          ddi: usuario.ddi,
+          ddd: usuario.ddd,
+          numero_celular: usuario.numero_celular,
+        }),
+      })
 
       setSucesso('Usuário atualizado com sucesso.')                       // Mensagem de sucesso
       setDirty(false)
       setTimeout(() => navigate('/usuarios/consultar'), 800)             // Redireciona
     } catch (err: any) {                                                  // Em erro
+
       if (err?.response?.status === 401) navigate('/login')
       else {
         const msg = err?.response?.data?.detail || 'Falha ao atualizar usuário.' // Extrai mensagem
         setErro(msg)                                                        // Define erro
       }
+
     } finally {                                                           // Sempre executa
       setEnviando(false)                                                  // Desmarca envio
     }                                                                     // Finaliza try/catch

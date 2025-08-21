@@ -1,36 +1,22 @@
-import { API_BASE, getAuthToken } from './api'
+import { apiFetch } from './api'
 
 export type LogFlags = { create:boolean; read:boolean; update:boolean; delete:boolean }
 export type LogConfigOut = LogFlags & { screen:string; updated_at:string; updated_by_name:string }
 
-function authHeaders() {
-  const token = getAuthToken()
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {})
-  }
-}
-
 export async function fetchScreens(): Promise<Array<{key:string; label:string}>> {
-  const r = await fetch(`${API_BASE}/logs/config/screens`, { headers: authHeaders() })
-  if (!r.ok) throw new Error('Falha ao carregar telas')
-  return r.json()
+  return apiFetch('/logs/config/screens')
 }
 
 export async function fetchLogConfig(screen:string): Promise<LogConfigOut> {
-  const r = await fetch(`${API_BASE}/logs/config?screen=${encodeURIComponent(screen)}`, { headers: authHeaders() })
-  if (!r.ok) throw new Error('Falha ao carregar configuração')
-  return r.json()
+  return apiFetch(`/logs/config?screen=${encodeURIComponent(screen)}`)
 }
 
 export async function saveLogConfig(body: {screen:string}&LogFlags&{applyAll?:boolean}): Promise<LogConfigOut> {
-  const r = await fetch(`${API_BASE}/logs/config`, {
+  return apiFetch('/logs/config', {
     method: 'PUT',
-    headers: authHeaders(),
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   })
-  if (!r.ok) throw new Error('Falha ao salvar configuração')
-  return r.json()
 }
 
 export type SummaryRow = {
@@ -40,10 +26,11 @@ export type SummaryRow = {
 export type SummaryResp = { page:number; pageSize:number; total:number; items:SummaryRow[] }
 
 export async function fetchLogsSummary(params: {page?:number; pageSize?:number; screen?:string; action?:'CREATE'|'READ'|'UPDATE'|'DELETE'; onlyActive?:boolean} = {}): Promise<SummaryResp> {
-  const u = new URL(`${API_BASE}/logs/summary`)
-  Object.entries(params).forEach(([k,v]) => { if (v!==undefined && v!==null && v!=='') u.searchParams.set(k, String(v)) })
-  const r = await fetch(u.toString(), { headers: authHeaders() })
-  if (!r.ok) throw new Error('Falha ao carregar visão geral')
-  return r.json()
+  const urlParams = new URLSearchParams()
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') urlParams.set(k, String(v))
+  })
+  const qs = urlParams.toString()
+  return apiFetch(`/logs/summary${qs ? `?${qs}` : ''}`)
 }
 

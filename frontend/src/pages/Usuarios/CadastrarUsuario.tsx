@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import axios from 'axios'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import '../../styles/CadastrarUsuario.css'
 import '../../styles/Forms.css'
 import useDirtyForm from '@/hooks/useDirtyForm'
-import { API_BASE, getAuthToken } from '@/services/api'
+
+import { apiFetch, getAuthToken } from '@/services/api'
+
 
 type MeuPerfil = { id_usuario?: number; tipo_perfil?: string; is_master?: boolean }
 
@@ -67,6 +68,7 @@ const CadastrarUsuario: React.FC = () => {
 
   const navigate = useNavigate()
 
+
   // Obtém headers com JWT ou redireciona para login
   const authHeaders = () => {
     const t = getAuthToken()
@@ -76,6 +78,7 @@ const CadastrarUsuario: React.FC = () => {
     }
     return { Authorization: `Bearer ${t}` }
   }
+
 
   const { isDirty, setDirty, confirmIfDirty } = useDirtyForm()
 
@@ -88,11 +91,13 @@ const CadastrarUsuario: React.FC = () => {
   useEffect(() => {
     const check = async () => {
       try {
+
         const headers = authHeaders()
         if (!headers) return
         const r = await fetch(`${API_BASE}/usuarios/me`, { headers })
         if (r.ok) {
           const m = (await r.json()) as MeuPerfil
+
           const p = toCanonical(m.tipo_perfil || '')
           const isMaster = Boolean(m.is_master || p === 'master')
           const autorizado = isMaster || PERFIS_PERMITIDOS.has(p)
@@ -100,10 +105,12 @@ const CadastrarUsuario: React.FC = () => {
           setMeuId(m.id_usuario)
           setMeuPerfil(p)
           setSouMaster(isMaster)
+
         } else if (r.status === 401) {
           navigate('/login')
           return
         } else {
+
           const claims = getClaimsFromToken()
           const p = toCanonical((claims?.role || claims?.perfil || claims?.tipo_perfil || '').toString())
           const id = claims?.sub ? Number(claims.sub) : undefined
@@ -114,11 +121,13 @@ const CadastrarUsuario: React.FC = () => {
           setMeuPerfil(p)
           setSouMaster(isMaster)
         }
+
         try { await fetch(`${API_BASE}/usuarios/log-perfil`, { headers }) } catch {}
       } catch {}
     }
     check()
   }, [API_BASE, navigate])
+
 
   // Se entrou com ?id, carrega dados para editar
   useEffect(() => {
@@ -126,10 +135,12 @@ const CadastrarUsuario: React.FC = () => {
     const headers = authHeaders()
     if (!headers) return
     setCarregandoEdicao(true); setErro(''); setSucesso('')
+
     axios
       .get(`${API_BASE}/usuarios/${idEdicao}`, { headers })
       .then((res) => {
         const u = res.data
+
         setNome(u.nome)
         setEmail(u.email)
         setPerfil(toCanonical(u.tipo_perfil))
@@ -138,12 +149,14 @@ const CadastrarUsuario: React.FC = () => {
         setNumeroCelular(u.numero_celular)
         setDirty(false)
       })
+
       .catch((e) => {
         if (e?.response?.status === 401) navigate('/login')
         else setErro(e?.response?.data?.detail || 'Falha ao carregar usuário.')
       })
       .finally(() => setCarregandoEdicao(false))
   }, [API_BASE, idEdicao, navigate])
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -165,6 +178,7 @@ const CadastrarUsuario: React.FC = () => {
         setSucesso('Usuário atualizado com sucesso.')
       } else {
         await axios.post(`${API_BASE}/usuarios`, body, { headers: jsonHeaders })
+
         setSucesso('Usuário cadastrado com sucesso.')
         setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
       }
@@ -172,8 +186,10 @@ const CadastrarUsuario: React.FC = () => {
       setDirty(false)
       setTimeout(() => navigate('/usuarios/consultar'), 700)
     } catch (err: any) {
+
       if (err?.response?.status === 401) navigate('/login')
       else setErro(err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
+
     } finally {
       setEnviando(false)
     }
@@ -196,12 +212,15 @@ const CadastrarUsuario: React.FC = () => {
     const headers = authHeaders()
     if (!headers) return
     try {
-      await axios.delete(`${API_BASE}/usuarios/${idEdicao}`, { headers })
+
+      await apiFetch(`/usuarios/${idEdicao}`, { method: 'DELETE' })
       alert('Usuário excluído com sucesso.')
       navigate('/usuarios/consultar')
+
     } catch (e: any) {
       if (e?.response?.status === 401) navigate('/login')
       else setErro(e?.response?.data?.detail || 'Falha ao excluir usuário.')
+
     }
   }
 
