@@ -6,7 +6,7 @@ import '../../../styles/CadastrarUsuario.css'
 import { AnoLetivo, getAnoLetivos } from '../../../services/anoLetivo'
 import { API_BASE, getAuthToken } from '../../../services/api'
 
-const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
+const PERFIS_PERMITIDOS = new Set(['master', 'diretor'])
 
 const toCanonical = (perfil: string) => {
   const p = (perfil || '').toLowerCase()
@@ -76,12 +76,16 @@ const AnoLetivoPage: React.FC = () => {
                 <td>{formatar(a.data_inicio)}</td>
                 <td>{formatar(a.data_fim)}</td>
                 <td>
-                  <button className="btn secundario" onClick={() => {}} disabled={!podeGerenciar}>
-                    Editar
-                  </button>
-                  <button className="btn perigo" onClick={() => {}} disabled={!podeGerenciar}>
-                    Excluir
-                  </button>
+                  {podeGerenciar && (
+                    <>
+                      <button className="btn secundario" onClick={() => {}}>
+                        Editar
+                      </button>
+                      <button className="btn perigo" onClick={() => {}}>
+                        Excluir
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
