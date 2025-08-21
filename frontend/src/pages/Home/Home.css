@@ -9,7 +9,7 @@
 
 /* Estilo do título principal */
 .home-container h1 {
-  color: #5e17eb; /* Roxo institucional */
+  color: var(--text-color); /* Roxo institucional */
   font-size: 32px;
   margin-bottom: 12px;
 }
@@ -17,5 +17,5 @@
 /* Estilo do subtítulo */
 .home-container p {
   font-size: 18px;
-  color: #444;
+  color: var(--text-color);
 }

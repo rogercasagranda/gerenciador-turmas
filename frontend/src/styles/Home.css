@@ -37,7 +37,7 @@ body { /* Aplica ao corpo do documento */
   top: 0;                       /* Ancoragem no topo da página */
   z-index: 50;                  /* Garante sobreposição sobre o conteúdo */
   background: linear-gradient(90deg, var(--pp-purple-900), var(--pp-purple-700)); /* Aplica degradê roxo */
-  color: #fff;                  /* Define texto branco para contraste */
+  color: var(--text-color);                  /* Define texto branco para contraste */
   display: flex;                /* Define layout em linha para título e ações */
   align-items: center;          /* Centraliza verticalmente os itens */
   justify-content: space-between; /* Separa título do botão sair */
@@ -85,7 +85,7 @@ body { /* Aplica ao corpo do documento */
   display: block;                /* Garante caixa de renderização */
   width: 20px;                   /* Define largura do ícone */
   height: 2px;                   /* Define espessura da linha central */
-  background: #fff;              /* Define cor branca para contraste */
+  background: var(--primary-color);              /* Define cor branca para contraste */
 }
 .icon-lines::before,             /* Seleciona linha superior */
 .icon-lines::after {             /* Seleciona linha inferior */
@@ -94,7 +94,7 @@ body { /* Aplica ao corpo do documento */
   left: 0;                       /* Alinha à esquerda do ícone */
   width: 20px;                   /* Define largura igual à linha central */
   height: 2px;                   /* Define espessura igual à linha central */
-  background: #fff;              /* Define cor branca */
+  background: var(--primary-color);              /* Define cor branca */
 }
 .icon-lines::before { top: -6px; } /* Posiciona a linha superior acima da central */
 .icon-lines::after  { top:  6px; } /* Posiciona a linha inferior abaixo da central */
@@ -151,7 +151,7 @@ body { /* Aplica ao corpo do documento */
   color: var(--pp-purple-900);     /* Usa tom roxo escuro para o texto */
   cursor: pointer;                 /* Indica que é clicável */
 }
-.nav-link:hover { background: #e9defc; } /* Realça visual ao hover */
+.nav-link:hover { background: var(--primary-color); } /* Realça visual ao hover */
 
 /* Indicador de seta do submenu */
 .caret { /* Cria um ícone de seta leve com CSS */
@@ -183,7 +183,7 @@ body { /* Aplica ao corpo do documento */
 
 /* Links internos do submenu */
 .submenu-link { /* Estiliza cada opção do submenu */
-  background: #ffffff;            /* Define fundo branco para contraste */
+  background: var(--primary-color);            /* Define fundo branco para contraste */
   border: 1px solid #eee6ff;      /* Delimita com borda suave */
   border-radius: 10px;            /* Arredonda cantos do botão */
   padding: 10px 12px;             /* Define espaçamento interno */
@@ -192,7 +192,7 @@ body { /* Aplica ao corpo do documento */
   cursor: pointer;                /* Indica elemento clicável */
   transition: background .15s ease; /* Transição suave para hover */
 }
-.submenu-link:hover { background: #f7f3ff; } /* Realça ao passar o mouse */
+.submenu-link:hover { background: var(--primary-color); } /* Realça ao passar o mouse */
 
 /* Área principal do conteúdo */
 .home-content { /* Delimita a área onde páginas carregam */
@@ -216,13 +216,13 @@ body { /* Aplica ao corpo do documento */
 /* Rodapé fixo enxuto */
 .home-footer { /* Estiliza a faixa de rodapé */
   background: var(--pp-purple-900); /* Repete a base do cabeçalho */
-  color: #fff;                    /* Define texto branco */
+  color: var(--text-color);                    /* Define texto branco */
   padding: 10px 16px;             /* Define espaçamento */
   text-align: center;             /* Centraliza o conteúdo */
 }
 
 .home-footer a {
-  color: #fff;
+  color: var(--text-color);
   text-decoration: underline;
   display: block;
   margin-top: 4px;
