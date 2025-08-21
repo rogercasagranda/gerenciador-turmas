@@ -1,5 +1,5 @@
 // Importa React e hooks necessários
-import React, { useEffect, useState, useCallback, Suspense } from 'react'
+import React, { useEffect, useState, useCallback, Suspense, useMemo } from 'react'
 // Importa utilitários de rota
 import { useNavigate, useLocation } from 'react-router-dom'
 // Importa CSS da Home (layout travado)
@@ -7,9 +7,7 @@ import '../../styles/Home.css'
 import '../../styles/Home.lock.css'
 import { loadThemeFromStorage } from '../../theme/utils'
 import { apiFetch, getAuthToken } from '@/services/api'
-import { safeAlert } from '@/utils/safeAlert'
 
-const PERFIS_PERMITIDOS = new Set(['master', 'diretor', 'secretaria'])
 const toCanonical = (perfil: string) => (perfil || '').toLowerCase()
 
 // Carrega páginas internas com import dinâmico
@@ -52,13 +50,22 @@ const Home: React.FC = () => {
   const [submenuConfigAberto, setSubmenuConfigAberto] = useState(false) // Controle do submenu Configuração
   const [submenuLogsAberto, setSubmenuLogsAberto] = useState(false) // Controle do submenu Logs
   const [submenuAcessosAberto, setSubmenuAcessosAberto] = useState(false) // Controle do submenu Acessos
-  const [permissions, setPermissions] = useState<Set<string>>(new Set())
+  const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>({})
   const [isMaster, setIsMaster] = useState(false)
-  const [podeUsuarios, setPodeUsuarios] = useState(false)
 
   // Roteamento
   const navigate = useNavigate()
   const location = useLocation()
+
+  const fetchPermissions = useCallback(() => {
+    apiFetch('/me/permissions/effective')
+      .then((data: Record<string, Record<string, boolean>>) => {
+        const perms = data || {}
+        setPermissions(perms)
+        try { localStorage.setItem('permissions.effective', JSON.stringify(perms)) } catch {}
+      })
+      .catch(() => setPermissions({}))
+  }, [])
 
   // Verifica sessão ativa ao montar
   useEffect(() => {
@@ -69,14 +76,10 @@ const Home: React.FC = () => {
       .then((data: any) => {
         if (!data) return
         const perfil = toCanonical(data.tipo_perfil)
-        const effective: string[] = data.permissions?.effective || []
-        setPermissions(new Set(effective))
-        const temPermissaoCadastro = effective.some((p: string) => p.startsWith('/cadastro'))
-        setPodeUsuarios(temPermissaoCadastro || PERFIS_PERMITIDOS.has(perfil))
-        try { localStorage.setItem('permissions.effective', JSON.stringify(effective)) } catch {}
         setIsMaster(Boolean(data.is_master))
         try { localStorage.setItem('user_id', String(data.id_usuario)) } catch {}
         loadThemeFromStorage()
+        fetchPermissions()
       })
       .catch(() => {
         const claims = getClaimsFromToken()
@@ -84,17 +87,22 @@ const Home: React.FC = () => {
           (claims?.role || claims?.perfil || claims?.tipo_perfil || '') as string,
         )
         const isMaster = perfil === 'master'
-        setPodeUsuarios(isMaster || PERFIS_PERMITIDOS.has(perfil))
         setIsMaster(isMaster)
       })
-  }, [navigate])
+  }, [navigate, fetchPermissions])
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem('permissions.effective')
-      if (raw) setPermissions(new Set(JSON.parse(raw)))
+      if (raw) setPermissions(JSON.parse(raw))
     } catch {}
   }, [])
+
+  useEffect(() => {
+    const handler = () => fetchPermissions()
+    window.addEventListener('permissions:refresh', handler)
+    return () => window.removeEventListener('permissions:refresh', handler)
+  }, [fetchPermissions])
 
   // Fecha drawer a cada navegação
   useEffect(() => {
@@ -125,14 +133,35 @@ const Home: React.FC = () => {
     if (path.includes('/configuracao/logs') && !isMaster) navigate('/home')
   }, [location.pathname, location.hash, isMaster, navigate])
 
-  const can = useCallback((p: string) => permissions.has(p), [permissions])
+  const can = useCallback(
+    (p: string, op?: string) => {
+      const ops = permissions[p]
+      if (!ops) return false
+      return op ? !!ops[op] : Object.values(ops).some(Boolean)
+    },
+    [permissions],
+  )
+
+  const canCadastro = useMemo(() => {
+    const paths = [
+      '/cadastro/turmas',
+      '/cadastro/alunos',
+      '/cadastro/disciplinas',
+      '/cadastro/turnos',
+      '/cadastro/professores',
+      '/cadastro/responsaveis',
+      '/cadastro/ano-letivo',
+      '/cadastro/feriados',
+    ]
+    return paths.some((p) => can(p))
+  }, [can])
 
 
   // Renderiza conteúdo interno
   const renderConteudo = () => {
     const path = getPath()
 
-    if (path.includes('/cadastro/turmas') && podeUsuarios) { // Página de cadastro de turmas
+    if (path.includes('/cadastro/turmas') && can('/cadastro/turmas', 'view')) { // Página de cadastro de turmas
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <CadTurmas />
@@ -140,7 +169,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/cadastro/alunos') && podeUsuarios) { // Página de cadastro de alunos
+    if (path.includes('/cadastro/alunos') && can('/cadastro/alunos', 'view')) { // Página de cadastro de alunos
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <CadAlunos />
@@ -148,7 +177,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/cadastro/disciplinas') && podeUsuarios) { // Página de cadastro de disciplinas
+    if (path.includes('/cadastro/disciplinas') && can('/cadastro/disciplinas', 'view')) { // Página de cadastro de disciplinas
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <CadDisciplinas />
@@ -156,7 +185,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/cadastro/turnos') && podeUsuarios) { // Página de cadastro de turnos
+    if (path.includes('/cadastro/turnos') && can('/cadastro/turnos', 'view')) { // Página de cadastro de turnos
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <CadTurnos />
@@ -164,7 +193,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/cadastro/professores') && podeUsuarios) { // Página de cadastro de professores
+    if (path.includes('/cadastro/professores') && can('/cadastro/professores', 'view')) { // Página de cadastro de professores
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <CadProfessores />
@@ -172,7 +201,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/cadastro/responsaveis') && podeUsuarios) { // Página de cadastro de responsáveis
+    if (path.includes('/cadastro/responsaveis') && can('/cadastro/responsaveis', 'view')) { // Página de cadastro de responsáveis
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <CadResponsaveis />
@@ -180,7 +209,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/cadastro/feriados') && podeUsuarios) { // Página de cadastro de feriados
+    if (path.includes('/cadastro/feriados') && can('/cadastro/feriados', 'view')) { // Página de cadastro de feriados
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <CadFeriados />
@@ -188,7 +217,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/cadastro/ano-letivo') && podeUsuarios) { // Página de cadastro de ano letivo
+    if (path.includes('/cadastro/ano-letivo') && can('/cadastro/ano-letivo', 'view')) { // Página de cadastro de ano letivo
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <CadAnoLetivo />
@@ -196,7 +225,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/configuracao/usuarios/cadastrar') && can('/configuracao/usuarios/cadastrar')) {
+    if (path.includes('/configuracao/usuarios/cadastrar') && can('/configuracao/usuarios/cadastrar', 'view')) {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <CadastrarUsuario />
@@ -204,7 +233,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/configuracao/usuarios/consultar') && can('/configuracao/usuarios/consultar')) {
+    if (path.includes('/configuracao/usuarios/consultar') && can('/configuracao/usuarios/consultar', 'view')) {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <ConsultarUsuario />
@@ -212,7 +241,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/configuracao/acessos/consultar') && can('/configuracao/acessos/consultar')) {
+    if (path.includes('/configuracao/acessos/consultar') && can('/configuracao/acessos/consultar', 'view')) {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <AcessosConsultar />
@@ -220,7 +249,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/configuracao/acessos/usuario') && can('/configuracao/acessos/usuario')) {
+    if (path.includes('/configuracao/acessos/usuario') && can('/configuracao/acessos/usuario', 'view')) {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <AcessoUsuario />
@@ -228,7 +257,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/configuracao/acessos/grupo') && can('/configuracao/acessos/grupo')) {
+    if (path.includes('/configuracao/acessos/grupo') && can('/configuracao/acessos/grupo', 'view')) {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <AcessoGrupo />
@@ -236,7 +265,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/configuracao/ano-letivo') && can('/configuracao/ano-letivo')) {
+    if (path.includes('/configuracao/ano-letivo') && can('/configuracao/ano-letivo', 'view')) {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <ConfigAnoLetivo />
@@ -259,7 +288,7 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/configuracao/tema') && can('/configuracao/tema')) {
+    if (path.includes('/configuracao/tema') && can('/configuracao/tema', 'view')) {
       return (
         <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
           <ConfigurarTema />
@@ -312,50 +341,66 @@ const Home: React.FC = () => {
           role="navigation"
           aria-label="Menu lateral"
         >
-          <nav className="nav">
-            {podeUsuarios && ( // Menu Cadastro visível apenas a perfis autorizados
-              <div
-                className="nav-item"
-                onMouseEnter={() => setSubmenuCadastroAberto(true)} // Abre submenu ao passar o mouse
-                onMouseLeave={() => setSubmenuCadastroAberto(false)} // Fecha submenu ao sair
-              >
-                <button
-                  className="nav-link"
-                  onClick={() => setSubmenuCadastroAberto(!submenuCadastroAberto)} // Alterna abertura
-                  aria-haspopup="true" // Indica que possui submenu
-                  aria-expanded={submenuCadastroAberto} // Estado de expansão
+            <nav className="nav">
+              {canCadastro && (
+                <div
+                  className="nav-item"
+                  onMouseEnter={() => setSubmenuCadastroAberto(true)}
+                  onMouseLeave={() => setSubmenuCadastroAberto(false)}
                 >
-                  Cadastro
-                  <span className={`caret ${submenuCadastroAberto ? 'caret--up' : 'caret--down'}`} />
-                </button>
-                <div className={`submenu ${submenuCadastroAberto ? 'submenu--open' : ''}`}> {/* Container do submenu */}
-                  <button className="submenu-link" onClick={() => navigate('/cadastro/turmas')}>
-                    Turmas
+                  <button
+                    className="nav-link"
+                    onClick={() => setSubmenuCadastroAberto(!submenuCadastroAberto)}
+                    aria-haspopup="true"
+                    aria-expanded={submenuCadastroAberto}
+                  >
+                    Cadastro
+                    <span className={`caret ${submenuCadastroAberto ? 'caret--up' : 'caret--down'}`} />
                   </button>
-                  <button className="submenu-link" onClick={() => navigate('/cadastro/alunos')}>
-                    Alunos
-                  </button>
-                  <button className="submenu-link" onClick={() => navigate('/cadastro/disciplinas')}>
-                    Disciplinas
-                  </button>
-                  <button className="submenu-link" onClick={() => navigate('/cadastro/turnos')}>
-                    Turnos
-                  </button>
-                  <button className="submenu-link" onClick={() => navigate('/cadastro/professores')}>
-                    Professores
-                  </button>
-                  <button className="submenu-link" onClick={() => navigate('/cadastro/responsaveis')}>
-                    Responsáveis
-                  </button>
-                  <button className="submenu-link" onClick={() => navigate('/cadastro/ano-letivo')}>
-                    Ano Letivo
-                  </button>
-                  <button className="submenu-link" onClick={() => navigate('/cadastro/feriados')}>
-                    Feriados
-                  </button>
+                  <div className={`submenu ${submenuCadastroAberto ? 'submenu--open' : ''}`}>
+                    {can('/cadastro/turmas') && (
+                      <button className="submenu-link" onClick={() => navigate('/cadastro/turmas')}>
+                        Turmas
+                      </button>
+                    )}
+                    {can('/cadastro/alunos') && (
+                      <button className="submenu-link" onClick={() => navigate('/cadastro/alunos')}>
+                        Alunos
+                      </button>
+                    )}
+                    {can('/cadastro/disciplinas') && (
+                      <button className="submenu-link" onClick={() => navigate('/cadastro/disciplinas')}>
+                        Disciplinas
+                      </button>
+                    )}
+                    {can('/cadastro/turnos') && (
+                      <button className="submenu-link" onClick={() => navigate('/cadastro/turnos')}>
+                        Turnos
+                      </button>
+                    )}
+                    {can('/cadastro/professores') && (
+                      <button className="submenu-link" onClick={() => navigate('/cadastro/professores')}>
+                        Professores
+                      </button>
+                    )}
+                    {can('/cadastro/responsaveis') && (
+                      <button className="submenu-link" onClick={() => navigate('/cadastro/responsaveis')}>
+                        Responsáveis
+                      </button>
+                    )}
+                    {can('/cadastro/ano-letivo') && (
+                      <button className="submenu-link" onClick={() => navigate('/cadastro/ano-letivo')}>
+                        Ano Letivo
+                      </button>
+                    )}
+                    {can('/cadastro/feriados') && (
+                      <button className="submenu-link" onClick={() => navigate('/cadastro/feriados')}>
+                        Feriados
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             <div className="nav-item">
               <button className="nav-link" onClick={() => alert('Módulo “Turmas” em desenvolvimento.')}> 

@@ -60,6 +60,7 @@ const AcessoGrupo: React.FC = () => {
   const salvar = async () => {
     if (!grupoId) return
     await salvarPermissoesGrupo(Number(grupoId), permissoes)
+    window.dispatchEvent(new Event('permissions:refresh'))
   }
 
   return (
