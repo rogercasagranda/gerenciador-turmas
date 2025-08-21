@@ -3,6 +3,7 @@ from fastapi import FastAPI
 
 # Importa o middleware CORS
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 # Importa o roteador da rota de login padrão
 from app.routes import login
@@ -14,9 +15,8 @@ from app.routes import auth_google_route
 app = FastAPI()
 
 # Configura as origens permitidas (ajustar para produção conforme necessário)
-origins = [
-    "http://localhost:5173",  # Frontend em ambiente local
-]
+origins_env = os.getenv("FRONTEND_ORIGINS")
+origins = origins_env.split(",") if origins_env else ["*"]
 
 # Adiciona o middleware CORS para permitir acesso entre domínios
 app.add_middleware(
