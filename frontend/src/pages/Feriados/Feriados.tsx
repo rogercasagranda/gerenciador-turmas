@@ -28,10 +28,12 @@ const Feriados: React.FC = () => {
   const [data, setData] = useState('')
   const [descricao, setDescricao] = useState('')
   const [erro, setErro] = useState('')
+  const [salvando, setSalvando] = useState(false)
 
   // Estados da importação
   const [importAberto, setImportAberto] = useState(false)
   const [linhas, setLinhas] = useState<LinhaImportada[]>([])
+  const [importSalvando, setImportSalvando] = useState(false)
 
   // Busca anos e feriados
   useEffect(() => {
@@ -65,15 +67,27 @@ const Feriados: React.FC = () => {
     setData('')
     setDescricao('')
     setErro('')
+    setSalvando(false)
     setFormAberto(true)
+  }
+
+  const fecharForm = () => {
+    setFormAberto(false)
+    setAnoId('')
+    setData('')
+    setDescricao('')
+    setErro('')
+    setSalvando(false)
   }
 
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (salvando) return
     setErro('')
+    setSalvando(true)
     try {
       await createFeriado({ ano_letivo_id: Number(anoId), data, descricao, origem: 'ESCOLA' })
-      setFormAberto(false)
+      fecharForm()
       // Recarrega anos/feriados
       const a = await getAnoLetivos()
       setAnos(a)
@@ -82,6 +96,8 @@ const Feriados: React.FC = () => {
       if (msg.includes('409')) setErro('Feriado já cadastrado.')
       else if (msg.includes('422')) setErro('Dados inválidos.')
       else setErro('Falha ao salvar feriado.')
+    } finally {
+      setSalvando(false)
     }
   }
 
@@ -128,13 +144,25 @@ const Feriados: React.FC = () => {
     reader.readAsText(file)
   }
 
-  const salvarImport = async () => {
-    for (const l of linhas.filter(l => !l.erro)) {
-      await createFeriado({ ano_letivo_id: l.ano, data: l.data, descricao: l.descricao, origem: 'ESCOLA' })
-    }
+  const fecharImport = () => {
     setImportAberto(false)
-    const a = await getAnoLetivos()
-    setAnos(a)
+    setLinhas([])
+    setImportSalvando(false)
+  }
+
+  const salvarImport = async () => {
+    if (importSalvando) return
+    setImportSalvando(true)
+    try {
+      for (const l of linhas.filter(l => !l.erro)) {
+        await createFeriado({ ano_letivo_id: l.ano, data: l.data, descricao: l.descricao, origem: 'ESCOLA' })
+      }
+      fecharImport()
+      const a = await getAnoLetivos()
+      setAnos(a)
+    } finally {
+      setImportSalvando(false)
+    }
   }
 
   const total = linhas.length
@@ -143,7 +171,7 @@ const Feriados: React.FC = () => {
 
   const botoes = (
     <>
-      <button className="btn secundario" onClick={() => { setLinhas([]); setImportAberto(true) }}>Importar Feriados</button>
+      <button className="btn secundario" onClick={() => { setLinhas([]); setImportSalvando(false); setImportAberto(true) }}>Importar Feriados</button>
       <button className="btn primario button" onClick={abrirNovo}>+ Novo Feriado</button>
     </>
   )
@@ -197,8 +225,10 @@ const Feriados: React.FC = () => {
               <input type="text" className="entrada" value={descricao} onChange={e => setDescricao(e.target.value)} />
             </label>
             <div className="modal-acoes">
-              <button type="button" className="btn secundario" onClick={() => setFormAberto(false)}>Cancelar</button>
-              <button type="submit" className="btn primario button" disabled={!anoId || !data || !descricao.trim()}>Salvar</button>
+              <button type="button" className="btn secundario" onClick={fecharForm}>Cancelar</button>
+              <button type="submit" className="btn primario button" disabled={salvando || !anoId || !data || !descricao.trim()}>
+                {salvando ? 'Salvando…' : 'Salvar'}
+              </button>
             </div>
           </form>
         </div>
@@ -236,8 +266,10 @@ const Feriados: React.FC = () => {
               </>
             )}
             <div className="modal-acoes">
-              <button className="btn secundario" type="button" onClick={() => setImportAberto(false)}>Cancelar</button>
-              <button className="btn primario button" type="button" onClick={salvarImport} disabled={validas === 0}>Salvar</button>
+              <button className="btn secundario" type="button" onClick={fecharImport}>Cancelar</button>
+              <button className="btn primario button" type="button" onClick={salvarImport} disabled={importSalvando || validas === 0}>
+                {importSalvando ? 'Salvando…' : 'Salvar'}
+              </button>
             </div>
           </div>
         </div>
