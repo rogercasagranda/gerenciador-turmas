@@ -3,47 +3,61 @@
   <head>
     <!-- Define o charset como UTF-8 para suporte a caracteres especiais -->
     <meta charset="UTF-8" />
-    <script>
-      (function () {
-        var root = document.documentElement;
-        var THEME_KEY = 'pp.theme';
-        var MODE_KEY = 'pp.mode';
-        var LEGACY_THEME_KEY = 'pp_theme';
-        var LEGACY_MODE_KEY = 'pp_mode';
+      <script>
+        (function () {
+          var root = document.documentElement;
+          var THEME_KEY = 'pp.theme';
+          var MODE_KEY = 'pp.mode';
+          var LEGACY_THEME_KEY = 'pp_theme';
+          var LEGACY_MODE_KEY = 'pp_mode';
+          var COLORS = {
+            roxo: '#6D28D9',
+            vermelho: '#EF4444',
+            azul: '#3B82F6',
+            verde: '#10B981',
+            laranja: '#F59E0B',
+            cinza: '#6B7280',
+            rosa: '#EC4899',
+            ciano: '#06B6D4'
+          };
 
-        var theme = localStorage.getItem(THEME_KEY);
-        if (!theme) {
-          var legacyTheme = localStorage.getItem(LEGACY_THEME_KEY);
-          if (legacyTheme) {
-            theme = legacyTheme;
-            localStorage.setItem(THEME_KEY, theme);
-            try { localStorage.removeItem(LEGACY_THEME_KEY); } catch (e) {}
-          } else {
-            theme = 'roxo';
+          var theme = localStorage.getItem(THEME_KEY);
+          if (!theme) {
+            var legacyTheme = localStorage.getItem(LEGACY_THEME_KEY);
+            if (legacyTheme) {
+              theme = legacyTheme;
+              localStorage.setItem(THEME_KEY, theme);
+              try { localStorage.removeItem(LEGACY_THEME_KEY); } catch (e) {}
+            } else {
+              theme = 'roxo';
+            }
           }
-        }
 
-        var mode = localStorage.getItem(MODE_KEY);
-        if (!mode) {
-          var legacyMode = localStorage.getItem(LEGACY_MODE_KEY);
-          if (legacyMode) {
-            mode = legacyMode;
-            localStorage.setItem(MODE_KEY, mode);
-            try { localStorage.removeItem(LEGACY_MODE_KEY); } catch (e) {}
-          } else {
-            mode = 'light';
+          var mode = localStorage.getItem(MODE_KEY);
+          if (!mode) {
+            var legacyMode = localStorage.getItem(LEGACY_MODE_KEY);
+            if (legacyMode) {
+              mode = legacyMode;
+              localStorage.setItem(MODE_KEY, mode);
+              try { localStorage.removeItem(LEGACY_MODE_KEY); } catch (e) {}
+            } else {
+              mode = 'light';
+            }
           }
-        }
 
-        root.setAttribute('data-theme', theme);
-        root.setAttribute('data-mode', mode);
-      })();
-    </script>
-    <!-- Define como o site deve se comportar em dispositivos móveis -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- Define a cor da barra superior no mobile -->
-    <meta name="theme-color" content="#ffffff" />
+          root.setAttribute('data-theme', theme);
+          root.setAttribute('data-mode', mode);
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute('name', 'theme-color');
+            document.head.appendChild(meta);
+          }
+          meta.setAttribute('content', COLORS[theme] || COLORS['roxo']);
+        })();
+      </script>
+      <!-- Define como o site deve se comportar em dispositivos móveis -->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Define o nome do aplicativo para instalação no PWA -->
     <meta name="apple-mobile-web-app-title" content="Portal do Professor" />

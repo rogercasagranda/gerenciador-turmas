@@ -4,6 +4,17 @@ export type ModeKey  = 'light'|'dark'
 
 export const THEME_OPTIONS: ThemeName[] = ['roxo','vermelho','azul','verde','laranja','cinza','rosa','ciano']
 
+export const THEME_COLORS: Record<ThemeName, string> = {
+  roxo: '#6D28D9',
+  vermelho: '#EF4444',
+  azul: '#3B82F6',
+  verde: '#10B981',
+  laranja: '#F59E0B',
+  cinza: '#6B7280',
+  rosa: '#EC4899',
+  ciano: '#06B6D4'
+}
+
 const THEME_KEY = 'pp.theme'
 const MODE_KEY  = 'pp.mode'
 const LEGACY_THEME_KEY = 'pp_theme'
@@ -54,6 +65,11 @@ export function applyTheme(theme: ThemeName, mode: ModeKey = 'light') {
   }
   if (root.getAttribute('data-mode') !== mode) {
     root.setAttribute('data-mode', mode)
+  }
+  const meta = document.querySelector('meta[name="theme-color"]')
+  const color = THEME_COLORS[theme] || THEME_COLORS.roxo
+  if (meta && meta.getAttribute('content') !== color) {
+    meta.setAttribute('content', color)
   }
 }
 
