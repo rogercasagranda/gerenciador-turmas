@@ -8,6 +8,7 @@ import Home from './pages/Home/Home'
 
 import PoliticaDeCookies from './pages/PoliticaDeCookies'
 import RouteGuard from './routes/RouteGuard'
+import routesConfig from './routes/routesConfig'
 
 
 // Componente principal da aplicação
@@ -30,14 +31,13 @@ const App: React.FC = () => {
       {/* Rotas de cadastro; montam a Home para exibir conteúdo interno */}
       <Route path="/cadastro/*" element={<RouteGuard><Home /></RouteGuard>} />
 
-      {/* Garante que qualquer rota de Usuários monte a Home e carregue o conteúdo dentro dela */}
-      <Route path="/usuarios/*" element={<RouteGuard><Home /></RouteGuard>} />
+      {/* Rotas de configuração definidas no arquivo de rotas */}
+      {routesConfig.map((r) => (
+        <Route key={r.path} path={r.path} element={<RouteGuard><Home /></RouteGuard>} />
+      ))}
 
-      {/* Rotas de configuração */}
-      <Route path="/config/*" element={<RouteGuard><Home /></RouteGuard>} />
-
-      {/* Página institucional: Política de Cookies */}
-      <Route path="/politica-de-cookies" element={<PoliticaDeCookies />} />
+      {/* Página de acesso negado */}
+      <Route path="/403" element={<RouteGuard><Home /></RouteGuard>} />
 
       {/* Fallback opcional para rotas desconhecidas */}
       <Route path="*" element={<Navigate to="/login" replace />} />

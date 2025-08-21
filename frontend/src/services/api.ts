@@ -268,8 +268,7 @@ async function apiRequest<T = unknown>(
   }
 }
 
-// Exporta também a versão mais completa para usos avançados
-export { apiRequest }
+
 
 // ============================================================
 // Endpoints específicos utilizados pelo Portal do Professor
