@@ -45,6 +45,17 @@ const Login: React.FC = () => {
     } catch {}
   }
 
+  // Redireciona para Home se já houver token armazenado
+  useEffect(() => {
+    try {
+      const tokenLocal = localStorage.getItem('auth_token');
+      const tokenSession = sessionStorage.getItem('auth_token');
+      if (tokenLocal || tokenSession) {
+        navigate('/home');
+      }
+    } catch {}
+  }, [navigate]);
+
 
   // Verifica se veio err=USER_NOT_FOUND na URL (fluxo Google)
   useEffect(() => {
