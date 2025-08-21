@@ -75,9 +75,10 @@ def _seed_base(db):
 
 def test_criar_e_revogar():
     client, SessionLocal = _create_client()
+    perms.BRAZIL_TZ = None
     with SessionLocal() as db:
         user, tela = _seed_base(db)
-    inicio = datetime.now(BRAZIL_TZ)
+    inicio = datetime.now()
     fim = inicio + timedelta(hours=1)
     payload = {
         "tela_id": 1,
@@ -88,9 +89,17 @@ def test_criar_e_revogar():
     resp = client.post("/acessos/usuarios/1/temporarias", json=payload)
     assert resp.status_code == 201
     perm_id = resp.json()[0]["id"]
+    # Ativa concede acesso
+    with SessionLocal() as db:
+        allowed, fonte = has_permission(db, 1, "professor", "/x", "view")
+        assert allowed and fonte == "override"
     resp2 = client.patch(f"/acessos/usuarios/1/temporarias/{perm_id}")
     assert resp2.status_code == 200
     assert resp2.json()["status"] == "REVOGADA"
+    # Revogada bloqueia acesso
+    with SessionLocal() as db:
+        allowed, _ = has_permission(db, 1, "professor", "/x", "view")
+        assert not allowed
 
 
 def test_sobreposicao_rejeitada():
@@ -135,6 +144,34 @@ def test_proibe_perfil_aluno():
         "fim": fim.isoformat(),
     }
     resp = client.post("/acessos/usuarios/2/temporarias", json=payload)
+    assert resp.status_code == 400
+
+
+def test_secretaria_nao_recebe_restrita_professor():
+    client, SessionLocal = _create_client()
+    with SessionLocal() as db:
+        user = Usuarios(
+            id_usuario=3,
+            nome="Sec",
+            email="s@example.com",
+            senha_hash="x",
+            tipo_perfil="Secretaria",
+            numero_celular="123",
+            ddd="11",
+            ddi="55",
+        )
+        tela = Tela(name="TelaR", path="/r", restrita_professor=True)
+        db.add_all([user, tela])
+        db.commit()
+    inicio = datetime.now(BRAZIL_TZ)
+    fim = inicio + timedelta(hours=1)
+    payload = {
+        "tela_id": 1,
+        "operacoes": {"view": True},
+        "inicio": inicio.isoformat(),
+        "fim": fim.isoformat(),
+    }
+    resp = client.post("/acessos/usuarios/3/temporarias", json=payload)
     assert resp.status_code == 400
 
 
