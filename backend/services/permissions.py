@@ -87,6 +87,7 @@ def _active_override(db: Session, user_id: int, tela_id: int) -> Dict[str, bool]
         )
         .all()
     )
+    updated = False
     for p in q:
         fim = p.fim
         if (
@@ -96,8 +97,16 @@ def _active_override(db: Session, user_id: int, tela_id: int) -> Dict[str, bool]
             and fim.microsecond == 0
         ):
             fim = fim.replace(hour=23, minute=59, second=59)
+        if now > fim:
+            p.status = PermissaoStatus.EXPIRADA
+            updated = True
+            continue
         if p.inicio <= now <= fim:
+            if updated:
+                db.commit()
             return p.operacoes or {}
+    if updated:
+        db.commit()
     return None
 
 def has_permission(

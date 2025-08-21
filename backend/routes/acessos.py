@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import os
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -17,6 +18,9 @@ from backend.models.usuarios import Usuarios as UsuariosModel
 from backend.routes.usuarios import token_data_from_request, to_canonical
 from backend.utils.pdf import generate_pdf
 from fastapi.responses import Response
+from backend.schemas.permissoes_temp import PermissaoTempIn, PermissaoTempOut
+
+BRAZIL_TZ = ZoneInfo("America/Sao_Paulo")
 
 router = APIRouter(prefix="/acessos", tags=["Acessos"])
 
@@ -98,12 +102,115 @@ def exportar_usuarios_grupo(
     )
 
 
-class PermissaoTempOut(dict):
-    tela: str
-    operacoes: dict
-    inicio: datetime
-    fim: datetime
-    status: str
+@router.post(
+    "/usuarios/{usuario_id}/temporarias",
+    response_model=list[PermissaoTempOut],
+    status_code=201,
+)
+def criar_perm_temp(
+    usuario_id: int,
+    permissoes: list[PermissaoTempIn] | PermissaoTempIn,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Cria permissões temporárias para um usuário."""
+    require_consultar(request)
+    user = (
+        db.query(UsuariosModel)
+        .filter(UsuariosModel.id_usuario == usuario_id)
+        .first()
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    perfil = to_canonical(user.tipo_perfil)
+    if perfil in {"aluno", "responsavel"}:
+        raise HTTPException(status_code=400, detail="Perfil não permite permissões temporárias")
+    if not isinstance(permissoes, list):
+        permissoes = [permissoes]
+    now = datetime.now(BRAZIL_TZ)
+    expiradas = (
+        db.query(UsuarioPermissaoTemp)
+        .filter(
+            UsuarioPermissaoTemp.usuario_id == usuario_id,
+            UsuarioPermissaoTemp.status == PermissaoStatus.ATIVA,
+            UsuarioPermissaoTemp.fim < now,
+        )
+        .all()
+    )
+    for e in expiradas:
+        e.status = PermissaoStatus.EXPIRADA
+    resultados: list[PermissaoTempOut] = []
+    for perm in permissoes:
+        tela = db.query(Tela).filter(Tela.id == perm.tela_id).first()
+        if not tela:
+            raise HTTPException(status_code=404, detail=f"Tela {perm.tela_id} não encontrada")
+        if perfil == "secretaria" and tela.restrita_professor:
+            raise HTTPException(status_code=400, detail="Tela restrita a professores")
+        if perm.fim < perm.inicio:
+            raise HTTPException(status_code=400, detail="Período inválido")
+        overlap = (
+            db.query(UsuarioPermissaoTemp)
+            .filter(
+                UsuarioPermissaoTemp.usuario_id == usuario_id,
+                UsuarioPermissaoTemp.tela_id == perm.tela_id,
+                UsuarioPermissaoTemp.status == PermissaoStatus.ATIVA,
+                UsuarioPermissaoTemp.fim >= perm.inicio,
+                UsuarioPermissaoTemp.inicio <= perm.fim,
+            )
+            .first()
+        )
+        if overlap:
+            raise HTTPException(status_code=400, detail="Período sobreposto")
+        novo = UsuarioPermissaoTemp(
+            usuario_id=usuario_id,
+            tela_id=perm.tela_id,
+            operacoes={k: v for k, v in perm.operacoes.items() if v},
+            inicio=perm.inicio,
+            fim=perm.fim,
+            status=PermissaoStatus.ATIVA,
+        )
+        db.add(novo)
+        db.flush()
+        resultados.append(
+            PermissaoTempOut(
+                id=novo.id,
+                tela_id=novo.tela_id,
+                operacoes=novo.operacoes,
+                inicio=novo.inicio,
+                fim=novo.fim,
+                status=novo.status,
+            )
+        )
+    db.commit()
+    return resultados
+
+
+@router.patch(
+    "/usuarios/{usuario_id}/temporarias/{perm_id}",
+    response_model=PermissaoTempOut,
+)
+def revogar_perm_temp(
+    usuario_id: int,
+    perm_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    require_consultar(request)
+    perm = (
+        db.query(UsuarioPermissaoTemp)
+        .filter(
+            UsuarioPermissaoTemp.id == perm_id,
+            UsuarioPermissaoTemp.usuario_id == usuario_id,
+        )
+        .first()
+    )
+    if not perm:
+        raise HTTPException(status_code=404, detail="Permissão não encontrada")
+    perm.status = PermissaoStatus.REVOGADA
+    perm.fim = datetime.now(BRAZIL_TZ)
+    db.commit()
+    db.refresh(perm)
+    return PermissaoTempOut.model_validate(perm)
 
 
 @router.get("/usuarios/{usuario_id}/temporarias")
@@ -114,13 +221,26 @@ def listar_perm_temp(
     db: Session = Depends(get_db),
 ):
     require_consultar(request)
+    now = datetime.now(BRAZIL_TZ)
+    expiradas = (
+        db.query(UsuarioPermissaoTemp)
+        .filter(
+            UsuarioPermissaoTemp.usuario_id == usuario_id,
+            UsuarioPermissaoTemp.status == PermissaoStatus.ATIVA,
+            UsuarioPermissaoTemp.fim < now,
+        )
+        .all()
+    )
+    for e in expiradas:
+        e.status = PermissaoStatus.EXPIRADA
+    if expiradas:
+        db.commit()
     q = (
         db.query(UsuarioPermissaoTemp, Tela)
         .join(Tela, Tela.id == UsuarioPermissaoTemp.tela_id)
         .filter(UsuarioPermissaoTemp.usuario_id == usuario_id)
     )
     if status == "ativas":
-        now = datetime.utcnow()
         q = q.filter(
             UsuarioPermissaoTemp.status == PermissaoStatus.ATIVA,
             UsuarioPermissaoTemp.inicio <= now,
