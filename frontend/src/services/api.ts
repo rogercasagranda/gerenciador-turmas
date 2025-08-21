@@ -57,6 +57,21 @@ export function clearAuthToken(): void {
   sessionStorage.removeItem("authToken")
 }
 
+// Remove apenas o token armazenado (local ou sessão)
+function clearCurrentAuthToken(): void {
+  if (localStorage.getItem("authToken") !== null) {
+    localStorage.removeItem("authToken")
+  } else if (sessionStorage.getItem("authToken") !== null) {
+    sessionStorage.removeItem("authToken")
+  }
+}
+
+// Logout controlado: limpa token atual e redireciona para login
+function logoutControlled(): void {
+  clearCurrentAuthToken()
+  window.location.href = "/login"
+}
+
 // ============================================================
 // Utilitário de requisições (fetch) com headers e tratamento de erros
 // ============================================================
@@ -168,16 +183,24 @@ async function apiRequest<T = unknown>(
     const contentType = res.headers.get("content-type") || ""
     const isJson = contentType.includes("application/json")
 
-    // Se resposta não OK, tenta extrair payload de erro e lança
-    if (!res.ok) {
-      let payload: ApiErrorPayload | undefined
-      try {
-        payload = isJson ? await res.json() : undefined
-      } catch {
-        payload = undefined
+      // Se resposta não OK, trata conforme status
+      if (!res.ok) {
+        let payload: ApiErrorPayload | undefined
+        try {
+          payload = isJson ? await res.json() : undefined
+        } catch {
+          payload = undefined
+        }
+
+        if (res.status === 401 || res.status === 403) {
+          const detail = typeof payload?.detail === "string" ? payload.detail.toLowerCase() : ""
+          if (!payload || detail.includes("token")) {
+            logoutControlled()
+          }
+        }
+
+        raiseHttpError(res, payload)
       }
-      raiseHttpError(res, payload)
-    }
 
     // Se OK e for JSON, retorna objeto tipado T; caso contrário, retorna como any (texto/blob se necessário)
     if (isJson) {
