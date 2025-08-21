@@ -143,8 +143,8 @@ const Feriados: React.FC = () => {
 
   const botoes = (
     <>
-      <button className="btn secundario" onClick={() => { setLinhas([]); setImportAberto(true) }}>Importar Feriados</button>
-      <button className="btn primario button" onClick={abrirNovo}>+ Novo Feriado</button>
+      <button className="button" onClick={() => { setLinhas([]); setImportAberto(true) }}>Importar Feriados</button>
+      <button className="button" onClick={abrirNovo}>+ Novo Feriado</button>
     </>
   )
   return (
@@ -166,7 +166,7 @@ const Feriados: React.FC = () => {
                 <td>{formatar(f.data)}</td>
                 <td>{f.descricao}</td>
                 <td>
-                  <button className="btn perigo" onClick={() => excluir(f.id)}>Excluir</button>
+                  <button className="button" onClick={() => excluir(f.id)}>Excluir</button>
                 </td>
               </tr>
             ))}
@@ -197,8 +197,8 @@ const Feriados: React.FC = () => {
               <input type="text" className="entrada" value={descricao} onChange={e => setDescricao(e.target.value)} />
             </label>
             <div className="modal-acoes">
-              <button type="button" className="btn secundario" onClick={() => setFormAberto(false)}>Cancelar</button>
-              <button type="submit" className="btn primario button" disabled={!anoId || !data || !descricao.trim()}>Salvar</button>
+              <button type="button" className="button" onClick={() => setFormAberto(false)}>Cancelar</button>
+              <button type="submit" className="button" disabled={!anoId || !data || !descricao.trim()}>Salvar</button>
             </div>
           </form>
         </div>
@@ -236,8 +236,8 @@ const Feriados: React.FC = () => {
               </>
             )}
             <div className="modal-acoes">
-              <button className="btn secundario" type="button" onClick={() => setImportAberto(false)}>Cancelar</button>
-              <button className="btn primario button" type="button" onClick={salvarImport} disabled={validas === 0}>Salvar</button>
+              <button className="button" type="button" onClick={() => setImportAberto(false)}>Cancelar</button>
+              <button className="button" type="button" onClick={salvarImport} disabled={validas === 0}>Salvar</button>
             </div>
           </div>
         </div>

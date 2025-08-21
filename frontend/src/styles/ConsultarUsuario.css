@@ -1,22 +1,17 @@
 /* ===== Consultar Usuários (respeita layout aprovado) ===== */
+/* Ajusta variáveis para seguir o tema global */
 :root {
-  --pp-purple-700: #53139c;
-  --pp-purple-50: #f9f5ff;
-  --pp-border: #e5e7eb;
-  --pp-text: #1f2937;
-  --pp-muted: #6b7280;
+  --pp-purple-50: color-mix(in srgb, var(--color-primary) 15%, var(--bg));
+  --pp-border: var(--border);
+  --pp-text: var(--text);
+  --pp-muted: color-mix(in srgb, var(--text) 60%, var(--bg));
 }
 
 .consulta-wrapper { max-width: 1024px; margin: 0 auto; padding: 12px 8px; }
 .consulta-topo { display:flex; align-items:center; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
 .consulta-titulo { font-size: 24px; font-weight: 700; color: var(--pp-text); }
 
-/* Botões (mantém linguagem do projeto) */
-.btn { padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; }
-.btn.primario { background: var(--pp-purple-700); color: #fff; border: none; }
-.btn.primario:hover { background: var(--pp-purple-900); }
-.btn.secundario { background: var(--pp-purple-100); color: var(--pp-purple-900); border: 1px solid var(--pp-border); }
-.btn.secundario:hover { background: var(--pp-purple-50); }
+/* Botões utilizam a classe .button do tema */
 
 /* Campo de filtro */
 #filtro.entrada { width: 320px; max-width: 100%; }
@@ -25,9 +20,9 @@
 .tabela-container { overflow-x: auto; }
 .tabela { width: 100%; border-collapse: collapse; }
 .tabela th { text-align: left; font-weight: 700; line-height: 1.35; color: var(--pp-text); padding: 9px 10px; border-bottom: 2px solid var(--pp-border); }
-.tabela td { padding: 9px 10px; border-bottom: 1px solid var(--pp-border); vertical-align: middle; line-height: 1.35; }
+.tabela td { padding: 9px 10px; border-bottom: 1px solid var(--pp-border); vertical-align: middle; line-height: 1.35; color: var(--pp-text); }
 .tabela tbody tr:nth-child(even) { background: var(--pp-purple-50); }
-.tabela tbody tr:hover { background: #f3e8ff; }
+.tabela tbody tr:hover { background: color-mix(in srgb, var(--color-primary) 20%, var(--pp-purple-50)); }
 
 .sem-registros { text-align: center; color: var(--pp-muted); padding: 16px; }
 

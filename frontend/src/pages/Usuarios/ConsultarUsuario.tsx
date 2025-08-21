@@ -120,7 +120,7 @@ const ConsultarUsuario: React.FC = () => {
         <h2 className="consulta-titulo">Consultar Usuários</h2>
         <div className="consulta-acoes">
           <button
-            className="btn primario button"
+            className="button"
             onClick={() => navigate('/usuarios/cadastrar')}
           >
             Cadastrar novo
@@ -184,7 +184,7 @@ const ConsultarUsuario: React.FC = () => {
                     </td>
                     <td>
                       <button
-                        className="btn secundario"
+                        className="button"
                         onClick={() => editar(u.id_usuario)}
                       >
                         Editar
