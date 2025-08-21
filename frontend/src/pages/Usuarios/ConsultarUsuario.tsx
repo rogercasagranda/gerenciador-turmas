@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 // Importa navegação
 import { useNavigate } from 'react-router-dom'
-import { API_BASE } from '@/services/api'
+import { API_BASE, getAuthToken } from '@/services/api'
 
 // Define tipo do usuário retornado pela API
 type Usuario = {
@@ -52,18 +52,21 @@ const ConsultarUsuario: React.FC = () => {
 
 
   // Função utilitária: monta headers de autenticação
-  const getAuthHeaders = () => {
-    const token =
-      localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
-    return token ? { Authorization: `Bearer ${token}` } : null
+  const authHeaders = () => {
+    const token = getAuthToken()
+    if (!token) {
+      navigate('/login')
+      return null
+    }
+    return { Authorization: `Bearer ${token}` }
   }
 
   // Guarda de rota por perfil + carga inicial
   useEffect(() => {
   const carregar = async () => {
     try {
-      const headers = getAuthHeaders()
-      if (!headers) { navigate('/login'); return }
+      const headers = authHeaders()
+      if (!headers) return
 
       // Valida perfil (tolerante a 422/500; só 401 derruba sessão)
       try {

@@ -66,11 +66,16 @@ const CadastrarUsuario: React.FC = () => {
   const [carregandoEdicao, setCarregandoEdicao] = useState(false)
 
   const navigate = useNavigate()
-  const token = getAuthToken()
-  const headers: Record<string, string> = useMemo(
-    () => (token ? { Authorization: `Bearer ${token}` } : {}),
-    [token]
-  )
+
+  // Obtém headers com JWT ou redireciona para login
+  const authHeaders = () => {
+    const t = getAuthToken()
+    if (!t) {
+      navigate('/login')
+      return null
+    }
+    return { Authorization: `Bearer ${t}` }
+  }
 
   const { isDirty, setDirty, confirmIfDirty } = useDirtyForm()
 
@@ -83,9 +88,8 @@ const CadastrarUsuario: React.FC = () => {
   useEffect(() => {
     const check = async () => {
       try {
-        const token = getAuthToken()
-        if (!token) { navigate('/login'); return }
-        // tenta /me
+        const headers = authHeaders()
+        if (!headers) return
         const r = await fetch(`${API_BASE}/usuarios/me`, { headers })
         if (r.ok) {
           const m = (await r.json()) as MeuPerfil
@@ -96,8 +100,10 @@ const CadastrarUsuario: React.FC = () => {
           setMeuId(m.id_usuario)
           setMeuPerfil(p)
           setSouMaster(isMaster)
+        } else if (r.status === 401) {
+          navigate('/login')
+          return
         } else {
-          // fallback: token payload
           const claims = getClaimsFromToken()
           const p = toCanonical((claims?.role || claims?.perfil || claims?.tipo_perfil || '').toString())
           const id = claims?.sub ? Number(claims.sub) : undefined
@@ -108,18 +114,20 @@ const CadastrarUsuario: React.FC = () => {
           setMeuPerfil(p)
           setSouMaster(isMaster)
         }
-        // Sempre registra no log do backend o perfil/id que acessou
         try { await fetch(`${API_BASE}/usuarios/log-perfil`, { headers }) } catch {}
       } catch {}
     }
     check()
-  }, [API_BASE, headers, navigate])
+  }, [API_BASE, navigate])
 
   // Se entrou com ?id, carrega dados para editar
   useEffect(() => {
     if (!idEdicao) return
+    const headers = authHeaders()
+    if (!headers) return
     setCarregandoEdicao(true); setErro(''); setSucesso('')
-    axios.get(`${API_BASE}/usuarios/${idEdicao}`, { headers })
+    axios
+      .get(`${API_BASE}/usuarios/${idEdicao}`, { headers })
       .then((res) => {
         const u = res.data
         setNome(u.nome)
@@ -130,9 +138,12 @@ const CadastrarUsuario: React.FC = () => {
         setNumeroCelular(u.numero_celular)
         setDirty(false)
       })
-      .catch((e) => setErro(e?.response?.data?.detail || 'Falha ao carregar usuário.'))
+      .catch((e) => {
+        if (e?.response?.status === 401) navigate('/login')
+        else setErro(e?.response?.data?.detail || 'Falha ao carregar usuário.')
+      })
       .finally(() => setCarregandoEdicao(false))
-  }, [API_BASE, headers, idEdicao])
+  }, [API_BASE, idEdicao, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -141,28 +152,31 @@ const CadastrarUsuario: React.FC = () => {
     if (!email.trim()) { setErro('O e-mail é obrigatório.'); return }
     if (!numeroCelular.trim()) { setErro('O número de celular é obrigatório.'); return }
 
+    const headers = authHeaders()
+    if (!headers) return
     const jsonHeaders: Record<string, string> = { ...headers, 'Content-Type': 'application/json' }
 
-      try {
-        setEnviando(true)
-        const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
+    try {
+      setEnviando(true)
+      const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
 
-        if (idEdicao) {
-          await axios.put(`${API_BASE}/usuarios/${idEdicao}`, body, { headers: jsonHeaders })
-          setSucesso('Usuário atualizado com sucesso.')
-        } else {
-          await axios.post(`${API_BASE}/usuarios`, body, { headers: jsonHeaders })
-          setSucesso('Usuário cadastrado com sucesso.')
-          setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
-        }
-
-        setDirty(false)
-        setTimeout(() => navigate('/usuarios/consultar'), 700)
-      } catch (err: any) {
-        setErro(err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
-      } finally {
-        setEnviando(false)
+      if (idEdicao) {
+        await axios.put(`${API_BASE}/usuarios/${idEdicao}`, body, { headers: jsonHeaders })
+        setSucesso('Usuário atualizado com sucesso.')
+      } else {
+        await axios.post(`${API_BASE}/usuarios`, body, { headers: jsonHeaders })
+        setSucesso('Usuário cadastrado com sucesso.')
+        setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
       }
+
+      setDirty(false)
+      setTimeout(() => navigate('/usuarios/consultar'), 700)
+    } catch (err: any) {
+      if (err?.response?.status === 401) navigate('/login')
+      else setErro(err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'))
+    } finally {
+      setEnviando(false)
+    }
   }
 
   // Lógica do botão Excluir: apenas master/diretor e sem autoexclusão
@@ -179,12 +193,15 @@ const CadastrarUsuario: React.FC = () => {
     if (!primeira) return
     const segunda = window.confirm('Confirme novamente: deseja realmente excluir?')
     if (!segunda) return
+    const headers = authHeaders()
+    if (!headers) return
     try {
       await axios.delete(`${API_BASE}/usuarios/${idEdicao}`, { headers })
       alert('Usuário excluído com sucesso.')
       navigate('/usuarios/consultar')
-    } catch (e:any) {
-      setErro(e?.response?.data?.detail || 'Falha ao excluir usuário.')
+    } catch (e: any) {
+      if (e?.response?.status === 401) navigate('/login')
+      else setErro(e?.response?.data?.detail || 'Falha ao excluir usuário.')
     }
   }
 
