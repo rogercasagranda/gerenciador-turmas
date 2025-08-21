@@ -12,6 +12,9 @@ import os                                                              # Importa
 
 import json                                                            # Serializa payloads para log
 
+from typing import Generator                                           # Utilizado nas dependências de banco
+from jose import jwt, JWTError                                         # JWT para autenticação
+from pydantic import BaseModel, EmailStr                               # Modelos Pydantic utilizados abaixo
 
 from backend.models import AnoLetivo                                   # Modelo de AnoLetivo
 from backend.models.turma import Turma                                 # Modelo de Turma para verificar dependências
@@ -23,8 +26,6 @@ from backend.schemas.turmas import (                                   # Importa
     FeriadoImportarNacionais,                                          # Schema para importação de feriados nacionais
 )
 
-
-from backend.routes.usuarios import token_data_from_request, to_canonical  # Utilidades de autenticação
 from backend.utils.audit import registrar_log                          # Função para auditoria
 
 # As demais rotas do projeto já são registradas na raiz (sem prefixo).
@@ -109,21 +110,27 @@ def listar_anos(request: Request, db: Session = Depends(get_db_dep)):
 
 @router.post("/ano-letivo", response_model=AnoLetivoOut, status_code=status.HTTP_201_CREATED)  # Cria ano letivo
 
-def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(get_db)):
+def criar_ano(payload: AnoLetivoCreate, request: Request, db: Session = Depends(get_db_dep)):
     token = require_role(request, WRITE_ACCESS)                       # Exige perfis com permissão de escrita
-    existente = db.query(AnoLetivo).filter(AnoLetivo.descricao == payload.descricao).first()  # Verifica duplicidade de descrição
+    existente = db.query(AnoLetivo).filter(                           # Verifica duplicidade de descrição (case-insens)
+        func.lower(AnoLetivo.descricao) == payload.descricao.lower()
+    ).first()
 
     if existente:                                                     # Se já houver mesma descrição
-
         raise HTTPException(status_code=400, detail="Descrição já cadastrada")
     if payload.data_inicio >= payload.data_fim:                       # Valida ordem das datas
         raise HTTPException(status_code=400, detail="data_inicio deve ser menor que data_fim")
 
-    ano = AnoLetivo(**payload.dict())                                 # Cria instância do modelo
+    dados = payload.model_dump()                                      # Extrai dados do payload
+    ano = AnoLetivo(
+        descricao=dados["descricao"],
+        inicio=dados["data_inicio"],
+        fim=dados["data_fim"],
+    )                                                                 # Cria instância do modelo
     db.add(ano)                                                       # Adiciona à sessão
     db.commit()                                                       # Persiste no banco
     db.refresh(ano)                                                   # Atualiza com ID gerado
-    resumo = json.dumps(payload.dict(), ensure_ascii=False)[:200]     # Resumo do payload
+    resumo = json.dumps(payload.model_dump(), default=str, ensure_ascii=False)[:200]  # Resumo do payload
     registrar_log(db, token.id_usuario, "CREATE", "ano_letivo", ano.id, f"({token.tipo_perfil}) {resumo}")
     return ano                                                        # Retorna ano criado
 
@@ -139,7 +146,7 @@ def obter_ano(ano_id: int, request: Request, db: Session = Depends(get_db_dep)):
 
 @router.put("/ano-letivo/{ano_id}", response_model=AnoLetivoOut)      # Atualiza ano letivo
 
-def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: Session = Depends(get_db)):
+def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: Session = Depends(get_db_dep)):
     token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
 
     ano = db.get(AnoLetivo, ano_id)                                   # Busca registro
@@ -155,23 +162,28 @@ def atualizar_ano(ano_id: int, payload: AnoLetivoUpdate, request: Request, db: S
 
             raise HTTPException(status_code=409, detail="Ano letivo já cadastrado")  # Retorna conflito
 
-    nova_inicio = payload.data_inicio or ano.data_inicio              # Determina nova data inicial
-    nova_fim = payload.data_fim or ano.data_fim                       # Determina nova data final
+    nova_inicio = payload.data_inicio or ano.inicio                   # Determina nova data inicial
+    nova_fim = payload.data_fim or ano.fim                            # Determina nova data final
     if nova_inicio >= nova_fim:                                      # Valida ordem das datas
         raise HTTPException(status_code=400, detail="data_inicio deve ser menor que data_fim")
 
-    for field, value in payload.dict(exclude_unset=True).items():     # Percorre campos enviados
+    dados = payload.model_dump(exclude_unset=True)                    # Dados enviados
+    if "data_inicio" in dados:
+        dados["inicio"] = dados.pop("data_inicio")                 # Adapta para atributo do modelo
+    if "data_fim" in dados:
+        dados["fim"] = dados.pop("data_fim")                       # Adapta para atributo do modelo
+    for field, value in dados.items():                                 # Percorre campos enviados
         setattr(ano, field, value)                                    # Atualiza atributos
     db.commit()                                                       # Persiste alterações
     db.refresh(ano)                                                   # Atualiza objeto
-    resumo = json.dumps(payload.dict(exclude_unset=True), ensure_ascii=False)[:200]
+    resumo = json.dumps(payload.model_dump(exclude_unset=True), default=str, ensure_ascii=False)[:200]
     registrar_log(db, token.id_usuario, "UPDATE", "ano_letivo", ano.id, f"({token.tipo_perfil}) {resumo}")
     return ano                                                        # Retorna ano atualizado
 
 
 @router.delete("/ano-letivo/{ano_id}")                               # Remove ano letivo
 
-def remover_ano(ano_id: int, request: Request, db: Session = Depends(get_db)):
+def remover_ano(ano_id: int, request: Request, db: Session = Depends(get_db_dep)):
     token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
 
     ano = db.get(AnoLetivo, ano_id)                                   # Busca registro
@@ -200,7 +212,7 @@ def listar_feriados(anoLetivoId: int, request: Request, db: Session = Depends(ge
 
 @router.post("/feriados", response_model=FeriadoOut, status_code=status.HTTP_201_CREATED)  # Cria feriado escolar
 
-def criar_feriado(payload: FeriadoCreate, request: Request, db: Session = Depends(get_db)):
+def criar_feriado(payload: FeriadoCreate, request: Request, db: Session = Depends(get_db_dep)):
     token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
 
     if payload.origem != "ESCOLA":                                    # Valida origem
@@ -208,7 +220,7 @@ def criar_feriado(payload: FeriadoCreate, request: Request, db: Session = Depend
 
     ano = db.get(AnoLetivo, payload.ano_letivo_id)                    # Busca ano letivo
 
-    if not ano or not (ano.data_inicio <= payload.data <= ano.data_fim):  # Verifica se data está no período
+    if not ano or not (ano.inicio <= payload.data <= ano.fim):  # Verifica se data está no período
 
         raise HTTPException(status_code=422, detail="Data fora do período do ano letivo")  # Retorna 422
     existente = db.query(Feriado).filter_by(                          # Verifica duplicidade
@@ -216,18 +228,18 @@ def criar_feriado(payload: FeriadoCreate, request: Request, db: Session = Depend
     ).first()
     if existente:                                                     # Se já cadastrado
         raise HTTPException(status_code=409, detail="Feriado já cadastrado")  # Retorna 409
-    fer = Feriado(**payload.dict())                                   # Cria instância
+    fer = Feriado(**payload.model_dump())                              # Cria instância
     db.add(fer)                                                       # Adiciona
     db.commit()                                                       # Persiste
     db.refresh(fer)                                                   # Atualiza
-    resumo = json.dumps(payload.dict(), ensure_ascii=False)[:200]
+    resumo = json.dumps(payload.model_dump(), default=str, ensure_ascii=False)[:200]
     registrar_log(db, token.id_usuario, "CREATE", "feriado", fer.id, f"({token.tipo_perfil}) {resumo}")
     return fer                                                        # Retorna feriado criado
 
 
 @router.put("/feriados/{feriado_id}", response_model=FeriadoOut)  # Atualiza feriado
 
-def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request, db: Session = Depends(get_db)):
+def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request, db: Session = Depends(get_db_dep)):
     token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
 
     fer = db.get(Feriado, feriado_id)                                 # Busca registro
@@ -238,7 +250,7 @@ def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request,
     if payload.data is not None:                                     # Se nova data informada
         ano = db.get(AnoLetivo, fer.ano_letivo_id)                   # Obtém ano letivo
 
-        if not (ano.data_inicio <= payload.data <= ano.data_fim):    # Verifica se data está no período
+        if not (ano.inicio <= payload.data <= ano.fim):              # Verifica se data está no período
 
             raise HTTPException(status_code=422, detail="Data fora do período do ano letivo")  # Retorna 422
         duplicado = db.query(Feriado).filter(                         # Verifica duplicidade com outros feriados
@@ -254,14 +266,14 @@ def atualizar_feriado(feriado_id: int, payload: FeriadoUpdate, request: Request,
         fer.descricao = payload.descricao                            # Atualiza descrição
     db.commit()                                                       # Persiste alterações
     db.refresh(fer)                                                   # Atualiza objeto
-    resumo = json.dumps(payload.dict(exclude_unset=True), ensure_ascii=False)[:200]
+    resumo = json.dumps(payload.model_dump(exclude_unset=True), default=str, ensure_ascii=False)[:200]
     registrar_log(db, token.id_usuario, "UPDATE", "feriado", fer.id, f"({token.tipo_perfil}) {resumo}")
     return fer                                                        # Retorna feriado atualizado
 
 
 @router.delete("/feriados/{feriado_id}")                             # Remove feriado
 
-def remover_feriado(feriado_id: int, request: Request, db: Session = Depends(get_db)):
+def remover_feriado(feriado_id: int, request: Request, db: Session = Depends(get_db_dep)):
     token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
 
     fer = db.get(Feriado, feriado_id)                                 # Busca registro
@@ -277,7 +289,7 @@ def remover_feriado(feriado_id: int, request: Request, db: Session = Depends(get
 
 @router.post("/feriados/importar-nacionais", response_model=list[FeriadoOut])  # Importa feriados nacionais
 
-def importar_nacionais(payload: FeriadoImportarNacionais, request: Request, db: Session = Depends(get_db)):
+def importar_nacionais(payload: FeriadoImportarNacionais, request: Request, db: Session = Depends(get_db_dep)):
     token = require_role(request, WRITE_ACCESS)                       # Exige permissão de escrita
 
 
@@ -295,7 +307,7 @@ def importar_nacionais(payload: FeriadoImportarNacionais, request: Request, db: 
         for item in dados:                                           # Percorre feriados retornados
             data_item = date.fromisoformat(item["data"])            # Converte data para objeto date
 
-            if not (ano.data_inicio <= data_item <= ano.data_fim):    # Verifica se data pertence ao período
+            if not (ano.inicio <= data_item <= ano.fim):             # Verifica se data pertence ao período
 
                 continue                                             # Ignora data fora do período
             existente = db.query(Feriado).filter_by(                  # Verifica duplicidade
@@ -316,7 +328,7 @@ def importar_nacionais(payload: FeriadoImportarNacionais, request: Request, db: 
     db.commit()                                                     # Persiste todos
     for fer in inseridos:                                           # Atualiza objetos com IDs
         db.refresh(fer)
-    resumo = json.dumps(payload.dict(), ensure_ascii=False)[:200]
+    resumo = json.dumps(payload.model_dump(), default=str, ensure_ascii=False)[:200]
     registrar_log(db, token.id_usuario, "CREATE", "feriado", payload.ano_letivo_id, f"({token.tipo_perfil}) import {resumo}")
     return inseridos                                                 # Retorna feriados inseridos
 
