@@ -57,7 +57,13 @@ const Home: React.FC = () => {
   const loadPermissions = useCallback(() => {
     try {
       const raw = localStorage.getItem('permissions.effective')
-      setPermissions(raw ? JSON.parse(raw) : {})
+      const parsed = raw ? JSON.parse(raw) : {}
+      if (Array.isArray(parsed) && parsed.includes('*')) {
+        setIsMaster(true)
+        setPermissions({})
+      } else {
+        setPermissions(parsed || {})
+      }
     } catch {
       setPermissions({})
     }
@@ -83,26 +89,29 @@ const Home: React.FC = () => {
     const token = getAuthToken()
     if (!token) { navigate('/login'); return }
 
-    authFetch('/me', { method: 'GET' })
+    authFetch('/me/permissions/effective')
       .then(async (res) => {
         if (!res.ok) throw new Error()
         const data: any = await res.json()
-        const { perfis = [], permissoes = {}, id_usuario, id } = data
-        setIsMaster(perfis.map(toCanonical).includes('master'))
-        setPermissions(permissoes)
-        try {
-          localStorage.setItem('permissions.effective', JSON.stringify(permissoes))
-          const uid = id_usuario ?? id
-          if (uid) localStorage.setItem('user_id', String(uid))
-        } catch {}
+        const { role, permissions: perms = {}, id } = data
+        const master = role === 'MASTER' || (Array.isArray(perms) && perms.includes('*'))
+        setIsMaster(master)
+        if (master) {
+          setPermissions({})
+          try { localStorage.setItem('permissions.effective', JSON.stringify(['*'])) } catch {}
+        } else {
+          setPermissions(perms)
+          try { localStorage.setItem('permissions.effective', JSON.stringify(perms)) } catch {}
+        }
+        if (id) try { localStorage.setItem('user_id', String(id)) } catch {}
         loadThemeFromStorage()
       })
       .catch(() => {
         const claims = getClaimsFromToken()
-        const perfis: any[] =
-          claims?.perfis || [claims?.role || claims?.perfil || claims?.tipo_perfil || '']
-        const isMaster = perfis.map((p) => toCanonical(p as string)).includes('master')
-        setIsMaster(isMaster)
+        const perms = claims?.permissions || claims?.permissoes
+        const role = (claims?.role || claims?.perfil || claims?.tipo_perfil || '').toUpperCase()
+        const master = role === 'MASTER' || (Array.isArray(perms) && perms.includes('*'))
+        setIsMaster(master)
       })
   }, [navigate])
 
@@ -137,11 +146,12 @@ const Home: React.FC = () => {
 
   const can = useCallback(
     (p: string, op?: string) => {
+      if (isMaster) return true
       const ops = permissions[p]
       if (!ops) return false
       return op ? !!ops[op] : Object.values(ops).some(Boolean)
     },
-    [permissions],
+    [permissions, isMaster],
   )
 
   const canCadastro = useMemo(() => {

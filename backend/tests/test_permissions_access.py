@@ -198,7 +198,8 @@ def test_effective_permissions_endpoint():
         db.commit()
     resp = client.get("/me/permissions/effective")
     assert resp.status_code == 200
-    assert resp.json()["/p"]["view"] is True
+    data = resp.json()
+    assert data["permissions"]["/p"]["view"] is True
 
 
 def test_export_formats():
