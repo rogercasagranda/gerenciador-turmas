@@ -1,12 +1,19 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
+from sqlalchemy.orm import Session
 
+from backend.database import get_db
 from backend.security import get_current_user
+from backend.services.permissions import get_effective_permissions
+from backend.routes.usuarios import token_data_from_request, to_canonical
 
 router = APIRouter()
 
 
 @router.get("/me")
-def read_me(current_user: dict = Depends(get_current_user)):
+def read_me(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     return {
         "id": current_user["id"],
         "email": current_user["email"],
@@ -14,3 +21,11 @@ def read_me(current_user: dict = Depends(get_current_user)):
         "perfis": current_user.get("perfis", []),
         "permissoes": current_user.get("permissoes", []),
     }
+
+
+@router.get("/me/permissions/effective")
+def effective_permissions(request: Request, db: Session = Depends(get_db)):
+    token = token_data_from_request(request)
+    perfil = to_canonical(token.tipo_perfil)
+    return get_effective_permissions(db, token.id_usuario, perfil)
+

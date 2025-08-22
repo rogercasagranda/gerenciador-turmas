@@ -192,7 +192,12 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # --------------------------------------------------
     # Normaliza chaves aceitando variações do front
     # --------------------------------------------------
-    email = (raw.get("email") or raw.get("usuario") or raw.get("username") or "").strip()  # Normaliza e-mail
+    email = (
+        raw.get("email")
+        or raw.get("usuario")
+        or raw.get("username")
+        or ""
+    ).strip().lower()  # Normaliza e-mail e força minúsculas
     senha = (raw.get("senha") or raw.get("password") or "").strip()                        # Normaliza senha
 
     # --------------------------------------------------
@@ -208,7 +213,7 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # --------------------------------------------------
     # Consulta usuário via ORM
     # --------------------------------------------------
-    usuario = db.query(Usuarios).filter(Usuarios.email == email).first()  # Busca usuário por e-mail
+    usuario = db.query(Usuarios).filter(Usuarios.email.ilike(email)).first()  # Busca usuário por e-mail (case-insensitive)
     if not usuario:                                                       # Verifica inexistência
         logger.warning(f"[{cid}] Usuário não pré-cadastrado (LOCAL): {email}")
         return JSONResponse(                                               # Retorna 403 com código e mensagem
