@@ -5,6 +5,7 @@ import {
   exportarUsuariosPorGrupo,
   UsuarioGrupoItem,
 } from '@/services/usuariosPorGrupo'
+import './Consultar.css'
 
 const ConsultarAcessos: React.FC = () => {
   const [grupos, setGrupos] = useState<Grupo[]>([])
@@ -72,7 +73,7 @@ const ConsultarAcessos: React.FC = () => {
       <div>
         <label>Grupos:</label>
         {grupos.map((g) => (
-          <label key={g.id} style={{ marginRight: '8px' }}>
+          <label key={g.id} className="grupo-label">
             <input
               type="checkbox"
               value={g.id}
