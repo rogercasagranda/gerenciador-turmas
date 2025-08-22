@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 // Importa páginas
 import LoginPageWrapper from './pages/Login/LoginPageWrapper'
 import Home from './pages/Home/Home'
+import OAuthOk from './pages/OAuthOk'
 
 import PoliticaDeCookies from './pages/PoliticaDeCookies'
 import RouteGuard from './routes/RouteGuard'
@@ -20,6 +21,7 @@ const App: React.FC = () => {
 
       {/* Tela de login (layout travado) */}
       <Route path="/login" element={<LoginPageWrapper />} />
+      <Route path="/oauth-ok" element={<OAuthOk />} />
 
       {/* Política de Cookies */}
       <Route path="/politica-de-cookies" element={<PoliticaDeCookies />} />

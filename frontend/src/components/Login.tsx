@@ -59,21 +59,6 @@ const Login: React.FC = () => {
     }
   }, []);
 
-// Captura token do Google (?token=...) e redireciona para Home
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get('token');
-  if (token) {
-    setAuthToken(token, keepConnected);
-    console.log('[auth] token recebido via callback, redirecionando para /home');
-    // Remove o parâmetro da URL sem recarregar
-    const url = new URL(window.location.href);
-    url.searchParams.delete('token');
-    window.history.replaceState({}, document.title, url.toString());
-    navigate('/home');
-  }
-}, []);
-
 
 
   // Envia dados para o backend ao submeter o formulário

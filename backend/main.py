@@ -8,6 +8,7 @@ import requests                               # Importa requests para realizar c
 import psycopg2                               # Importa psycopg2 para conexão síncrona com PostgreSQL
 from psycopg2 import Error as PsycopgError    # Importa a classe de erro específica do psycopg2
 from zoneinfo import ZoneInfo                 # Importa ZoneInfo para definir fuso horário
+import uuid                                   # Gera correlation_id quando ausente
 
 # ======================================================
 # JWT: criação de token de acesso
@@ -199,14 +200,15 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
         logger.warning("Payload inválido no /login (faltando email/senha)")  # Registra aviso
         raise HTTPException(status_code=422, detail="Payload inválido: envie 'email' e 'senha'.")  # Retorna 422
 
-    logger.info(f"Tentativa de login com e-mail: {email}")  # Registra tentativa de login
+    cid = request.headers.get("x-cid") or str(uuid.uuid4())
+    logger.info(f"[{cid}] Tentativa de login com e-mail: {email}")
 
     # --------------------------------------------------
     # Consulta usuário via ORM
     # --------------------------------------------------
     usuario = db.query(Usuarios).filter(Usuarios.email == email).first()  # Busca usuário por e-mail
     if not usuario:                                                       # Verifica inexistência
-        logger.warning(f"Usuário não pré-cadastrado (LOCAL): {email}")  # Registra pré-cadastro ausente
+        logger.warning(f"[{cid}] Usuário não pré-cadastrado (LOCAL): {email}")
         return JSONResponse(                                               # Retorna 403 com código e mensagem
             status_code=403,
             content={"code": "USER_NOT_FOUND", "message": "Cadastro não encontrado, procure a secretaria da sua escola"}
@@ -216,13 +218,13 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # Valida senha com bcrypt
     # --------------------------------------------------
     if not usuario.senha_hash:                                             # Verifica ausência de senha local
-        logger.warning(f"Usuário sem senha local configurada: {email}")  # Registra ausência de senha
+        logger.warning(f"[{cid}] Usuário sem senha local configurada: {email}")
         return JSONResponse(                                               # Retorna 403 com código e mensagem
             status_code=403,
             content={"code": "NO_LOCAL_PASSWORD", "message": "Cadastro não possui senha local, utilize o login com Google"}
         )
     if not bcrypt.checkpw(senha.encode("utf-8"), usuario.senha_hash.encode("utf-8")):  # Compara hash
-        logger.warning(f"Senha incorreta para o e-mail: {email}")  # Registra senha incorreta
+        logger.warning(f"[{cid}] Senha incorreta para o e-mail: {email}")
         raise HTTPException(                                                            # Retorna 401 padronizado
             status_code=401,
             detail="SEU USUÁRIO E/OU SENHA ESTÃO INCORRETAS, TENTE NOVAMENTE"
@@ -232,8 +234,8 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # Sucesso
     # --------------------------------------------------
     logger.info(
-        f"Login realizado com sucesso para: {email} (perfil: {usuario.tipo_perfil})"
-    )  # Registra sucesso com perfil do usuário
+        f"[{cid}] Login realizado com sucesso user_id={usuario.id_usuario} role={usuario.tipo_perfil}"
+    )
     # Monta grupos e permissões do usuário
     grupos = [
         g.nome
@@ -245,19 +247,17 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     permissoes = get_effective_permissions(db, usuario.id_usuario, usuario.tipo_perfil)
     is_master = bool(usuario.is_master or (usuario.tipo_perfil or "").lower() == "master")
     role = "Master" if is_master else usuario.tipo_perfil
-    # Gera JWT completo com dados para o front
+    perms_payload = ["*"] if is_master else permissoes
     token_payload = {
-        "sub": email,
-        "id_usuario": usuario.id_usuario,
-        "tipo_perfil": usuario.tipo_perfil,
-        "id": usuario.id_usuario,
+        "sub": str(usuario.id_usuario),
         "email": email,
         "role": role,
-        "grupos": grupos,
-        "permissoes": permissoes,
+        "groups": grupos,
+        "permissions": perms_payload,
         "is_master": is_master,
     }
     token = create_access_token(token_payload)
+    logger.info(f"[{cid}] JWT size={len(token)} bytes")
     response = JSONResponse(
         {
             "message": "Login realizado com sucesso",
@@ -317,10 +317,12 @@ def google_login():
 # 🔁 Google callback
 @app.get("/google-callback")
 def google_callback(request: Request):
+    cid = request.headers.get("x-cid") or str(uuid.uuid4())
     try:
         code = request.query_params.get("code")                        # Lê código de autorização
         if not code:                                                   # Valida presença do código
-            raise HTTPException(status_code=400, detail="Código de autorização ausente")  # Retorna 400
+            logger.warning(f"[{cid}] Código de autorização ausente")
+            raise HTTPException(status_code=400, detail="Código de autorização ausente")
 
         client_id = os.getenv("GOOGLE_CLIENT_ID")                      # Lê client_id do .env
         client_secret = os.getenv("GOOGLE_CLIENT_SECRET")              # Lê client_secret do .env
@@ -337,8 +339,8 @@ def google_callback(request: Request):
 
         token_response = requests.post(token_url, data=token_data, timeout=10)  # Solicita token ao Google
         if token_response.status_code != 200:                                   # Valida resposta
-            logger.error(f"Erro ao obter token: {token_response.text}")  # Registra erro
-            raise HTTPException(status_code=400, detail="Falha ao obter token de acesso")  # Retorna 400
+            logger.error(f"[{cid}] Erro ao obter token: {token_response.text}")
+            raise HTTPException(status_code=400, detail="Falha ao obter token de acesso")
 
         access_token = token_response.json().get("access_token")      # Extrai access_token
         if not access_token:                                          # Valida presença
@@ -346,15 +348,16 @@ def google_callback(request: Request):
 
         user_info_url = "https://www.googleapis.com/oauth2/v1/userinfo"  # Define endpoint de userinfo
         headers = {"Authorization": f"Bearer {access_token}"}            # Monta header de autorização
-        user_info_response = requests.get(user_info_url, headers=headers, timeout=10)  # Consulta dados do usuário
-        if user_info_response.status_code != 200:                        # Valida resposta
-            logger.error(f"Erro ao obter dados do usuário: {user_info_response.text}")  # Registra erro
-            raise HTTPException(status_code=400, detail="Erro ao obter dados do usuário")  # Retorna 400
+        user_info_response = requests.get(user_info_url, headers=headers, timeout=10)
+        if user_info_response.status_code != 200:
+            logger.error(f"[{cid}] Erro ao obter dados do usuário: {user_info_response.text}")
+            raise HTTPException(status_code=400, detail="Erro ao obter dados do usuário")
 
         user_data = user_info_response.json()                # Converte resposta para dicionário
         user_email = user_data.get("email")                  # Extrai e-mail do usuário
-        if not user_email:                                   # Valida presença do e-mail
-            raise HTTPException(status_code=400, detail="Email não encontrado na resposta do Google")  # Retorna 400
+        if not user_email:
+            logger.warning(f"[{cid}] Email ausente na resposta do Google")
+            raise HTTPException(status_code=400, detail="Email não encontrado na resposta do Google")
 
         conn = None                                          # Inicializa conexão
         cur = None                                           # Inicializa cursor
@@ -370,15 +373,15 @@ def google_callback(request: Request):
             result = cur.fetchone()                          # Lê resultado
 
             if not result:                                   # Verifica se usuário não existe
-                logger.warning(f"Usuário não pré-cadastrado (GOOGLE): {user_email}")  # Registra ausência
+                logger.warning(f"[{cid}] Usuário não pré-cadastrado (GOOGLE): {user_email}")
                 from fastapi.responses import RedirectResponse                            # Importa RedirectResponse
                 frontend_origin = os.getenv("FRONTEND_ORIGIN")                           # Lê origem do front
-                if not frontend_origin:                                                         # Verifica configuração
-                    logger.error("FRONTEND_ORIGIN não configurado")  # Registra erro
-                    raise HTTPException(status_code=500, detail="FRONTEND_ORIGIN não configurado")
-                return RedirectResponse(url=f"{frontend_origin}/login?err=USER_NOT_FOUND", status_code=302)  # Redireciona
+                if not frontend_origin:
+                    logger.error(f"[{cid}] FRONTEND_ORIGIN não configurado")
+                raise HTTPException(status_code=500, detail="FRONTEND_ORIGIN não configurado")
+                return RedirectResponse(url=f"{frontend_origin}/login?err=USER_NOT_FOUND", status_code=302)
 
-            logger.info(f"Usuário autorizado: {user_email}")  # Registra sucesso
+            logger.info(f"[{cid}] Usuário autorizado: {user_email}")
             id_usuario, tipo_perfil, is_master_db = result       # Extrai dados do usuário
             with SessionLocal() as db_session:
                 grupos = [
@@ -391,47 +394,46 @@ def google_callback(request: Request):
                 permissoes = get_effective_permissions(db_session, id_usuario, tipo_perfil)
             is_master = bool(is_master_db or (tipo_perfil or "").lower() == "master")
             role = "Master" if is_master else tipo_perfil
+            perms_payload = ["*"] if is_master else permissoes
             token_payload = {
-                "sub": user_email,
-                "id_usuario": id_usuario,
-                "tipo_perfil": tipo_perfil,
-                "id": id_usuario,
+                "sub": str(id_usuario),
                 "email": user_email,
                 "role": role,
-                "grupos": grupos,
-                "permissoes": permissoes,
+                "groups": grupos,
+                "permissions": perms_payload,
                 "is_master": is_master,
             }
-            token = create_access_token(token_payload)           # Gera JWT completo
-            from fastapi.responses import RedirectResponse         # Importa RedirectResponse
-            frontend_origin = os.getenv("FRONTEND_ORIGIN")                          # Lê origem do front
-            if not frontend_origin:                                                      # Verifica configuração
-                logger.error("FRONTEND_ORIGIN não configurado")  # Registra erro
+            token = create_access_token(token_payload)
+            logger.info(f"[{cid}] Google login gerou JWT size={len(token)} bytes")
+            from fastapi.responses import RedirectResponse
+            frontend_origin = os.getenv("FRONTEND_ORIGIN")
+            if not frontend_origin:
+                logger.error(f"[{cid}] FRONTEND_ORIGIN não configurado")
                 raise HTTPException(status_code=500, detail="FRONTEND_ORIGIN não configurado")
             return RedirectResponse(
-                url=f"{frontend_origin}/login?token={token}",
+                url=f"{frontend_origin}/oauth-ok?token={token}",
                 status_code=302,
-            )  # Redireciona com token
+            )
 
         except PsycopgError as db_err:                       # Captura erro de banco
-            logger.error(f"Erro ao consultar banco de dados: {db_err}")  # Registra erro
+            logger.error(f"[{cid}] Erro ao consultar banco de dados: {db_err}")
             raise HTTPException(status_code=500, detail="Erro ao acessar banco de dados")  # Retorna 500
         finally:
             if cur is not None:                              # Verifica cursor aberto
                 try:
                     cur.close()                              # Fecha cursor
                 except Exception:
-                    logger.warning("Falha ao fechar cursor do banco")  # Registra aviso
+                    logger.warning(f"[{cid}] Falha ao fechar cursor do banco")
             if conn is not None:                             # Verifica conexão aberta
                 try:
                     conn.close()                             # Fecha conexão
                 except Exception:
-                    logger.warning("Falha ao fechar conexão com o banco")  # Registra aviso
+                    logger.warning(f"[{cid}] Falha ao fechar conexão com o banco")
 
     except HTTPException:                                    # Mantém HTTPException original
         raise                                                # Propaga exceção
     except Exception:                                        # Captura exceções não previstas
-        logger.exception("Erro inesperado na callback do Google")  # Registra stacktrace
+        logger.exception(f"[{cid}] Erro inesperado na callback do Google")
         raise HTTPException(status_code=500, detail="Erro interno no servidor")  # Retorna 500
 
 

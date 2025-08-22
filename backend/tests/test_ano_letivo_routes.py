@@ -22,7 +22,7 @@ ALGORITHM = "HS256"
 
 
 def _token(perfil: str) -> str:
-    payload = {"sub": "user@example.com", "id_usuario": 1, "tipo_perfil": perfil}
+    payload = {"sub": "1", "email": "user@example.com", "role": perfil}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 

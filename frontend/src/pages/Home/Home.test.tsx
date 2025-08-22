@@ -20,6 +20,8 @@ function mockPerfil(perfil: string, perms?: Record<string, Record<string, boolea
       : { tipo_perfil: perfil, is_master: perfil === 'master' }
     return Promise.resolve({
       ok: true,
+      status: 200,
+      headers: { get: () => 'application/json' } as any,
       json: () => Promise.resolve(body),
       text: () => Promise.resolve(JSON.stringify(body))
     }) as any

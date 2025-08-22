@@ -49,10 +49,10 @@ def _claims(request: Request) -> dict:
 @router.delete("/{id_usuario}")
 def excluir_usuario(id_usuario: int, request: Request, db: Session = Depends(get_db)):
     claims = _claims(request)
-    # O token contém o e-mail em "sub" e o identificador numérico em "id_usuario".
-    # Converte o ID para inteiro e falha com 401 caso o valor seja ausente ou não numérico.
+    # O token contém o identificador numérico no campo "sub".
+    # Converte o ID para inteiro e falha com 401 caso o valor seja ausente ou inválido.
     try:
-        me_id = int(claims.get("id_usuario"))
+        me_id = int(claims.get("sub"))
     except (TypeError, ValueError):
         raise HTTPException(status_code=401, detail="ID do usuário inválido no token")
 

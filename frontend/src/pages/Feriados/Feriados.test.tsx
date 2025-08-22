@@ -10,7 +10,7 @@ function mockFetch(map: Record<string, (opts?: RequestInit) => any>) {
     const url = typeof input === 'string' ? input : input.toString()
     const chave = Object.keys(map).sort((a, b) => b.length - a.length).find(k => url.includes(k))
     if (chave) return Promise.resolve(map[chave](init))
-    return Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as Response)
+    return Promise.resolve({ ok: true, status: 200, headers: { get: () => 'application/json' }, json: () => Promise.resolve({}), text: () => Promise.resolve('{}') } as any)
   }) as any
 }
 
@@ -23,7 +23,7 @@ afterEach(() => {
 // RBAC
 it('menu e rota protegidos por role', async () => {
   localStorage.setItem('auth_token', 'x')
-  mockFetch({ '/usuarios/me': () => ({ ok: true, json: () => Promise.resolve({ tipo_perfil: 'professor' }) }) })
+  mockFetch({ '/usuarios/me': () => ({ ok: true, status: 200, headers: { get: () => 'application/json' }, json: () => Promise.resolve({ tipo_perfil: 'professor' }), text: () => Promise.resolve('{"tipo_perfil":"professor"}') }) })
   render(
     <MemoryRouter initialEntries={['/cadastro/feriados']}>
       <App />

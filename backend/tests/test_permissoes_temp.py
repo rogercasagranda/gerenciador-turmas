@@ -50,6 +50,7 @@ def _create_client():
             self.id_usuario = 0
             self.email = "adm@example.com"
             self.tipo_perfil = "Master"
+            self.is_master = True
 
     acessos.token_data_from_request = lambda request: DummyToken()
     acessos.to_canonical = lambda p: p.lower()
