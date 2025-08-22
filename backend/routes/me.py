@@ -37,4 +37,6 @@ def read_me(request: Request, db: Session = Depends(get_db)):
 @router.get("/permissions/effective")
 def permissions_effective(request: Request, db: Session = Depends(get_db)):
     token = token_data_from_request(request)
+    if token.is_master or (token.tipo_perfil or "").lower() == "master":
+        return ["*"]
     return get_effective_permissions(db, token.id_usuario, token.tipo_perfil)

@@ -61,10 +61,11 @@ def _create_client():
     app.dependency_overrides[me.get_db] = override_get_db
 
     class DummyToken:
-        def __init__(self, id_usuario=1, perfil="Master"):
+        def __init__(self, id_usuario=1, perfil="Master", is_master=False):
             self.id_usuario = id_usuario
             self.email = f"user{id_usuario}@example.com"
             self.tipo_perfil = perfil
+            self.is_master = is_master
 
     token_holder = {"token": DummyToken()}
 
@@ -177,7 +178,7 @@ def test_override_precedence():
 
 def test_effective_permissions_endpoint():
     client, SessionLocal, token_holder = _create_client()
-    token_holder["token"] = type("T", (), {"id_usuario": 2, "email": "p@example.com", "tipo_perfil": "Professor"})()
+    token_holder["token"] = type("T", (), {"id_usuario": 2, "email": "p@example.com", "tipo_perfil": "Professor", "is_master": False})()
     with SessionLocal() as db:
         tela = Tela(id=1, name="A", path="/p", restrita_professor=False)
         user = Usuarios(
@@ -232,7 +233,7 @@ def test_export_formats():
 def test_logs_on_403():
     client, SessionLocal, token_holder = _create_client()
     # Token com perfil Aluno
-    token_holder["token"] = type("T", (), {"id_usuario": 1, "email": "a@example.com", "tipo_perfil": "Aluno"})()
+    token_holder["token"] = type("T", (), {"id_usuario": 1, "email": "a@example.com", "tipo_perfil": "Aluno", "is_master": False})()
     with SessionLocal() as db:
         db.add(
             Usuarios(

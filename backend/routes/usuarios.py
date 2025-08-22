@@ -67,25 +67,27 @@ class TokenData(BaseModel):
     id_usuario: int
     email: EmailStr
     tipo_perfil: str | None = None
+    is_master: bool = False
 
 
 def token_data_from_request(request: Request) -> TokenData:
     auth = request.headers.get("Authorization", "")
     if not auth.lower().startswith("bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token ausente.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid/expired")
     token = auth.split(" ", 1)[1]
     if len(token) > MAX_JWT_BYTES:
         raise HTTPException(status_code=413, detail="Token muito grande")
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         sub = payload.get("sub")
-        id_usuario = payload.get("id_usuario")
-        tipo_perfil = payload.get("tipo_perfil")
-        if sub is None or id_usuario is None:
-            raise HTTPException(status_code=401, detail="Token inválido.")
-        return TokenData(id_usuario=int(id_usuario), email=str(sub), tipo_perfil=tipo_perfil)
+        email = payload.get("email")
+        role = payload.get("role")
+        is_master = bool(payload.get("is_master"))
+        if sub is None or email is None:
+            raise HTTPException(status_code=401, detail="invalid/expired")
+        return TokenData(id_usuario=int(sub), email=str(email), tipo_perfil=role, is_master=is_master)
     except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido.")
+        raise HTTPException(status_code=401, detail="invalid/expired")
 
 
 def require_perfil(request: Request, db: Session) -> TokenData:

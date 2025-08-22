@@ -7,7 +7,7 @@ import useBaseNavigate from '@/hooks/useBaseNavigate'
 import '../../styles/Home.css'
 import '../../styles/Home.lock.css'
 import { loadThemeFromStorage } from '../../theme/utils'
-import { apiFetch, getAuthToken } from '@/services/api'
+import { apiFetch, getAuthToken, logoutLocal } from '@/services/api'
 
 const toCanonical = (perfil: string) => (perfil || '').toLowerCase()
 
@@ -115,10 +115,8 @@ const Home: React.FC = () => {
 
   // Logout
   const handleLogout = useCallback(() => {
-    try { localStorage.removeItem('auth_token') } catch {}
-    try { sessionStorage.removeItem('auth_token') } catch {}
-    try { localStorage.removeItem('usuarioLogado') } catch {}
-    try { localStorage.removeItem('user_id') } catch {}
+    apiFetch('/logout', { method: 'POST' }).catch(() => {})
+    logoutLocal()
     try { localStorage.removeItem('permissions.effective') } catch {}
     navigate('/login')
   }, [navigate])

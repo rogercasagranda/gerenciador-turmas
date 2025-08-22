@@ -37,14 +37,14 @@ def _make_request(token: str) -> Request:
 
 
 def test_claims_accepts_token_below_limit():
-    token = jwt.encode({"sub": "user@example.com"}, SECRET_KEY, algorithm=ALGORITHM)
+    token = jwt.encode({"sub": "1"}, SECRET_KEY, algorithm=ALGORITHM)
     req = _make_request(token)
     claims = _claims(req)
-    assert claims["sub"] == "user@example.com"
+    assert claims["sub"] == "1"
 
 
 def test_claims_rejects_token_above_limit():
-    big_payload = {"sub": "user@example.com", "data": "a" * MAX_JWT_BYTES}
+    big_payload = {"sub": "1", "data": "a" * MAX_JWT_BYTES}
     token = jwt.encode(big_payload, SECRET_KEY, algorithm=ALGORITHM)
     assert len(token) > MAX_JWT_BYTES
     req = _make_request(token)
@@ -55,7 +55,7 @@ def test_claims_rejects_token_above_limit():
 
 
 def test_token_data_from_request_accepts_small_token():
-    token = jwt.encode({"sub": "user@example.com", "id_usuario": 1}, U_SECRET_KEY, algorithm=U_ALGORITHM)
+    token = jwt.encode({"sub": "1", "email": "user@example.com", "role": "Master"}, U_SECRET_KEY, algorithm=U_ALGORITHM)
     req = _make_request(token)
     data = token_data_from_request(req)
     assert data.email == "user@example.com"
@@ -64,8 +64,9 @@ def test_token_data_from_request_accepts_small_token():
 
 def test_token_data_from_request_rejects_big_token():
     big_payload = {
-        "sub": "user@example.com",
-        "id_usuario": 1,
+        "sub": "1",
+        "email": "user@example.com",
+        "role": "Master",
         "data": "a" * U_MAX_JWT_BYTES,
     }
     token = jwt.encode(big_payload, U_SECRET_KEY, algorithm=U_ALGORITHM)
