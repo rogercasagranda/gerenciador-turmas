@@ -59,12 +59,12 @@
 }
 
 /* Overlay escurecido do fundo quando o drawer abre */
-.hamburger-overlay {
-  position: fixed; /* Mantém overlay fixo na tela */
-  inset: 0; /* Ocupa toda a área da janela */
-  background: rgba(0, 0, 0, 0.45); /* Define fundo semitransparente */
-  z-index: 1000; /* Fica abaixo do botão e acima do conteúdo */
-}
+  .hamburger-overlay {
+    position: fixed; /* Mantém overlay fixo na tela */
+    inset: 0; /* Ocupa toda a área da janela */
+    background: var(--overlay-bg); /* Define fundo semitransparente */
+    z-index: 1000; /* Fica abaixo do botão e acima do conteúdo */
+  }
 
 /* Drawer lateral (menu) em modo fechado */
 .hamburger-drawer {
@@ -74,8 +74,8 @@
   left: 0; /* Alinha à esquerda da tela */
   width: 84%; /* Define largura do drawer em mobile */
   max-width: 320px; /* Define largura máxima para consistência */
-  background: var(--primary-color); /* Define fundo branco para conteúdo */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); /* Adiciona sombra para elevação */
+    background: var(--primary-color); /* Define fundo branco para conteúdo */
+    box-shadow: var(--drawer-shadow); /* Adiciona sombra para elevação */
   transform: translateX(-110%); /* Esconde fora da tela quando fechado */
   transition: transform 240ms ease; /* Anima abertura/fechamento suave */
   z-index: 1001; /* Fica acima do overlay e abaixo do botão */
