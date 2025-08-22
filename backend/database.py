@@ -21,12 +21,16 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))  # Carr
 DATABASE_URL = os.getenv("DATABASE_URL")   # Obtém a variável de ambiente DATABASE_URL
 
 # ======================================================
-# Valida a variável de ambiente
+# Valida e normaliza a variável de ambiente
 # ======================================================
 if not DATABASE_URL:  # Verifica se a URL está ausente
     raise RuntimeError(
         "DATABASE_URL ausente no backend/.env. Verifique se o valor completo foi colado."
     )
+
+# Permite uso de sintaxe abreviada "file:./test.db" para SQLite em ambiente de teste
+if DATABASE_URL.startswith("file:"):
+    DATABASE_URL = f"sqlite:///{DATABASE_URL[5:]}"
 
 # ======================================================
 # Configurações específicas para bancos como SQLite
