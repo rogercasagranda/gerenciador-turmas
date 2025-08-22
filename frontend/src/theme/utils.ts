@@ -35,8 +35,12 @@ export function loadThemeFromStorage(): { theme: ThemeName; mode: ModeKey } {
   let mode: ModeKey = 'light'
   if (typeof window !== 'undefined') {
     try {
-      theme = (localStorage.getItem('theme') as ThemeName) || 'default'
-      mode = (localStorage.getItem('mode') as ModeKey) || 'light'
+      const storedTheme = localStorage.getItem('theme') as ThemeName | null
+      const storedMode = localStorage.getItem('mode') as ModeKey | null
+      theme = storedTheme || 'default'
+      mode = storedMode || 'light'
+      if (!storedTheme) localStorage.setItem('theme', theme)
+      if (!storedMode) localStorage.setItem('mode', mode)
     } catch {}
   }
   if (typeof document !== 'undefined') {

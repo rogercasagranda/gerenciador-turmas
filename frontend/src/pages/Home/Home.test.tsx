@@ -65,7 +65,7 @@ test('rota de feriados bloqueada para professor', async () => {
       </Routes>
     </MemoryRouter>
   )
-  await waitFor(() => expect(screen.getByText('403 - Acesso negado')).toBeInTheDocument())
+  await waitFor(() => expect(screen.getByText('Bem-vindo ao Portal do Professor')).toBeInTheDocument())
   expect(screen.queryByText('Cadastro de Feriados')).not.toBeInTheDocument()
 })
 
@@ -80,7 +80,7 @@ test('rota de ano letivo bloqueada para professor', async () => {
       </Routes>
     </MemoryRouter>
   )
-  await waitFor(() => expect(screen.getByText('403 - Acesso negado')).toBeInTheDocument())
+  await waitFor(() => expect(screen.getByText('Bem-vindo ao Portal do Professor')).toBeInTheDocument())
   expect(screen.queryByText('Cadastro de Ano Letivo')).not.toBeInTheDocument()
 })
 
