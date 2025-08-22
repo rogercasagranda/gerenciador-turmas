@@ -33,11 +33,12 @@ const RouteGuard: React.FC<Props> = ({ children }) => {
   }, [navigate])
 
   useEffect(() => {
+    if (!token) return
     fetchSession()
     const handler = () => fetchSession()
     window.addEventListener('permissions:refresh', handler)
     return () => window.removeEventListener('permissions:refresh', handler)
-  }, [fetchSession])
+  }, [fetchSession, token])
 
   useEffect(() => {
     const handler = () => {

@@ -110,6 +110,8 @@ const Login: React.FC = () => {
 
   // Redireciona para o login do Google
   const handleGoogleLogin = () => {
+    const persist = keepConnected ? "1" : "0";
+    sessionStorage.setItem("login:persist", persist);
     window.location.href = `${API_BASE}/google-login`;
   };
 

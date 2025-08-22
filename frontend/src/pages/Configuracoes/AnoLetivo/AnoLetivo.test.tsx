@@ -22,7 +22,7 @@ afterEach(() => {
 
 // RBAC
 test('menu e rota protegidos por role', async () => {
-  localStorage.setItem('auth_token', 'x')
+  localStorage.setItem('authToken', 'x')
   mockFetch({ '/usuarios/me': () => ({ ok: true, status: 200, headers: { get: () => 'application/json' }, json: () => Promise.resolve({ tipo_perfil: 'professor' }), text: () => Promise.resolve('{"tipo_perfil":"professor"}') }) })
 
   render(
