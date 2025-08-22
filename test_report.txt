@@ -1,0 +1,21 @@
+Relatório de Testes - Gerenciador de Turmas
+==========================================
+
+Backend
+-------
+- Dependência `httpx` adicionada a `requirements.txt` e `backend/requirements.txt`.
+- Execução `pytest backend/tests` passou em todos os 29 testes (29 passed, 14 warnings).
+
+Frontend
+--------
+- Execução `npm test -- --run` resultou em falha de 3 arquivos de teste e sucesso em 2.
+- Resumo: 3 testes falharam, 7 passaram e 4 foram ignorados.
+- Principais falhas observadas:
+  * `src/theme/utils.test.ts` — esperado `'default'`, mas `localStorage` retornou `null`.
+  * `src/pages/Feriados/Feriados.test.tsx` — elemento "Bem-vindo ao Portal do Professor" não encontrado.
+  * `src/pages/Configuracoes/Acessos/Consultar.test.tsx` — erros de navegação não implementada em `jsdom`.
+
+Observações
+-----------
+- A inclusão de `httpx` garante que os testes de backend não falhem por dependências ausentes.
+- As falhas de frontend indicam possíveis problemas de fluxo nas rotas protegidas e no carregamento de tema.
