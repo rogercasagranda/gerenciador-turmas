@@ -1,28 +1,31 @@
-# Importa dependências necessárias
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
-from passlib.context import CryptContext
-from backend.db.session import get_db
-from backend.db.models.user import User
-from backend.schemas.login_schema import LoginRequest
-from backend.utils.token import create_access_token
+"""Rota de login que delega a autenticação ao backend."""
 
-# Instancia o roteador da API
+import os
+from typing import Any
+
+import requests
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
+
+class LoginRequest(BaseModel):
+    """Modelo de entrada com credenciais de login."""
+
+    username: str
+    password: str
+
 router = APIRouter()
 
-# Define o contexto de criptografia para senhas
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
-# Cria a rota POST para login
+
 @router.post("/login")
-def login(request: LoginRequest, db: Session = Depends(get_db)):
-    # Busca usuário no banco pelo nome de usuário
-    user = db.query(User).filter(User.username == request.username).first()
+def login(request: LoginRequest) -> Any:
+    """Encaminha as credenciais ao backend e retorna o token gerado."""
+    response = requests.post(f"{BACKEND_URL}/login", json=request.dict())
 
-    # Verifica se o usuário existe e se a senha está correta
-    if not user or not pwd_context.verify(request.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Usuário e/ou senha inválidos")
+    if response.status_code != 200:
+        detail = response.json().get("detail", "Erro ao autenticar")
+        raise HTTPException(status_code=response.status_code, detail=detail)
 
-    # Gera o token JWT de acesso
-    token = create_access_token(data={"sub": user.username})
-    return {"access_token": token, "token_type": "bearer"}
+    return response.json()
