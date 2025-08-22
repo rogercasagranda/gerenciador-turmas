@@ -11,13 +11,10 @@ import { loadThemeFromStorage } from './utils/theme';
 import './index.css';
 import './styles/Layout.css';
 
-// Lê o Client ID do Google via .env
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
-
 loadThemeFromStorage();
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <GoogleOAuthProvider clientId={googleClientId}>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as string}>
       <BrowserRouter>
         <App />
       </BrowserRouter>
@@ -25,7 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>,
 );
 
-// Registro do Service Worker (PWA)
+// Register service worker after page load
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js');
