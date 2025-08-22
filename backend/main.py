@@ -129,8 +129,8 @@ app.add_middleware(                                  # Adiciona middleware de CO
         "https://gerenciador-turmas-f.onrender.com",
         "http://localhost:5173",
     ],                                               # Domínios permitidos (adicione staging se necessário)
-    allow_credentials=True,                          # Permite envio de cookies/credenciais
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_credentials=False,                         # JWT via header; não usa cookies
+    allow_methods=["*"],                             # Libera todos os métodos
     allow_headers=["Authorization", "Content-Type"],
 )
 
