@@ -17,6 +17,7 @@ const RouteGuard: React.FC<Props> = ({ children }) => {
   const [user, setUser] = useState<any>(null)
 
   const fetchSession = useCallback(async () => {
+    if (!getAuthToken()) return
     try {
       const u = await apiFetch('/me')
       const perms = await apiFetch('/me/permissions/effective')

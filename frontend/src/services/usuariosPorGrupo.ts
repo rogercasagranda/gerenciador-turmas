@@ -1,4 +1,4 @@
-import { apiRequest, API_BASE, authFetch } from './api'
+import { apiRequest, authFetch } from './api'
 
 export interface UsuarioGrupoItem {
   id_usuario: number
@@ -63,7 +63,7 @@ export async function exportarUsuariosPorGrupo(
     format,
   })
   const res = await authFetch(
-    `${API_BASE}/acessos/export/usuarios-por-grupo?${query}`,
+    `/acessos/export/usuarios-por-grupo?${query}`,
   )
   if (!res.ok) throw new Error('Falha na exportação')
   return res.blob()
