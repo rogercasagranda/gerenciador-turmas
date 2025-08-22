@@ -5,7 +5,7 @@ import './styles/global.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { loadThemeFromStorage } from './utils/theme';
 import './index.css';
@@ -21,11 +21,11 @@ if (!rootElement) {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
       <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as string}>
-        <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <HashRouter basename={import.meta.env.BASE_URL}>
           <ErrorBoundary>
             <App />
           </ErrorBoundary>
-        </BrowserRouter>
+        </HashRouter>
       </GoogleOAuthProvider>
     </React.StrictMode>,
   );
