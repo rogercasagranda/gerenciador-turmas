@@ -18,7 +18,9 @@ from datetime import datetime, timedelta     # Importa utilitários de data e te
 from jose import jwt                         # Importa biblioteca JOSE para geração de JWT
 
 # Lê a chave do JWT priorizando SECRET_KEY (compatibilidade com nomes antigos)
-SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET", "change-me-in-prod")  # Define chave secreta do JWT
+SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET")  # Define chave secreta do JWT
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is not set")
 ALGORITHM = os.getenv("JWT_ALG", "HS256")                 # Define algoritmo de assinatura
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))  # Define expiração padrão
 

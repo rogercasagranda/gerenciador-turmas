@@ -4,7 +4,9 @@ from jose import jwt
 import os
 
 # Define a chave secreta e algoritmo
-SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET", "sua-chave-secreta-super-segura")
+SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is not set")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

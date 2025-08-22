@@ -8,8 +8,10 @@ from jose import jwt, JWTError
 logger = logging.getLogger(__name__)
 
 # Lê chave e algoritmo do JWT a partir das variáveis de ambiente
-# Mantém compatibilidade com nomes antigos, mas prioriza SECRET_KEY
-SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET", "change-me-in-prod")
+# Mantém compatibilidade com nomes antigos, mas levanta erro se ausente
+SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is not set")
 ALGORITHM = os.getenv("JWT_ALG", "HS256")
 
 
