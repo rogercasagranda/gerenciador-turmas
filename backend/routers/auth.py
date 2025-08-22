@@ -8,7 +8,10 @@ from sqlalchemy.orm import Session
 from backend.database import get_db
 
 # Importa o modelo de usuário para consulta à tabela "usuarios"
-from backend.models import Usuario
+from backend.models import Usuarios
+
+# Utilitário para geração de tokens JWT
+from backend.utils.token import create_access_token
 
 # Importa a biblioteca bcrypt para verificação segura da senha
 import bcrypt
@@ -20,7 +23,7 @@ router = APIRouter()
 @router.post("/login")
 def login(email: str, senha: str, db: Session = Depends(get_db)):
     # Busca o usuário pelo e-mail informado
-    usuario = db.query(Usuario).filter(Usuario.email == email).first()
+    usuario = db.query(Usuarios).filter(Usuarios.email == email).first()
 
     # Se o usuário não existir, retorna erro de credenciais inválidas
     if not usuario:
@@ -36,8 +39,21 @@ def login(email: str, senha: str, db: Session = Depends(get_db)):
             detail="SEU USUÁRIO E/OU SENHA ESTÃO INCORRETAS, TENTE NOVAMENTE"
         )
 
-    # Se todas as validações passarem, retorna sucesso com o e-mail do usuário
+    # Se todas as validações passarem, gera token e retorna dados essenciais
+    token_payload = {
+        "sub": str(usuario.id_usuario),
+        "email": usuario.email,
+        "nome": usuario.nome,
+        "role": usuario.tipo_perfil,
+    }
+    access_token = create_access_token(token_payload)
     return {
-        "mensagem": "Login realizado com sucesso",
-        "usuario": usuario.email
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": usuario.id_usuario,
+            "email": usuario.email,
+            "nome": usuario.nome,
+            "perfis": [usuario.tipo_perfil],
+        },
     }
