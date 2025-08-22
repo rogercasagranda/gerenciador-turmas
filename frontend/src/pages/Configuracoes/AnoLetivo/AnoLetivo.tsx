@@ -48,7 +48,7 @@ const AnoLetivoPage: React.FC = () => {
   }
 
   const botoes = (
-    <button className="btn primario button" onClick={abrirNovo}>+ Novo Ano Letivo</button>
+      <button className="btn btn-md primario" onClick={abrirNovo}>+ Novo Ano Letivo</button>
   )
 
   return (
@@ -72,8 +72,8 @@ const AnoLetivoPage: React.FC = () => {
                 <td>{new Date(a.data_inicio).toLocaleDateString('pt-BR')}</td>
                 <td>{new Date(a.data_fim).toLocaleDateString('pt-BR')}</td>
                 <td>
-                  <button className="btn" onClick={() => abrirEditar(a)}>Editar</button>
-                  <button className="btn perigo" onClick={() => excluir(a.id)}>Excluir</button>
+                    <button className="btn btn-md" onClick={() => abrirEditar(a)}>Editar</button>
+                    <button className="btn btn-md perigo" onClick={() => excluir(a.id)}>Excluir</button>
                 </td>
               </tr>
             ))}

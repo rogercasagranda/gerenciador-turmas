@@ -35,7 +35,6 @@
 .usuario-form button {
   background-color: #5B21B6;
   color: white;
-  padding: 10px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -74,7 +73,6 @@
 .usuario-botoes button {
   background-color: #5B21B6;             /* Roxo */
   color: white;                          /* Texto branco */
-  padding: 12px 20px;                    /* Espaço interno */
   border: none;                          /* Remove borda */
   border-radius: 6px;                    /* Bordas arredondadas */
   font-size: 1rem;                       /* Tamanho da fonte */

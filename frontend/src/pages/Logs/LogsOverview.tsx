@@ -161,7 +161,7 @@ const LogsOverview: React.FC<Props> = ({ onEdit }) => {
                 {i.updated_at ? new Date(i.updated_at).toLocaleString() : '—'}
               </td>
               <td>
-                <button className="button" onClick={() => onEdit(i.screen)}>
+                  <button className="btn btn-md" onClick={() => onEdit(i.screen)}>
                   Editar
                 </button>
               </td>
@@ -169,25 +169,25 @@ const LogsOverview: React.FC<Props> = ({ onEdit }) => {
           ))}
         </tbody>
       </table>
-      <div className="paginacao">
-        <button className="button" onClick={exportarCsv}>
+        <div className="paginacao">
+          <button className="btn btn-md" onClick={exportarCsv}>
           Exportar CSV
         </button>
-        <button
-          className="button"
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          disabled={page <= 1}
-        >
+          <button
+            className="btn btn-md"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+          >
           Anterior
         </button>
         <span>
           Página {page} de {totalPages}
         </span>
-        <button
-          className="button"
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          disabled={page >= totalPages}
-        >
+          <button
+            className="btn btn-md"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+          >
           Próxima
         </button>
         <select

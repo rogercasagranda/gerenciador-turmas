@@ -74,7 +74,7 @@ const LogsConfig: React.FC<Props> = ({ initialScreen }) => {
             {c}
           </label>
         ))}
-        <button className="button" disabled={!formValido} onClick={salvar}>
+          <button className="btn btn-md" disabled={!formValido} onClick={salvar}>
           Salvar alterações
         </button>
       </div>

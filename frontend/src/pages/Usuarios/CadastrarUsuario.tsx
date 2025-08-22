@@ -298,14 +298,14 @@ const CadastrarUsuario: React.FC = () => {
             <div className="form-actions">
               <button
                 type="button"
-                className="button"
+                className="btn btn-md"
                 onClick={() => {
                   if (!isDirty || confirmIfDirty()) navigate('/usuarios/consultar')
                 }}
               >
                 Consultar Usuários
               </button>
-              <button type="submit" className="button save-button" disabled={enviando || !isDirty}>
+              <button type="submit" className="btn btn-md save-button" disabled={enviando || !isDirty}>
                 {enviando ? (idEdicao ? 'Salvando…' : 'Enviando…') : (idEdicao ? 'Salvar alterações' : 'Cadastrar')}
               </button>
 
@@ -313,7 +313,7 @@ const CadastrarUsuario: React.FC = () => {
               {podeExcluir && (
                 <button
                   type="button"
-                  className="button"
+                  className="btn btn-md"
                   onClick={handleExcluir}
                   aria-label="Excluir usuário"
                   title="Excluir usuário"

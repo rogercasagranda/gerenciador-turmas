@@ -283,7 +283,7 @@ const Home: React.FC = () => {
       <header className="home-header" role="banner" aria-label="Cabeçalho do sistema">
         <div className="header-left">
           <button
-            className="icon-button"
+            className="btn btn-md icon-button"
             aria-label="Abrir menu"
             aria-expanded={drawerAberto}
             onClick={() => setDrawerAberto(!drawerAberto)}
@@ -293,7 +293,7 @@ const Home: React.FC = () => {
           <h1 className="app-title">Portal do Professor</h1>
         </div>
         <div className="header-right">
-          <button className="button-exit" onClick={handleLogout}>Sair</button>
+          <button className="btn btn-md button-exit" onClick={handleLogout}>Sair</button>
         </div>
       </header>
 
@@ -314,7 +314,7 @@ const Home: React.FC = () => {
                   onMouseLeave={() => setSubmenuCadastroAberto(false)}
                 >
                   <button
-                    className="nav-link"
+                    className="btn btn-md nav-link"
                     onClick={() => setSubmenuCadastroAberto(!submenuCadastroAberto)}
                     aria-haspopup="true"
                     aria-expanded={submenuCadastroAberto}
@@ -324,42 +324,42 @@ const Home: React.FC = () => {
                   </button>
                   <div className={`submenu ${submenuCadastroAberto ? 'submenu--open' : ''}`}>
                     {can('/cadastro/turmas') && (
-                      <button className="submenu-link" onClick={() => navigate('/cadastro/turmas')}>
+                      <button className="btn btn-md submenu-link" onClick={() => navigate('/cadastro/turmas')}>
                         Turmas
                       </button>
                     )}
                     {can('/cadastro/alunos') && (
-                      <button className="submenu-link" onClick={() => navigate('/cadastro/alunos')}>
+                      <button className="btn btn-md submenu-link" onClick={() => navigate('/cadastro/alunos')}>
                         Alunos
                       </button>
                     )}
                     {can('/cadastro/disciplinas') && (
-                      <button className="submenu-link" onClick={() => navigate('/cadastro/disciplinas')}>
+                      <button className="btn btn-md submenu-link" onClick={() => navigate('/cadastro/disciplinas')}>
                         Disciplinas
                       </button>
                     )}
                     {can('/cadastro/turnos') && (
-                      <button className="submenu-link" onClick={() => navigate('/cadastro/turnos')}>
+                      <button className="btn btn-md submenu-link" onClick={() => navigate('/cadastro/turnos')}>
                         Turnos
                       </button>
                     )}
                     {can('/cadastro/professores') && (
-                      <button className="submenu-link" onClick={() => navigate('/cadastro/professores')}>
+                      <button className="btn btn-md submenu-link" onClick={() => navigate('/cadastro/professores')}>
                         Professores
                       </button>
                     )}
                     {can('/cadastro/responsaveis') && (
-                      <button className="submenu-link" onClick={() => navigate('/cadastro/responsaveis')}>
+                      <button className="btn btn-md submenu-link" onClick={() => navigate('/cadastro/responsaveis')}>
                         Responsáveis
                       </button>
                     )}
                     {can('/cadastro/ano-letivo') && (
-                      <button className="submenu-link" onClick={() => navigate('/cadastro/ano-letivo')}>
+                      <button className="btn btn-md submenu-link" onClick={() => navigate('/cadastro/ano-letivo')}>
                         Ano Letivo
                       </button>
                     )}
                     {can('/cadastro/feriados') && (
-                      <button className="submenu-link" onClick={() => navigate('/cadastro/feriados')}>
+                      <button className="btn btn-md submenu-link" onClick={() => navigate('/cadastro/feriados')}>
                         Feriados
                       </button>
                     )}
@@ -368,13 +368,13 @@ const Home: React.FC = () => {
               )}
 
             <div className="nav-item">
-              <button className="nav-link" onClick={() => alert('Módulo “Turmas” em desenvolvimento.')}> 
+              <button className="btn btn-md nav-link" onClick={() => alert('Módulo “Turmas” em desenvolvimento.')}> 
                 Turmas
               </button>
             </div>
 
             <div className="nav-item">
-              <button className="nav-link" onClick={() => alert('Módulo “Relatórios” em desenvolvimento.')}>
+              <button className="btn btn-md nav-link" onClick={() => alert('Módulo “Relatórios” em desenvolvimento.')}>
                 Relatórios
               </button>
             </div>
@@ -385,7 +385,7 @@ const Home: React.FC = () => {
               onMouseLeave={() => setSubmenuConfigAberto(false)}
             >
               <button
-                className="nav-link"
+                className="btn btn-md nav-link"
                 onClick={() => setSubmenuConfigAberto(!submenuConfigAberto)}
                 aria-haspopup="true"
                 aria-expanded={submenuConfigAberto}
@@ -395,12 +395,12 @@ const Home: React.FC = () => {
               </button>
               <div className={`submenu ${submenuConfigAberto ? 'submenu--open' : ''}`}>
                 {can('/configuracao/tema') && (
-                  <button className="submenu-link" onClick={() => navigate('/configuracao/tema')}>
+                  <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/tema')}>
                     Configurar Tema
                   </button>
                 )}
                 {can('/configuracao/ano-letivo') && (
-                  <button className="submenu-link" onClick={() => navigate('/configuracao/ano-letivo')}>
+                  <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/ano-letivo')}>
                     Ano Letivo
                   </button>
                 )}
@@ -414,7 +414,7 @@ const Home: React.FC = () => {
                     onMouseLeave={() => setSubmenuAcessosAberto(false)}
                   >
                     <button
-                      className="submenu-link"
+                      className="btn btn-md submenu-link"
                       onClick={() => setSubmenuAcessosAberto(!submenuAcessosAberto)}
                       aria-haspopup="true"
                       aria-expanded={submenuAcessosAberto}
@@ -424,17 +424,17 @@ const Home: React.FC = () => {
                     </button>
                     <div className={`submenu ${submenuAcessosAberto ? 'submenu--open' : ''}`}>
                       {can('/configuracao/acessos/consultar') && (
-                        <button className="submenu-link" onClick={() => navigate('/configuracao/acessos/consultar')}>
+                        <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/acessos/consultar')}>
                           Consultar
                         </button>
                       )}
                       {can('/configuracao/acessos/usuario') && (
-                        <button className="submenu-link" onClick={() => navigate('/configuracao/acessos/usuario')}>
+                        <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/acessos/usuario')}>
                           Usuário
                         </button>
                       )}
                       {can('/configuracao/acessos/grupo') && (
-                        <button className="submenu-link" onClick={() => navigate('/configuracao/acessos/grupo')}>
+                        <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/acessos/grupo')}>
                           Grupo
                         </button>
                       )}
@@ -450,7 +450,7 @@ const Home: React.FC = () => {
                     onMouseLeave={() => setSubmenuUsuariosAberto(false)}
                   >
                     <button
-                      className="submenu-link"
+                      className="btn btn-md submenu-link"
                       onClick={() => setSubmenuUsuariosAberto(!submenuUsuariosAberto)}
                       aria-haspopup="true"
                       aria-expanded={submenuUsuariosAberto}
@@ -460,12 +460,12 @@ const Home: React.FC = () => {
                     </button>
                     <div className={`submenu ${submenuUsuariosAberto ? 'submenu--open' : ''}`}>
                       {can('/configuracao/usuarios/cadastrar') && (
-                        <button className="submenu-link" onClick={() => navigate('/configuracao/usuarios/cadastrar')}>
+                        <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/usuarios/cadastrar')}>
                           Cadastrar
                         </button>
                       )}
                       {can('/configuracao/usuarios/consultar') && (
-                        <button className="submenu-link" onClick={() => navigate('/configuracao/usuarios/consultar')}>
+                        <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/usuarios/consultar')}>
                           Consultar
                         </button>
                       )}
@@ -480,7 +480,7 @@ const Home: React.FC = () => {
                     onMouseLeave={() => setSubmenuLogsAberto(false)}
                   >
                     <button
-                      className="submenu-link"
+                      className="btn btn-md submenu-link"
                       onClick={() => setSubmenuLogsAberto(!submenuLogsAberto)}
                       aria-haspopup="true"
                       aria-expanded={submenuLogsAberto}
@@ -489,10 +489,10 @@ const Home: React.FC = () => {
                       <span className={`caret ${submenuLogsAberto ? 'caret--up' : 'caret--down'}`} />
                     </button>
                     <div className={`submenu ${submenuLogsAberto ? 'submenu--open' : ''}`}>
-                      <button className="submenu-link" onClick={() => navigate('/configuracao/logs?tab=overview')}>
+                      <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/logs?tab=overview')}>
                         Visão geral
                       </button>
-                      <button className="submenu-link" onClick={() => navigate('/configuracao/logs?tab=config')}>
+                      <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/logs?tab=config')}>
                         Configurar
                       </button>
                     </div>

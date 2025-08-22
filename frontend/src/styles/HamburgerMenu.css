@@ -8,8 +8,6 @@
   cursor: pointer; /* Indica elemento clicável */
   /* Define posição acima do conteúdo para ficar sempre clicável */
   z-index: 1002; /* Garante botão acima do overlay e do conteúdo */
-  /* Define espaçamento interno confortável */
-  padding: 12px; /* Ajusta área clicável do botão */
   /* Remove contorno visual agressivo (focus será controlado) */
   outline: none; /* Remove outline padrão */
   /* Oculta por padrão em telas grandes (será visível no mobile) */

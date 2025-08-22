@@ -109,7 +109,7 @@ const AcessoGrupo: React.FC = () => {
                     </td>
                   ))}
                   <td>
-                    <button onClick={() => removerPermissao(idx)}>Remover</button>
+                      <button className="btn btn-md" onClick={() => removerPermissao(idx)}>Remover</button>
                   </td>
                 </tr>
               ))}
@@ -148,11 +148,11 @@ const AcessoGrupo: React.FC = () => {
                 {op}
               </label>
             ))}
-            <button onClick={adicionarPermissao}>
-              Adicionar permissão de tela ao grupo
-            </button>
+              <button className="btn btn-md" onClick={adicionarPermissao}>
+                Adicionar permissão de tela ao grupo
+              </button>
           </div>
-          <button onClick={salvar}>Salvar</button>
+            <button className="btn btn-md" onClick={salvar}>Salvar</button>
         </>
       )}
     </section>

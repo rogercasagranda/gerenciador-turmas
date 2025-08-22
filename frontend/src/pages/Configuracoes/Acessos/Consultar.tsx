@@ -102,14 +102,15 @@ const ConsultarAcessos: React.FC = () => {
           placeholder="Buscar"
           onChange={(e) => setQ(e.target.value)}
         />
-        <button
-          onClick={() => {
-            setPage(1)
-            carregar()
-          }}
-        >
-          Filtrar
-        </button>
+          <button
+            className="btn btn-md"
+            onClick={() => {
+              setPage(1)
+              carregar()
+            }}
+          >
+            Filtrar
+          </button>
       </div>
       <table>
         <thead>
@@ -140,23 +141,24 @@ const ConsultarAcessos: React.FC = () => {
         </tbody>
       </table>
       <div>
-        <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
-          Anterior
-        </button>
+          <button className="btn btn-md" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            Anterior
+          </button>
         <span>
           {page} / {totalPages}
         </span>
-        <button
-          disabled={page >= totalPages}
-          onClick={() => setPage(page + 1)}
-        >
-          Próxima
-        </button>
+          <button
+            className="btn btn-md"
+            disabled={page >= totalPages}
+            onClick={() => setPage(page + 1)}
+          >
+            Próxima
+          </button>
       </div>
       <div>
-        <button onClick={() => handleExport('csv')}>CSV</button>
-        <button onClick={() => handleExport('xlsx')}>XLSX</button>
-        <button onClick={() => handleExport('pdf')}>PDF</button>
+          <button className="btn btn-md" onClick={() => handleExport('csv')}>CSV</button>
+          <button className="btn btn-md" onClick={() => handleExport('xlsx')}>XLSX</button>
+          <button className="btn btn-md" onClick={() => handleExport('pdf')}>PDF</button>
       </div>
     </section>
   )

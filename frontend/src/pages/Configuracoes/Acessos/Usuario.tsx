@@ -55,7 +55,7 @@ const AcessoUsuario: React.FC = () => {
           value={usuarioId}
           onChange={(e) => setUsuarioId(e.target.value)}
         />
-        <button onClick={carregar}>Buscar</button>
+          <button className="btn btn-md" onClick={carregar}>Buscar</button>
       </div>
       <div>
         <select
@@ -79,7 +79,7 @@ const AcessoUsuario: React.FC = () => {
           value={novaPerm.fim}
           onChange={(e) => setNovaPerm({ ...novaPerm, fim: e.target.value })}
         />
-        <button onClick={adicionar}>Adicionar permissão temporária</button>
+          <button className="btn btn-md" onClick={adicionar}>Adicionar permissão temporária</button>
       </div>
       <table>
         <thead>
@@ -99,7 +99,7 @@ const AcessoUsuario: React.FC = () => {
               <td>{p.fim}</td>
               <td>{p.status}</td>
               <td>
-                <button onClick={() => revogar(p.id)}>Revogar agora</button>
+                  <button className="btn btn-md" onClick={() => revogar(p.id)}>Revogar agora</button>
               </td>
             </tr>
           ))}

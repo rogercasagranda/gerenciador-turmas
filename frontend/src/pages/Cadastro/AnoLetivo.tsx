@@ -98,7 +98,7 @@ const AnoLetivoPage: React.FC = () => {
     <FormPage title="Cadastro de Ano Letivo">
       {/* Botão para iniciar novo cadastro */}
       <div className="acoes">
-        <button className="button" onClick={limpar}>Novo</button>
+          <button className="btn btn-md" onClick={limpar}>Novo</button>
       </div>
 
       {/* Tabela de anos cadastrados */}
@@ -118,8 +118,8 @@ const AnoLetivoPage: React.FC = () => {
               <td>{new Date(a.data_inicio).toLocaleDateString('pt-BR')}</td>
               <td>{new Date(a.data_fim).toLocaleDateString('pt-BR')}</td>
               <td>
-                <button className="button" onClick={() => editar(a)}>Editar</button>
-                <button className="button" onClick={() => excluir(a.id)}>Excluir</button>
+                  <button className="btn btn-md" onClick={() => editar(a)}>Editar</button>
+                  <button className="btn btn-md" onClick={() => excluir(a.id)}>Excluir</button>
               </td>
             </tr>
           ))}
@@ -161,7 +161,7 @@ const AnoLetivoPage: React.FC = () => {
           </div>
         </div>
         <div className="form-actions">
-          <button type="submit" className="button save-button" disabled={!isDirty || !podeSalvar}>Salvar</button>
+            <button type="submit" className="btn btn-md save-button" disabled={!isDirty || !podeSalvar}>Salvar</button>
         </div>
       </form>
 

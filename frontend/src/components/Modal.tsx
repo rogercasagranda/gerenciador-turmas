@@ -19,8 +19,8 @@ const Modal: React.FC<ModalProps> = ({ open, title, onClose, onConfirm, confirmL
         <h3>{title}</h3>
         {children}
         <div className="modal-acoes">
-          <button type="button" className="btn secundario" onClick={onClose}>Cancelar</button>
-          <button type="button" className="btn primario" onClick={onConfirm} disabled={confirmDisabled}>{confirmLabel}</button>
+            <button type="button" className="btn btn-md secundario" onClick={onClose}>Cancelar</button>
+            <button type="button" className="btn btn-md primario" onClick={onConfirm} disabled={confirmDisabled}>{confirmLabel}</button>
         </div>
       </div>
     </div>
