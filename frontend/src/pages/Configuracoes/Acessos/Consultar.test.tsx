@@ -3,6 +3,10 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import ConsultarAcessos from './Consultar'
 
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => vi.fn(),
+}))
+
 vi.mock('@/services/permissoesGrupo', () => ({
   listarGrupos: vi.fn()
 }))
@@ -25,6 +29,7 @@ beforeEach(() => {
   exportarMock.mockResolvedValue(new Blob(['x'], { type: 'text/plain' }))
   ;(window.URL.createObjectURL as any) = vi.fn(() => 'url')
   ;(window.URL.revokeObjectURL as any) = vi.fn()
+  ;(HTMLAnchorElement.prototype.click as any) = vi.fn()
 })
 
 afterEach(() => {
