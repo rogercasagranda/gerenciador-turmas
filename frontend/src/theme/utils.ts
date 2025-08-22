@@ -23,8 +23,8 @@ export function applyTheme(theme: ThemeName, mode: ModeKey = 'light') {
 export function loadThemeFromStorage(): { theme: ThemeName; mode: ModeKey } {
   const theme = (localStorage.getItem('theme') as ThemeName) || 'default'
   const mode = (localStorage.getItem('mode') as ModeKey) || 'light'
-  document.documentElement.setAttribute('data-theme', theme)
-  document.documentElement.setAttribute('data-mode', mode)
+  // reuse applyTheme to ensure attributes and storage are in sync
+  applyTheme(theme, mode)
   console.info('[theme] load:', theme, mode)
   return { theme, mode }
 }

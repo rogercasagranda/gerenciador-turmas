@@ -9,11 +9,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-html, body, #root {
-  background: var(--bg);
-  color: var(--text);
-}
-
 a {
   font-weight: 500;
   color: var(--primary);

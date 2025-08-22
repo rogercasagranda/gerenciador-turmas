@@ -16,8 +16,8 @@ describe('utils de tema', () => {
     expect(mode).toBe('light')
     expect(root.getAttribute('data-theme')).toBe('default')
     expect(root.getAttribute('data-mode')).toBe('light')
-    expect(localStorage.getItem('theme')).toBeNull()
-    expect(localStorage.getItem('mode')).toBeNull()
+    expect(localStorage.getItem('theme')).toBe('default')
+    expect(localStorage.getItem('mode')).toBe('light')
   })
 
   it('salva, aplica e carrega tema e modo', () => {
