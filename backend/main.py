@@ -129,8 +129,8 @@ app.add_middleware(                                  # Adiciona middleware de CO
         "http://localhost:5173",
     ],                                               # Domínios permitidos (adicione staging se necessário)
     allow_credentials=True,                          # Permite envio de cookies/credenciais
-    allow_methods=["*"],                             # Libera todos os métodos HTTP
-    allow_headers=["*"],                             # Libera todos os headers
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # ======================================================
