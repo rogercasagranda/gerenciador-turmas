@@ -51,6 +51,8 @@ from backend.database import (
 from backend.models.usuarios import (
     Usuarios, Base
 )  # Importa o modelo Usuarios e a Base compartilhada
+from backend.models.permissoes import Grupo, UsuarioGrupo  # Importa grupos e associação usuário-grupo
+from backend.services.permissions import get_effective_permissions  # Calcula permissões efetivas
 from backend.models.logconfig import LogConfig          # Modelo de configuração de logs
 from backend.models.logauditoria import LogAuditoria    # Modelo de auditoria para criação de tabela
 import bcrypt                                          # Importa bcrypt para validação de senha
@@ -232,20 +234,42 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     logger.info(
         f"Login realizado com sucesso para: {email} (perfil: {usuario.tipo_perfil})"
     )  # Registra sucesso com perfil do usuário
-    # Gera JWT incluindo identificador e tipo de perfil do usuário
+    # Monta grupos e permissões do usuário
+    grupos = [
+        g.nome
+        for g in db.query(Grupo)
+        .join(UsuarioGrupo, UsuarioGrupo.grupo_id == Grupo.id)
+        .filter(UsuarioGrupo.usuario_id == usuario.id_usuario)
+        .all()
+    ]
+    permissoes = get_effective_permissions(db, usuario.id_usuario, usuario.tipo_perfil)
+    is_master = bool(usuario.is_master or (usuario.tipo_perfil or "").lower() == "master")
+    role = "Master" if is_master else usuario.tipo_perfil
+    # Gera JWT completo com dados para o front
     token_payload = {
         "sub": email,
         "id_usuario": usuario.id_usuario,
         "tipo_perfil": usuario.tipo_perfil,
+        "id": usuario.id_usuario,
+        "email": email,
+        "role": role,
+        "grupos": grupos,
+        "permissoes": permissoes,
+        "is_master": is_master,
     }
     token = create_access_token(token_payload)
     response = JSONResponse(
         {
             "message": "Login realizado com sucesso",
             "token": token,
-            "email": email,
-            "id_usuario": usuario.id_usuario,
-            "tipo_perfil": usuario.tipo_perfil,
+            "user": {
+                "id": usuario.id_usuario,
+                "email": email,
+                "role": role,
+                "grupos": grupos,
+                "permissoes": permissoes,
+                "is_master": is_master,
+            },
         }
     )
     response.set_cookie(
@@ -340,7 +364,7 @@ def google_callback(request: Request):
             cur = conn.cursor()                              # Abre cursor
             # Busca identificador e perfil do usuário pré-cadastrado
             cur.execute(
-                "SELECT id_usuario, tipo_perfil FROM usuarios WHERE email = %s",
+                "SELECT id_usuario, tipo_perfil, is_master FROM usuarios WHERE email = %s",
                 (user_email,),
             )
             result = cur.fetchone()                          # Lê resultado
@@ -355,11 +379,28 @@ def google_callback(request: Request):
                 return RedirectResponse(url=f"{frontend_origin}/login?err=USER_NOT_FOUND", status_code=302)  # Redireciona
 
             logger.info(f"Usuário autorizado: {user_email}")  # Registra sucesso
-            id_usuario, tipo_perfil = result                     # Extrai dados do usuário
+            id_usuario, tipo_perfil, is_master_db = result       # Extrai dados do usuário
+            with SessionLocal() as db_session:
+                grupos = [
+                    g.nome
+                    for g in db_session.query(Grupo)
+                    .join(UsuarioGrupo, UsuarioGrupo.grupo_id == Grupo.id)
+                    .filter(UsuarioGrupo.usuario_id == id_usuario)
+                    .all()
+                ]
+                permissoes = get_effective_permissions(db_session, id_usuario, tipo_perfil)
+            is_master = bool(is_master_db or (tipo_perfil or "").lower() == "master")
+            role = "Master" if is_master else tipo_perfil
             token_payload = {
                 "sub": user_email,
                 "id_usuario": id_usuario,
                 "tipo_perfil": tipo_perfil,
+                "id": id_usuario,
+                "email": user_email,
+                "role": role,
+                "grupos": grupos,
+                "permissoes": permissoes,
+                "is_master": is_master,
             }
             token = create_access_token(token_payload)           # Gera JWT completo
             from fastapi.responses import RedirectResponse         # Importa RedirectResponse
