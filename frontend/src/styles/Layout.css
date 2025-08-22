@@ -1,9 +1,4 @@
 /* Global layout helpers for full-viewport pages */
-html, body, #root {
-  height: 100%;
-  min-height: 100vh;
-  width: 100%;
-}
 
 .pp-app-shell {
   min-height: 100vh;

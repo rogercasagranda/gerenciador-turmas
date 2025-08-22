@@ -112,6 +112,11 @@ def root():
         body["frontend_url"] = FRONTEND_URL
     return body
 
+@app.get("/health")
+def health():
+    """Endpoint de saúde para monitoramento."""
+    return {"status": "ok"}
+
 # ======================================================
 # Configura CORS de forma ampla (padrão já aprovado)
 # ======================================================
@@ -119,6 +124,7 @@ app.add_middleware(                                  # Adiciona middleware de CO
     CORSMiddleware,                                  # Define a classe do middleware
     allow_origins=[
         "https://gerenciador-turmas-f.onrender.com",
+        "http://localhost:5173",
     ],                                               # Domínios permitidos (adicione staging se necessário)
     allow_credentials=True,                          # Permite envio de cookies/credenciais
     allow_methods=["*"],                             # Libera todos os métodos HTTP
