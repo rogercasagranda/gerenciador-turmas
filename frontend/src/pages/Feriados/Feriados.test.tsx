@@ -29,7 +29,7 @@ it('menu e rota protegidos por role', async () => {
       <App />
     </MemoryRouter>
   )
-  expect(await screen.findByText('Bem-vindo ao Portal do Professor')).toBeInTheDocument()
+  expect(await screen.findByText('403 - Acesso negado')).toBeInTheDocument()
   expect(screen.queryByText('Cadastro')).not.toBeInTheDocument()
 })
 
