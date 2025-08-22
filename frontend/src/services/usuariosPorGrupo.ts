@@ -1,4 +1,4 @@
-import { apiRequest, API_BASE, getAuthToken } from './api'
+import { apiRequest, API_BASE, authFetch } from './api'
 
 export interface UsuarioGrupoItem {
   id_usuario: number
@@ -62,10 +62,9 @@ export async function exportarUsuariosPorGrupo(
     q: params.q,
     format,
   })
-  const token = getAuthToken()
-  const res = await fetch(`${API_BASE}/acessos/export/usuarios-por-grupo?${query}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  })
+  const res = await authFetch(
+    `${API_BASE}/acessos/export/usuarios-por-grupo?${query}`,
+  )
   if (!res.ok) throw new Error('Falha na exportação')
   return res.blob()
 }
