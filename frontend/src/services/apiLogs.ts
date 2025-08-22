@@ -1,22 +1,27 @@
-import { apiFetch } from './api'
+import { authFetch } from './api'
 
 export type LogFlags = { create:boolean; read:boolean; update:boolean; delete:boolean }
 export type LogConfigOut = LogFlags & { screen:string; updated_at:string; updated_by_name:string }
 
 export async function fetchScreens(): Promise<Array<{key:string; label:string}>> {
-  return apiFetch('/logs/config/screens')
+  const res = await authFetch('/logs/config/screens', { method: 'GET' })
+  if (!res.ok) throw new Error()
+  return res.json()
 }
 
 export async function fetchLogConfig(screen:string): Promise<LogConfigOut> {
-  return apiFetch(`/logs/config?screen=${encodeURIComponent(screen)}`)
+  const res = await authFetch(`/logs/config?screen=${encodeURIComponent(screen)}`, { method: 'GET' })
+  if (!res.ok) throw new Error()
+  return res.json()
 }
 
 export async function saveLogConfig(body: {screen:string}&LogFlags&{applyAll?:boolean}): Promise<LogConfigOut> {
-  return apiFetch('/logs/config', {
+  const res = await authFetch('/logs/config', {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   })
+  if (!res.ok) throw new Error()
+  return res.json()
 }
 
 export type SummaryRow = {
@@ -31,6 +36,8 @@ export async function fetchLogsSummary(params: {page?:number; pageSize?:number; 
     if (v !== undefined && v !== null && v !== '') urlParams.set(k, String(v))
   })
   const qs = urlParams.toString()
-  return apiFetch(`/logs/summary${qs ? `?${qs}` : ''}`)
+  const res = await authFetch(`/logs/summary${qs ? `?${qs}` : ''}`, { method: 'GET' })
+  if (!res.ok) throw new Error()
+  return res.json()
 }
 

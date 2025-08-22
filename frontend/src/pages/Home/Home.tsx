@@ -7,7 +7,7 @@ import useBaseNavigate from '@/hooks/useBaseNavigate'
 import '../../styles/Home.css'
 import '../../styles/Home.lock.css'
 import { loadThemeFromStorage } from '../../theme/utils'
-import { apiFetch, getAuthToken, logoutLocal } from '@/services/api'
+import { authFetch, getAuthToken, logoutLocal } from '@/services/api'
 
 const toCanonical = (perfil: string) => (perfil || '').toLowerCase()
 
@@ -83,9 +83,10 @@ const Home: React.FC = () => {
     const token = getAuthToken()
     if (!token) { navigate('/login'); return }
 
-    apiFetch('/me')
-      .then((data: any) => {
-        if (!data) return
+    authFetch('/me', { method: 'GET' })
+      .then(async (res) => {
+        if (!res.ok) throw new Error()
+        const data: any = await res.json()
         const { perfis = [], permissoes = {}, id_usuario, id } = data
         setIsMaster(perfis.map(toCanonical).includes('master'))
         setPermissions(permissoes)
@@ -119,7 +120,7 @@ const Home: React.FC = () => {
 
   // Logout
   const handleLogout = useCallback(() => {
-    apiFetch('/logout', { method: 'POST' }).catch(() => {})
+    authFetch('/logout', { method: 'POST' }).catch(() => {})
     logoutLocal()
     try { localStorage.removeItem('permissions.effective') } catch {}
     navigate('/login')

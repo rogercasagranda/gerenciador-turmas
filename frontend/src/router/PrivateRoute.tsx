@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
-import { apiFetch, getAuthToken, clearAuthToken } from '@/services/api'
+import { authFetch, getAuthToken, clearAuthToken } from '@/services/api'
 import useBaseNavigate from '@/hooks/useBaseNavigate'
 
 interface Props {
@@ -20,13 +20,15 @@ const PrivateRoute: React.FC<Props> = ({ children }) => {
   useEffect(() => {
     if (!token) return
     let active = true
-    apiFetch('/me').catch((err: any) => {
-      if (!active) return
-      if (err?.status === 401) {
-        clearAuthToken()
-        navigate('/login', { replace: true })
-      }
-    })
+    authFetch('/me', { method: 'GET' })
+      .then(res => {
+        if (!active) return
+        if (res.status === 401) {
+          clearAuthToken()
+          navigate('/login', { replace: true })
+        }
+      })
+      .catch(() => {})
     return () => {
       active = false
     }
