@@ -13,17 +13,22 @@ interface Props {
  * - Com token: renderiza children e valida /me de forma lazy
  * - 401 no /me: limpa storage e redireciona para login
  */
+let validatedToken: string | null = null
+
 const PrivateRoute: React.FC<Props> = ({ children }) => {
   const navigate = useBaseNavigate()
   const token = getAuthToken()
 
   useEffect(() => {
     if (!token) return
+    if (validatedToken === token) return
     let active = true
+    validatedToken = token
     apiFetch('/me').catch((err: any) => {
       if (!active) return
       if (err?.status === 401) {
         clearAuthToken()
+        validatedToken = null
         navigate('/login', { replace: true })
       }
     })
