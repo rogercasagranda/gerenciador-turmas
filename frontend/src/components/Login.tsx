@@ -38,6 +38,7 @@ const Login: React.FC = () => {
   useEffect(() => {
     const token = getAuthToken();
     if (token) {
+      console.log('[auth] token presente, redirecionando para /home')
       navigate('/home');
     }
   }, [navigate]);
@@ -64,6 +65,7 @@ useEffect(() => {
   const token = params.get('token');
   if (token) {
     setAuthToken(token, keepConnected);
+    console.log('[auth] token recebido via callback, redirecionando para /home');
     // Remove o parâmetro da URL sem recarregar
     const url = new URL(window.location.href);
     url.searchParams.delete('token');

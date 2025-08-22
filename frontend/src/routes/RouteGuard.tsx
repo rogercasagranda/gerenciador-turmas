@@ -45,6 +45,7 @@ const RouteGuard: React.FC<Props> = ({ children }) => {
   }, [navigate])
 
   if (!token) {
+    console.warn('[auth] token ausente, redirecionando para /login')
     return <Navigate to="/login" replace />
   }
 
@@ -56,7 +57,7 @@ const RouteGuard: React.FC<Props> = ({ children }) => {
   const base = path.split('?')[0]
   const hasView = !!permissions[base]?.view
   if (base !== '/home' && base !== '/403' && !hasView) {
-    console.warn('Acesso negado à rota', base)
+    console.warn('[auth] acesso negado à rota', base, '→ redirecionando para /403')
     return <Navigate to="/403" replace />
   }
 
