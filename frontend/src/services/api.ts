@@ -5,35 +5,15 @@
 // ============================================================
 
 // Declara API base a partir das variáveis de ambiente do Vite
-// Expõe erro claro se a variável não estiver definida
-export const API_BASE: string = (() => {
-  // Lê variável do Vite
-  const url = import.meta.env.VITE_API_URL as string | undefined
-  // Valida existência
-  if (!url) {
-    // Gera erro descritivo para facilitar debug em produção e dev
-    throw new Error(
-      "[API] VITE_API_URL não definida. Configure no frontend/.env e no Render → Environment."
-    )
-  }
-  // Remove barra final para evitar // nas rotas
-  return url.replace(/\/+$/, "")
-})()
+export const API_BASE = (import.meta.env.VITE_API_URL as string).replace(/\/+$/, "")
 
 // ============================================================
 // Gestão de token (JWT)
 // ============================================================
 
-// Obtém token do localStorage (persistente) ou sessionStorage (sessão)
+// Obtém token do localStorage (persistente) ou, se ausente, do sessionStorage
 export function getAuthToken(): string | null {
-  // Tenta obter do armazenamento persistente
-  const fromLocal =
-    localStorage.getItem("authToken") || localStorage.getItem("auth_token")
-  if (fromLocal) return fromLocal
-  return (
-    sessionStorage.getItem("authToken") ||
-    sessionStorage.getItem("auth_token")
-  )
+  return localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
 }
 
 // Salva token conforme “Continuar conectado” (true → localStorage, false → sessionStorage)
@@ -75,31 +55,37 @@ function logoutControlled(): void {
 }
 
 // ============================================================
-// Fetch centralizado com anexação automática de Authorization
+// Wrapper fetch com Content-Type e Authorization automáticos
+// ============================================================
+
+export function authFetch(input: string, init: RequestInit = {}) {
+  const token = getAuthToken()
+  const headers = new Headers(init.headers || {})
+  if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+  return fetch(input, { ...init, headers })
+}
+
+// ============================================================
+// Fetch que prefixa API_BASE e trata erros JSON
 // ============================================================
 
 export async function apiFetch(
   input: string,
   init: RequestInit = {},
 ): Promise<any> {
-  const token = getAuthToken()
-  const headers = new Headers(init.headers || {})
-  if (token) headers.set("Authorization", `Bearer ${token}`)
+  const url = `${API_BASE}${input.startsWith('/') ? '' : '/'}${input}`
+  const res = await authFetch(url, init)
 
-  const url = `${API_BASE}${input.startsWith("/") ? "" : "/"}${input}`
-
-  const res = await fetch(url, { ...init, headers })
-
-  // 401 → token inválido/expirado: limpa token e força login
   if (res.status === 401) {
     clearAuthToken()
-    window.dispatchEvent(new Event("auth:unauthorized"))
+    window.dispatchEvent(new Event('auth:unauthorized'))
   }
 
   const text = await res.text()
-  const ct = res.headers.get("content-type") || ""
+  const ct = res.headers.get('content-type') || ''
   let data: any = null
-  if (ct.includes("application/json") && text) {
+  if (ct.includes('application/json') && text) {
     try {
       data = JSON.parse(text)
     } catch {
@@ -111,7 +97,7 @@ export async function apiFetch(
 
   if (!res.ok) {
     const msg =
-      (data && (data.detail || data.message)) || res.statusText || "Erro na requisição"
+      (data && (data.detail || data.message)) || res.statusText || 'Erro na requisição'
     const err: any = new Error(msg)
     err.status = res.status
     err.payload = data
@@ -198,20 +184,10 @@ export async function apiRequest<T = unknown>(
   // Monta URL final removendo barras duplicadas
   const url = `${API_BASE}/${path.replace(/^\/+/, "")}`
 
-  // Prepara headers base
+  // Prepara headers base mesclando customizados do chamador
   const baseHeaders: Record<string, string> = {
-    // Define JSON por padrão quando houver body
     ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
-    // Mescla headers customizados do chamador
     ...headers,
-  }
-
-  // Anexa Authorization: Bearer <token> quando solicitado e token existir
-  if (withAuth) {
-    const token = getAuthToken()
-    if (token) {
-      baseHeaders.Authorization = `Bearer ${token}`
-    }
   }
 
   // Cria controlador para cancelar por timeout
@@ -220,8 +196,9 @@ export async function apiRequest<T = unknown>(
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    // Executa fetch com método, headers, corpo serializado e signal de abort
-    const res = await fetch(url, {
+    // Executa fetch (autenticado ou não) com corpo serializado e signal de abort
+    const fetchImpl = withAuth ? authFetch : fetch
+    const res = await fetchImpl(url, {
       method,
       headers: baseHeaders,
       body: body !== undefined ? JSON.stringify(body) : undefined,
