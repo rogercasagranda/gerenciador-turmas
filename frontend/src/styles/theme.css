@@ -44,10 +44,6 @@
 :root[data-theme="rosa"]     { --primary: #EC4899; --on-primary: #ffffff; }
 :root[data-theme="ciano"]    { --primary: #06B6D4; --on-primary: #ffffff; }
 
-html, body, #root {
-  background: var(--bg);
-  color: var(--text);
-}
 
 .card, .menu, .header {
   background: var(--surface);

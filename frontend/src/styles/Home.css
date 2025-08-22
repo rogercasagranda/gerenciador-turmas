@@ -17,12 +17,6 @@
   padding: 0;             /* Remove espaçamentos padrão do navegador */
 }
 
-/* Define tipografia base e cor de fundo geral */
-body { /* Aplica ao corpo do documento */
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; /* Define pilha de fontes moderna */
-  color: var(--pp-text);       /* Define cor padrão do texto usando variável */
-  background: var(--pp-surface); /* Define cor do fundo da página */
-}
 
 /* Container raiz da Home */
 .home-root { /* Delimita a área total da home */

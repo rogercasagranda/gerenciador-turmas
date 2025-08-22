@@ -6,8 +6,6 @@
    ======================================================================== */
 /* Fundo degradê que ocupa toda a tela */
 body {
-  margin: 0; /* Remove margens padrão */
-  min-height: 100vh; /* Garante altura mínima da viewport */
   background: linear-gradient(135deg, #e6e6fa, #98fb98); /* Degradê lavanda para manjericão */
   background-attachment: fixed; /* Mantém o fundo fixo */
   background-size: cover; /* Cobre toda a área visível */
