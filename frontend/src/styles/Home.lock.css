@@ -73,8 +73,6 @@ body { /* Aplica ao corpo do documento */
 
 /* Botão genérico de ícone (hambúrguer) */
 .icon-button { /* Estiliza botão sem bordas aparentes */
-  width: 40px;                   /* Define largura fixa */
-  height: 40px;                  /* Define altura fixa */
   display: inline-flex;          /* Centraliza o conteúdo internamente */
   align-items: center;           /* Alinha verticalmente o ícone */
   justify-content: center;       /* Centraliza horizontalmente o ícone */
@@ -150,7 +148,6 @@ body { /* Aplica ao corpo do documento */
   text-align: left;                /* Alinha texto à esquerda */
   background: transparent;         /* Remove fundo padrão */
   border: none;                    /* Remove borda padrão */
-  padding: 12px 12px;              /* Define espaçamento interno */
   border-radius: 10px;             /* Arredonda cantos */
   font-weight: 600;                /* Destaque de texto */
   color: var(--pp-purple-900);     /* Usa tom roxo escuro para o texto */
@@ -191,7 +188,6 @@ body { /* Aplica ao corpo do documento */
   background: #ffffff;            /* Define fundo branco para contraste */
   border: 1px solid #eee6ff;      /* Delimita com borda suave */
   border-radius: 10px;            /* Arredonda cantos do botão */
-  padding: 10px 12px;             /* Define espaçamento interno */
   text-align: left;               /* Alinha o texto à esquerda */
   color: var(--pp-text);          /* Usa cor de texto padrão */
   cursor: pointer;                /* Indica elemento clicável */
@@ -255,6 +251,5 @@ body { /* Aplica ao corpo do documento */
     font-size: 18px;             /* Reduz levemente para caber melhor */
   }
   .button-exit { /* Ajusta o botão sair */
-    padding: 8px 10px;           /* Reduz espaçamento para caber no cabeçalho */
   }
 }

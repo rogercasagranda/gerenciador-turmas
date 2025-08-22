@@ -54,7 +54,7 @@ const AnoLetivoPage: React.FC = () => {
   }, [navigate])
 
   const novo = podeGerenciar ? (
-    <button className="btn primario button">Novo</button>
+      <button className="btn btn-md primario">Novo</button>
   ) : null
 
   return (
@@ -80,10 +80,10 @@ const AnoLetivoPage: React.FC = () => {
                 <td>
                   {podeGerenciar && (
                     <>
-                      <button className="btn secundario" onClick={() => {}}>
+                        <button className="btn btn-md secundario" onClick={() => {}}>
                         Editar
                       </button>
-                      <button className="btn perigo" onClick={() => {}}>
+                        <button className="btn btn-md perigo" onClick={() => {}}>
                         Excluir
                       </button>
                     </>

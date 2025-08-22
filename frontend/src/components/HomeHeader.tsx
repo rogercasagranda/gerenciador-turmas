@@ -15,10 +15,10 @@ const HomeHeader: React.FC = () => {
       {/* Área com ícones de notificação e usuário */}
       <div className="home-header-actions">
         {/* Ícone de notificações */}
-        <button className="button icon-button" title="Notificações">🔔</button>
+          <button className="btn btn-md icon-button" title="Notificações">🔔</button>
 
         {/* Ícone do usuário */}
-        <button className="button icon-button" title="Perfil do usuário">👤</button>
+          <button className="btn btn-md icon-button" title="Perfil do usuário">👤</button>
       </div>
     </header>
   );

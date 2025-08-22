@@ -58,18 +58,18 @@ const Logs: React.FC = () => {
   return (
     <section className="logs-section">
       <div className="logs-tabs">
-        <button
-          className={`logs-tab ${tab === 'config' ? 'active' : ''}`}
-          onClick={() => changeTab('config')}
-        >
-          Configurar
-        </button>
-        <button
-          className={`logs-tab ${tab === 'overview' ? 'active' : ''}`}
-          onClick={() => changeTab('overview')}
-        >
-          Visão geral
-        </button>
+          <button
+            className={`btn btn-md logs-tab ${tab === 'config' ? 'active' : ''}`}
+            onClick={() => changeTab('config')}
+          >
+            Configurar
+          </button>
+          <button
+            className={`btn btn-md logs-tab ${tab === 'overview' ? 'active' : ''}`}
+            onClick={() => changeTab('overview')}
+          >
+            Visão geral
+          </button>
       </div>
       <div hidden={tab !== 'config'}>
         <LogsConfig initialScreen={screenParam} />

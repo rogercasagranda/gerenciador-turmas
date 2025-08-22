@@ -63,14 +63,12 @@
 }
 
 .logs-wrapper button {
-  height: 40px; /* mesma altura dos demais campos */
-  padding: 0 16px; /* espaçamento horizontal do botão */
-  background: var(--pp-purple-700); /* cor primária do tema sem hardcode */
-  color: var(--text-color); /* texto claro para contraste */
-  border: none; /* remove bordas padrão */
-  border-radius: 8px; /* cantos arredondados coerentes */
-  cursor: pointer; /* indica interatividade */
-}
+    background: var(--pp-purple-700); /* cor primária do tema sem hardcode */
+    color: var(--text-color); /* texto claro para contraste */
+    border: none; /* remove bordas padrão */
+    border-radius: 8px; /* cantos arredondados coerentes */
+    cursor: pointer; /* indica interatividade */
+  }
 
 .logs-wrapper button:hover {
   filter: brightness(0.9); /* leve escurecimento no hover */
@@ -102,13 +100,12 @@
 }
 
 .logs-tab {
-  padding: 8px 16px;
-  background: var(--pp-purple-100);
-  color: var(--pp-purple-900);
-  border: 1px solid var(--pp-border);
-  border-radius: 8px;
-  cursor: pointer;
-}
+    background: var(--pp-purple-100);
+    color: var(--pp-purple-900);
+    border: 1px solid var(--pp-border);
+    border-radius: 8px;
+    cursor: pointer;
+  }
 
 .logs-tab.active {
   background: var(--pp-purple-700);

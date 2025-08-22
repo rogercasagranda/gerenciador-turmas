@@ -152,8 +152,8 @@ const Feriados: React.FC = () => {
   return (
     <FormPage title="Cadastro de Feriados">
       <div className="acoes">
-        <button className="btn secundario" onClick={() => { setLinhas([]); setImportAberto(true) }}>Importar Feriados</button>
-        <button className="btn primario" onClick={abrirNovo}>+ Novo Feriado</button>
+          <button className="btn btn-md secundario" onClick={() => { setLinhas([]); setImportAberto(true) }}>Importar Feriados</button>
+          <button className="btn btn-md primario" onClick={abrirNovo}>+ Novo Feriado</button>
       </div>
 
 
@@ -175,7 +175,7 @@ const Feriados: React.FC = () => {
                 <td>{f.descricao}</td>
                 <td>
 
-                  <button className="btn perigo" onClick={() => excluir(f.id)}>Excluir</button>
+                    <button className="btn btn-md perigo" onClick={() => excluir(f.id)}>Excluir</button>
 
                 </td>
               </tr>
@@ -208,8 +208,8 @@ const Feriados: React.FC = () => {
             </label>
             <div className="modal-acoes">
 
-              <button type="button" className="btn secundario" onClick={() => setFormAberto(false)}>Cancelar</button>
-              <button type="submit" className="btn primario" disabled={!anoId || !data || !descricao.trim()}>Salvar</button>
+                <button type="button" className="btn btn-md secundario" onClick={() => setFormAberto(false)}>Cancelar</button>
+                <button type="submit" className="btn btn-md primario" disabled={!anoId || !data || !descricao.trim()}>Salvar</button>
 
             </div>
           </form>
@@ -249,8 +249,8 @@ const Feriados: React.FC = () => {
             )}
             <div className="modal-acoes">
 res
-              <button className="btn secundario" type="button" onClick={() => setImportAberto(false)}>Cancelar</button>
-              <button className="btn primario" type="button" onClick={salvarImport} disabled={validas === 0}>Salvar</button>
+                <button className="btn btn-md secundario" type="button" onClick={() => setImportAberto(false)}>Cancelar</button>
+                <button className="btn btn-md primario" type="button" onClick={salvarImport} disabled={validas === 0}>Salvar</button>
 
             </div>
           </div>

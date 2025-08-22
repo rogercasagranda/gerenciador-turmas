@@ -27,7 +27,7 @@ class ErrorBoundary extends React.Component<React.PropsWithChildren, State> {
       return (
         <div style={{ padding: 16 }}>
           <h1>Ocorreu um erro.</h1>
-          <button onClick={this.handleReload}>Tentar novamente</button>
+            <button className="btn btn-md" onClick={this.handleReload}>Tentar novamente</button>
         </div>
       )
     }
