@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import '../../styles/ConfigTema.css'
 import { applyTheme, loadThemeFromStorage, saveTheme, saveMode, THEME_OPTIONS, ThemeName, ModeKey } from '../../theme/utils'
+import { put } from '../../services/http'
 
 const ConfigurarTema: React.FC = () => {
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>('roxo')
@@ -13,10 +14,15 @@ const ConfigurarTema: React.FC = () => {
     setSelectedMode(mode)
   }, [])
 
-  const handleSalvar = () => {
+  const handleSalvar = async () => {
     saveTheme(selectedTheme)
     saveMode(selectedMode)
     applyTheme(selectedTheme, selectedMode)
+    try {
+      await put('/me/preferences/theme', { themeName: selectedTheme, themeMode: selectedMode })
+    } catch {
+      // ignore errors silently
+    }
     setShowToast(true)
     setTimeout(() => setShowToast(false), 2000)
   }
@@ -50,13 +56,13 @@ const ConfigurarTema: React.FC = () => {
 
       <div className="theme-preview" data-preview-theme={selectedTheme} data-preview-mode={selectedMode}>
         <div className="preview-header"></div>
-          <button className="btn btn-md">Botão Primário</button>
+          <button className="btn btn-md btn-primary">Botão Primário</button>
       </div>
 
       {showToast && <div className="toast-success">Tema alterado com sucesso</div>}
 
       <div className="theme-actions">
-          <button className="btn btn-md" onClick={handleSalvar}>Salvar alterações</button>
+          <button className="btn btn-md btn-primary" onClick={handleSalvar}>Salvar alterações</button>
       </div>
     </section>
   )

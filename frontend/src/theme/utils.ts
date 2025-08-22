@@ -18,8 +18,8 @@ export function saveMode(mode: ModeKey) {
 
 export function applyTheme(theme: ThemeName, mode: ModeKey = 'light') {
   if (typeof document !== 'undefined') {
-    document.documentElement.setAttribute('data-theme', theme)
-    document.documentElement.setAttribute('data-mode', mode)
+    document.body.setAttribute('data-theme', theme)
+    document.body.setAttribute('data-mode', mode)
   }
   if (typeof window !== 'undefined') {
     try {
@@ -31,21 +31,21 @@ export function applyTheme(theme: ThemeName, mode: ModeKey = 'light') {
 }
 
 export function loadThemeFromStorage(): { theme: ThemeName; mode: ModeKey } {
-  let theme: ThemeName = 'default'
+  let theme: ThemeName = 'roxo'
   let mode: ModeKey = 'light'
   if (typeof window !== 'undefined') {
     try {
       const storedTheme = localStorage.getItem('theme') as ThemeName | null
       const storedMode = localStorage.getItem('mode') as ModeKey | null
-      theme = storedTheme || 'default'
+      theme = storedTheme || 'roxo'
       mode = storedMode || 'light'
       if (!storedTheme) localStorage.setItem('theme', theme)
       if (!storedMode) localStorage.setItem('mode', mode)
     } catch {}
   }
   if (typeof document !== 'undefined') {
-    document.documentElement.setAttribute('data-theme', theme)
-    document.documentElement.setAttribute('data-mode', mode)
+    document.body.setAttribute('data-theme', theme)
+    document.body.setAttribute('data-mode', mode)
   }
   console.info('[theme] load:', theme, mode)
   return { theme, mode }

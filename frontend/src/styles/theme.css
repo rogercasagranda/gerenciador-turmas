@@ -8,6 +8,11 @@
   --border: #e2e2e8;
   --btn-radius: .75rem;
   --btn-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --color-white: #ffffff;
 
   /* aliases for legacy variables */
   --primary-color: var(--primary);
@@ -22,6 +27,34 @@
   --pp-muted: color-mix(in srgb, var(--text) 60%, var(--bg));
   --pp-danger: #e53e3e;
   --pp-shadow: var(--btn-shadow);
+
+  /* theme color tokens */
+  --theme-roxo: #6D28D9;
+  --theme-roxo-on: #ffffff;
+  --theme-vermelho: #EF4444;
+  --theme-vermelho-on: #ffffff;
+  --theme-azul: #3B82F6;
+  --theme-azul-on: #ffffff;
+  --theme-verde: #10B981;
+  --theme-verde-on: #ffffff;
+  --theme-laranja: #F59E0B;
+  --theme-laranja-on: #111827;
+  --theme-cinza: #6B7280;
+  --theme-cinza-on: #ffffff;
+  --theme-rosa: #EC4899;
+  --theme-rosa-on: #ffffff;
+  --theme-ciano: #06B6D4;
+  --theme-ciano-on: #ffffff;
+
+  /* mode base colors for previews */
+  --mode-light-bg: #ffffff;
+  --mode-light-text: #111827;
+  --mode-light-surface: #f5f7fb;
+  --mode-light-border: #e5e7eb;
+  --mode-dark-bg: #0f172a;
+  --mode-dark-text: #e5e7eb;
+  --mode-dark-surface: #111827;
+  --mode-dark-border: #1f2937;
 }
 
 :root[data-mode="dark"] {
@@ -35,14 +68,14 @@
 }
 
 /* theme maps */
-:root[data-theme="roxo"]     { --primary: #6D28D9; --on-primary: #ffffff; }
-:root[data-theme="vermelho"] { --primary: #EF4444; --on-primary: #ffffff; }
-:root[data-theme="azul"]     { --primary: #3B82F6; --on-primary: #ffffff; }
-:root[data-theme="verde"]    { --primary: #10B981; --on-primary: #ffffff; }
-:root[data-theme="laranja"]  { --primary: #F59E0B; --on-primary: #111827; }
-:root[data-theme="cinza"]    { --primary: #6B7280; --on-primary: #ffffff; }
-:root[data-theme="rosa"]     { --primary: #EC4899; --on-primary: #ffffff; }
-:root[data-theme="ciano"]    { --primary: #06B6D4; --on-primary: #ffffff; }
+:root[data-theme="roxo"]     { --primary: var(--theme-roxo); --on-primary: var(--theme-roxo-on); }
+:root[data-theme="vermelho"] { --primary: var(--theme-vermelho); --on-primary: var(--theme-vermelho-on); }
+:root[data-theme="azul"]     { --primary: var(--theme-azul); --on-primary: var(--theme-azul-on); }
+:root[data-theme="verde"]    { --primary: var(--theme-verde); --on-primary: var(--theme-verde-on); }
+:root[data-theme="laranja"]  { --primary: var(--theme-laranja); --on-primary: var(--theme-laranja-on); }
+:root[data-theme="cinza"]    { --primary: var(--theme-cinza); --on-primary: var(--theme-cinza-on); }
+:root[data-theme="rosa"]     { --primary: var(--theme-rosa); --on-primary: var(--theme-rosa-on); }
+:root[data-theme="ciano"]    { --primary: var(--theme-ciano); --on-primary: var(--theme-ciano-on); }
 
 
 .card, .menu, .header {
@@ -91,4 +124,21 @@
 .app-bg      { background: var(--bg);    color: var(--text); }
 .app-surface { background: var(--surface); }
 .app-border  { border: 1px solid var(--border); }
+
+/* utility buttons */
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: 1px solid transparent;
+  border-radius: var(--btn-radius);
+}
+
+.btn-primary:hover {
+  filter: brightness(0.92);
+}
+
+.toast-success {
+  background: var(--color-success);
+  color: var(--color-white);
+}
 

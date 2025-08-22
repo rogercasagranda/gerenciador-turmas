@@ -3,32 +3,6 @@
   <head>
     <!-- Define o charset como UTF-8 para suporte a caracteres especiais -->
     <meta charset="UTF-8" />
-      <script>
-        (function () {
-          var root = document.documentElement;
-          var COLORS = {
-            roxo: '#6D28D9',
-            vermelho: '#EF4444',
-            azul: '#3B82F6',
-            verde: '#10B981',
-            laranja: '#F59E0B',
-            cinza: '#6B7280',
-            rosa: '#EC4899',
-            ciano: '#06B6D4'
-          };
-          var theme = localStorage.getItem('theme') || 'roxo';
-          var mode = localStorage.getItem('mode') || 'light';
-          root.setAttribute('data-theme', theme);
-          root.setAttribute('data-mode', mode);
-          var meta = document.querySelector('meta[name="theme-color"]');
-          if (!meta) {
-            meta = document.createElement('meta');
-            meta.setAttribute('name', 'theme-color');
-            document.head.appendChild(meta);
-          }
-          meta.setAttribute('content', COLORS[theme] || COLORS['roxo']);
-        })();
-      </script>
       <!-- Define como o site deve se comportar em dispositivos móveis -->
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -45,7 +19,7 @@
     <!-- Título da aba do navegador -->
     <title>Portal do Professor</title>
   </head>
-  <body>
+  <body data-theme="roxo" data-mode="light">
     <!-- Container onde a aplicação React será injetada -->
     <div id="root"></div>
 

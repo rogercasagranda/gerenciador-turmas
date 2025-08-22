@@ -1,7 +1,7 @@
 # backend/models/usuarios.py
 
 # Importa os tipos de coluna do SQLAlchemy
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON
 
 # Importa datetime para timestamps
 from datetime import datetime
@@ -52,3 +52,6 @@ class Usuarios(Base):
 
     # Timestamp de atualização do usuário
     atualizado_em = Column(DateTime, nullable=True, default=None)
+
+    # Preferências do usuário (ex.: tema da interface)
+    preferences = Column(JSON, nullable=False, default=dict)

@@ -4,19 +4,19 @@ import { loadThemeFromStorage, saveTheme, saveMode, applyTheme } from './utils'
 describe('utils de tema', () => {
   beforeEach(() => {
     localStorage.clear()
-    const root = document.documentElement
-    root.removeAttribute('data-theme')
-    root.removeAttribute('data-mode')
+    const body = document.body
+    body.removeAttribute('data-theme')
+    body.removeAttribute('data-mode')
   })
 
   it('carrega padrão quando storage vazio', () => {
     const { theme, mode } = loadThemeFromStorage()
-    const root = document.documentElement
-    expect(theme).toBe('default')
+    const body = document.body
+    expect(theme).toBe('roxo')
     expect(mode).toBe('light')
-    expect(root.getAttribute('data-theme')).toBe('default')
-    expect(root.getAttribute('data-mode')).toBe('light')
-    expect(localStorage.getItem('theme')).toBe('default')
+    expect(body.getAttribute('data-theme')).toBe('roxo')
+    expect(body.getAttribute('data-mode')).toBe('light')
+    expect(localStorage.getItem('theme')).toBe('roxo')
     expect(localStorage.getItem('mode')).toBe('light')
   })
 
@@ -25,13 +25,13 @@ describe('utils de tema', () => {
     saveMode('dark')
     applyTheme('vermelho', 'dark')
     const { theme, mode } = loadThemeFromStorage()
-    const root = document.documentElement
+    const body = document.body
     expect(theme).toBe('vermelho')
     expect(mode).toBe('dark')
     expect(localStorage.getItem('theme')).toBe('vermelho')
     expect(localStorage.getItem('mode')).toBe('dark')
-    expect(root.getAttribute('data-theme')).toBe('vermelho')
-    expect(root.getAttribute('data-mode')).toBe('dark')
+    expect(body.getAttribute('data-theme')).toBe('vermelho')
+    expect(body.getAttribute('data-mode')).toBe('dark')
   })
 
   it('idempotência de applyTheme', () => {
@@ -40,9 +40,9 @@ describe('utils de tema', () => {
         applyTheme('ciano', 'dark')
       }
     }).not.toThrow()
-    const root = document.documentElement
-    expect(root.getAttribute('data-theme')).toBe('ciano')
-    expect(root.getAttribute('data-mode')).toBe('dark')
+    const body = document.body
+    expect(body.getAttribute('data-theme')).toBe('ciano')
+    expect(body.getAttribute('data-mode')).toBe('dark')
     expect(localStorage.getItem('theme')).toBe('ciano')
     expect(localStorage.getItem('mode')).toBe('dark')
   })
