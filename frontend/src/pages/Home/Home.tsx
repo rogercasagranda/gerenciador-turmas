@@ -78,25 +78,29 @@ const Home: React.FC = () => {
     return () => window.removeEventListener('permissions:updated', handler)
   }, [loadPermissions])
 
-// Verifica sessão ativa ao montar
+// Verifica sessão ativa ao montar e carrega permissões
   useEffect(() => {
     const token = getAuthToken()
     if (!token) { navigate('/login'); return }
 
-    apiFetch('/usuarios/me')
+    apiFetch('/me')
       .then((data: any) => {
         if (!data) return
-        const perfil = toCanonical(data.tipo_perfil)
-        setIsMaster(Boolean(data.is_master))
-        try { localStorage.setItem('user_id', String(data.id_usuario)) } catch {}
+        const { perfis = [], permissoes = {}, id_usuario, id } = data
+        setIsMaster(perfis.map(toCanonical).includes('master'))
+        setPermissions(permissoes)
+        try {
+          localStorage.setItem('permissions.effective', JSON.stringify(permissoes))
+          const uid = id_usuario ?? id
+          if (uid) localStorage.setItem('user_id', String(uid))
+        } catch {}
         loadThemeFromStorage()
       })
       .catch(() => {
         const claims = getClaimsFromToken()
-        const perfil = toCanonical(
-          (claims?.role || claims?.perfil || claims?.tipo_perfil || '') as string,
-        )
-        const isMaster = perfil === 'master'
+        const perfis: any[] =
+          claims?.perfis || [claims?.role || claims?.perfil || claims?.tipo_perfil || '']
+        const isMaster = perfis.map((p) => toCanonical(p as string)).includes('master')
         setIsMaster(isMaster)
       })
   }, [navigate])
@@ -155,119 +159,84 @@ const Home: React.FC = () => {
 
 
   // Renderiza conteúdo interno
+  const renderWithAuth = (allowed: boolean, node: React.ReactNode) => (
+    <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
+      {allowed ? node : <Forbidden />}
+    </Suspense>
+  )
+
   const renderConteudo = () => {
     const path = getPath()
 
-    if (path.includes('/cadastro/turmas') && can('/cadastro/turmas', 'view')) { // Página de cadastro de turmas
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <CadTurmas />
-        </Suspense>
+    if (path.includes('/cadastro/turmas')) {
+      return renderWithAuth(can('/cadastro/turmas', 'view'), <CadTurmas />)
+    }
+
+    if (path.includes('/cadastro/alunos')) {
+      return renderWithAuth(can('/cadastro/alunos', 'view'), <CadAlunos />)
+    }
+
+    if (path.includes('/cadastro/disciplinas')) {
+      return renderWithAuth(can('/cadastro/disciplinas', 'view'), <CadDisciplinas />)
+    }
+
+    if (path.includes('/cadastro/turnos')) {
+      return renderWithAuth(can('/cadastro/turnos', 'view'), <CadTurnos />)
+    }
+
+    if (path.includes('/cadastro/professores')) {
+      return renderWithAuth(can('/cadastro/professores', 'view'), <CadProfessores />)
+    }
+
+    if (path.includes('/cadastro/responsaveis')) {
+      return renderWithAuth(can('/cadastro/responsaveis', 'view'), <CadResponsaveis />)
+    }
+
+    if (path.includes('/cadastro/feriados')) {
+      return renderWithAuth(can('/cadastro/feriados', 'view'), <CadFeriados />)
+    }
+
+    if (path.includes('/cadastro/ano-letivo')) {
+      return renderWithAuth(can('/cadastro/ano-letivo', 'view'), <CadAnoLetivo />)
+    }
+
+    if (path.includes('/configuracao/usuarios/cadastrar')) {
+      return renderWithAuth(
+        can('/configuracao/usuarios/cadastrar', 'view'),
+        <CadastrarUsuario />,
       )
     }
 
-    if (path.includes('/cadastro/alunos') && can('/cadastro/alunos', 'view')) { // Página de cadastro de alunos
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <CadAlunos />
-        </Suspense>
+    if (path.includes('/configuracao/usuarios/consultar')) {
+      return renderWithAuth(
+        can('/configuracao/usuarios/consultar', 'view'),
+        <ConsultarUsuario />,
       )
     }
 
-    if (path.includes('/cadastro/disciplinas') && can('/cadastro/disciplinas', 'view')) { // Página de cadastro de disciplinas
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <CadDisciplinas />
-        </Suspense>
+    if (path.includes('/configuracao/acessos/consultar')) {
+      return renderWithAuth(
+        can('/configuracao/acessos/consultar', 'view'),
+        <AcessosConsultar />,
       )
     }
 
-    if (path.includes('/cadastro/turnos') && can('/cadastro/turnos', 'view')) { // Página de cadastro de turnos
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <CadTurnos />
-        </Suspense>
+    if (path.includes('/configuracao/acessos/usuario')) {
+      return renderWithAuth(
+        can('/configuracao/acessos/usuario', 'view'),
+        <AcessoUsuario />,
       )
     }
 
-    if (path.includes('/cadastro/professores') && can('/cadastro/professores', 'view')) { // Página de cadastro de professores
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <CadProfessores />
-        </Suspense>
+    if (path.includes('/configuracao/acessos/grupo')) {
+      return renderWithAuth(
+        can('/configuracao/acessos/grupo', 'view'),
+        <AcessoGrupo />,
       )
     }
 
-    if (path.includes('/cadastro/responsaveis') && can('/cadastro/responsaveis', 'view')) { // Página de cadastro de responsáveis
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <CadResponsaveis />
-        </Suspense>
-      )
-    }
-
-    if (path.includes('/cadastro/feriados') && can('/cadastro/feriados', 'view')) { // Página de cadastro de feriados
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <CadFeriados />
-        </Suspense>
-      )
-    }
-
-    if (path.includes('/cadastro/ano-letivo') && can('/cadastro/ano-letivo', 'view')) { // Página de cadastro de ano letivo
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <CadAnoLetivo />
-        </Suspense>
-      )
-    }
-
-    if (path.includes('/configuracao/usuarios/cadastrar') && can('/configuracao/usuarios/cadastrar', 'view')) {
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <CadastrarUsuario />
-        </Suspense>
-      )
-    }
-
-    if (path.includes('/configuracao/usuarios/consultar') && can('/configuracao/usuarios/consultar', 'view')) {
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <ConsultarUsuario />
-        </Suspense>
-      )
-    }
-
-    if (path.includes('/configuracao/acessos/consultar') && can('/configuracao/acessos/consultar', 'view')) {
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <AcessosConsultar />
-        </Suspense>
-      )
-    }
-
-    if (path.includes('/configuracao/acessos/usuario') && can('/configuracao/acessos/usuario', 'view')) {
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <AcessoUsuario />
-        </Suspense>
-      )
-    }
-
-    if (path.includes('/configuracao/acessos/grupo') && can('/configuracao/acessos/grupo', 'view')) {
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <AcessoGrupo />
-        </Suspense>
-      )
-    }
-
-    if (path.includes('/configuracao/ano-letivo') && can('/configuracao/ano-letivo', 'view')) {
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <ConfigAnoLetivo />
-        </Suspense>
-      )
+    if (path.includes('/configuracao/ano-letivo')) {
+      return renderWithAuth(can('/configuracao/ano-letivo', 'view'), <ConfigAnoLetivo />)
     }
 
     if (path.includes('/configuracao/logs')) {
@@ -278,27 +247,15 @@ const Home: React.FC = () => {
           </section>
         )
       }
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <Logs />
-        </Suspense>
-      )
+      return renderWithAuth(true, <Logs />)
     }
 
-    if (path.includes('/configuracao/tema') && can('/configuracao/tema', 'view')) {
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <ConfigurarTema />
-        </Suspense>
-      )
+    if (path.includes('/configuracao/tema')) {
+      return renderWithAuth(can('/configuracao/tema', 'view'), <ConfigurarTema />)
     }
 
     if (path.includes('/403')) {
-      return (
-        <Suspense fallback={<div className="conteudo-carregando">Carregando página…</div>}>
-          <Forbidden />
-        </Suspense>
-      )
+      return renderWithAuth(true, <Forbidden />)
     }
 
     return (

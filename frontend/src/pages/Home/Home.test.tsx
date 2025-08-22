@@ -11,22 +11,23 @@ function mockPerfil(perfil: string, perms?: Record<string, Record<string, boolea
     (perfil === 'diretor'
       ? {
           '/cadastro/feriados': { view: true },
-          '/cadastro/ano-letivo': { view: true }
+          '/cadastro/ano-letivo': { view: true },
         }
       : {})
-  global.fetch = vi.fn((url: string) => {
-    const body = url.includes('/permissions/effective')
-      ? effective
-      : { tipo_perfil: perfil, is_master: perfil === 'master' }
+  global.fetch = vi.fn(() => {
+    const body = {
+      perfis: [perfil],
+      permissoes: effective,
+      is_master: perfil === 'master',
+    }
     return Promise.resolve({
       ok: true,
       status: 200,
       headers: { get: () => 'application/json' } as any,
       json: () => Promise.resolve(body),
-      text: () => Promise.resolve(JSON.stringify(body))
+      text: () => Promise.resolve(JSON.stringify(body)),
     }) as any
   })
-  localStorage.setItem('permissions.effective', JSON.stringify(effective))
 }
 
 afterEach(() => {
@@ -67,7 +68,9 @@ test('rota de feriados bloqueada para professor', async () => {
       </Routes>
     </MemoryRouter>
   )
-  await waitFor(() => expect(screen.getByText('Bem-vindo ao Portal do Professor')).toBeInTheDocument())
+  await waitFor(() =>
+    expect(screen.getByText('403 - Acesso negado')).toBeInTheDocument(),
+  )
   expect(screen.queryByText('Cadastro de Feriados')).not.toBeInTheDocument()
 })
 
@@ -82,7 +85,9 @@ test('rota de ano letivo bloqueada para professor', async () => {
       </Routes>
     </MemoryRouter>
   )
-  await waitFor(() => expect(screen.getByText('Bem-vindo ao Portal do Professor')).toBeInTheDocument())
+  await waitFor(() =>
+    expect(screen.getByText('403 - Acesso negado')).toBeInTheDocument(),
+  )
   expect(screen.queryByText('Cadastro de Ano Letivo')).not.toBeInTheDocument()
 })
 
