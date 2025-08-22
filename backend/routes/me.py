@@ -12,4 +12,5 @@ def read_me(current_user: dict = Depends(get_current_user)):
         "email": current_user["email"],
         "nome": current_user.get("nome"),
         "perfis": current_user.get("perfis", []),
+        "permissoes": current_user.get("permissoes", []),
     }
