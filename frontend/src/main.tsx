@@ -13,6 +13,7 @@ import './styles/Layout.css';
 import ErrorBoundary from './components/ErrorBoundary';
 
 loadThemeFromStorage();
+
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   console.error('Elemento #root não encontrado');
@@ -29,6 +30,7 @@ if (!rootElement) {
     </React.StrictMode>,
   );
 }
+
 
 // Register service worker after page load
 if ('serviceWorker' in navigator) {
