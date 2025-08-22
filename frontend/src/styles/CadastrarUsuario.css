@@ -39,8 +39,8 @@
 /* Estados e mensagens */
 .carregando { color: var(--pp-muted); }
 .alerta { padding: 10px 12px; border-radius: 10px; font-size: 14px; }
-.alerta.erro { background: var(--primary-color); color: var(--text-color); border: 1px solid #fecaca; }
-.alerta.sucesso { background: var(--primary-color); color: var(--text-color); border: 1px solid #bbf7d0; }
+  .alerta.erro { background: var(--primary-color); color: var(--text-color); border: 1px solid var(--color-error-border); }
+  .alerta.sucesso { background: var(--primary-color); color: var(--text-color); border: 1px solid var(--color-success-border); }
 
 /* Responsivo */
 @media (max-width: 700px) {

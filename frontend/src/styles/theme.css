@@ -13,6 +13,10 @@
   --color-success: #16a34a;
   --color-error: #dc2626;
   --color-white: #ffffff;
+  --color-success-border: #bbf7d0;
+  --color-error-border: #fecaca;
+  --overlay-bg: rgba(0,0,0,0.45);
+  --drawer-shadow: 0 10px 30px rgba(0,0,0,0.25);
 
   /* aliases for legacy variables */
   --primary-color: var(--primary);
