@@ -1,13 +1,13 @@
 // Importa React e navegação
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import useBaseNavigate from '@/hooks/useBaseNavigate'
 
 // Importa o CSS compartilhado
 import '../../styles/Usuarios.css';
 
 // Tela principal da rota /usuarios com botões de acesso
 const UsuariosIndex: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useBaseNavigate();
 
   return (
     <div className="usuario-container">

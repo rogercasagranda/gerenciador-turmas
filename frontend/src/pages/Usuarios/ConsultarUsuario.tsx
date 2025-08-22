@@ -3,7 +3,7 @@ import '../../styles/ConsultarUsuario.css'
 // Importa React e hooks
 import React, { useEffect, useMemo, useState } from 'react'
 // Importa navegação
-import { useNavigate } from 'react-router-dom'
+import useBaseNavigate from '@/hooks/useBaseNavigate'
 
 import { apiFetch, getAuthToken } from '@/services/api'
 import { safeAlert } from '@/utils/safeAlert'
@@ -49,7 +49,7 @@ const ConsultarUsuario: React.FC = () => {
   const [erro, setErro] = useState<string>('')
 
   // Navegação
-  const navigate = useNavigate()
+  const navigate = useBaseNavigate()
 
 
 

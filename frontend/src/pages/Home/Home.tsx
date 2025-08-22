@@ -1,7 +1,8 @@
 // Importa React e hooks necessários
 import React, { useEffect, useState, useCallback, Suspense, useMemo } from 'react'
 // Importa utilitários de rota
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import useBaseNavigate from '@/hooks/useBaseNavigate'
 // Importa CSS da Home (layout travado)
 import '../../styles/Home.css'
 import '../../styles/Home.lock.css'
@@ -63,7 +64,7 @@ const Home: React.FC = () => {
   }, [])
 
   // Roteamento
-  const navigate = useNavigate()
+  const navigate = useBaseNavigate()
   const location = useLocation()
 
 

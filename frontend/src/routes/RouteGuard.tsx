@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { apiFetch, getAuthToken } from '@/services/api'
+import useBaseNavigate from '@/hooks/useBaseNavigate'
 
 interface Props {
   children: React.ReactElement
 }
 
 const RouteGuard: React.FC<Props> = ({ children }) => {
-  const navigate = useNavigate()
+  const navigate = useBaseNavigate()
   const location = useLocation()
   const token = getAuthToken()
 

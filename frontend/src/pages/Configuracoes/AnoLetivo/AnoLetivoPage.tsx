@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import useBaseNavigate from '@/hooks/useBaseNavigate'
 import ListPage from '../../../components/ListPage'
 import '../../../styles/CadastrarUsuario.css'
 
@@ -24,7 +24,7 @@ const AnoLetivoPage: React.FC = () => {
   const [anos, setAnos] = useState<AnoLetivo[]>([])
   const [carregado, setCarregado] = useState(false)
   const [podeGerenciar, setPodeGerenciar] = useState(false)
-  const navigate = useNavigate()
+  const navigate = useBaseNavigate()
 
   useEffect(() => {
     const token = getAuthToken()

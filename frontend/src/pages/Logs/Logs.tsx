@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
+import useBaseNavigate from '@/hooks/useBaseNavigate'
 import { apiFetch } from '@/services/api'
 import LogsConfig from './LogsConfig'
 import LogsOverview from './LogsOverview'
@@ -10,7 +11,7 @@ type LogItem = Record<string, any>
 
 const Logs: React.FC = () => {
   const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
+  const navigate = useBaseNavigate()
   const tabParam = searchParams.get('tab') === 'config' ? 'config' : 'overview'
   const screenParam = searchParams.get('screen') || ''
   const [tab, setTab] = useState<Tab>(tabParam)
