@@ -12,7 +12,8 @@ from backend.models.usuarios import Usuarios as UsuariosModel
 from backend.utils.audit import registrar_log, log_403
 from backend.utils.pdf import generate_pdf
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
+# Lê a chave do JWT priorizando SECRET_KEY para compatibilidade
+SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
 ALGORITHM  = "HS256"
 ALLOWED_PERFIS = {"master", "diretor", "secretaria"}
 MAX_JWT_BYTES = 256 * 1024

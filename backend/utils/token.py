@@ -1,9 +1,10 @@
 # Importa bibliotecas para criação de JWT
 from datetime import datetime, timedelta
 from jose import jwt
+import os
 
 # Define a chave secreta e algoritmo
-SECRET_KEY = "sua-chave-secreta-super-segura"
+SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET", "sua-chave-secreta-super-segura")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

@@ -11,7 +11,8 @@ import os
 import logging
 from jose import jwt, JWTError
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
+# Utiliza SECRET_KEY como padrão para assinatura do JWT
+SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 MAX_JWT_BYTES = 256 * 1024
 

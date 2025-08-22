@@ -37,7 +37,7 @@ CANON_TO_ENUM = {
 }
 
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
+SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
 ALGORITHM = "HS256"
 MAX_JWT_BYTES = 256 * 1024
 

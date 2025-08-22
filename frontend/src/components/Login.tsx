@@ -6,8 +6,8 @@ import React, { useState, useEffect } from "react";
 // Importa o hook de navegação com suporte a BASE_URL
 import useBaseNavigate from '@/hooks/useBaseNavigate'
 
-// Base da API
-import { API_BASE, getAuthToken, setAuthToken } from "@/services/api";
+// Base da API e utilidades de autenticação
+import { API_BASE, getAuthToken, setAuthToken, authFetch } from "@/services/api";
 
 // Importa o arquivo CSS da tela de login
 import "../styles/Login.css";
@@ -92,11 +92,22 @@ const Login: React.FC = () => {
         return;
       }
 
-      // Se sucesso, armazena token (se existir) e redireciona para a tela Home
+      // Se sucesso, armazena token e consulta permissões antes de seguir
       try {
         const data = await response.json();
-        if (data && data.token) {
-          setAuthToken(data.token, keepConnected);
+        const token = data.token || data.access_token;
+        if (token) {
+          setAuthToken(token, keepConnected);
+          try {
+            const res = await authFetch('/me/permissions/effective');
+            if (res.ok) {
+              const perms = await res.json();
+              try {
+                localStorage.setItem('permissions.effective', JSON.stringify(perms.permissions));
+              } catch {}
+              window.dispatchEvent(new Event('permissions:updated'));
+            }
+          } catch {}
         }
       } catch {}
       navigate('/home');
