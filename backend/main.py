@@ -411,7 +411,7 @@ def google_callback(request: Request):
                 logger.error(f"[{cid}] FRONTEND_ORIGIN não configurado")
                 raise HTTPException(status_code=500, detail="FRONTEND_ORIGIN não configurado")
             return RedirectResponse(
-                url=f"{frontend_origin}/oauth-ok?token={token}",
+                url=f"{frontend_origin}/#/oauth-ok?token={token}",
                 status_code=302,
             )
 
