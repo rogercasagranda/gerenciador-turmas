@@ -49,10 +49,6 @@ export function setAuthToken(token: string, lembrar: boolean): void {
     // Armazena na sessão atual
     sessionStorage.setItem("authToken", token)
   }
-  // Loga tamanho do token para auditoria
-  try {
-    console.log(`[auth] token length: ${token.length}`)
-  } catch {}
 }
 
 // Remove token de ambos os armazenamentos
