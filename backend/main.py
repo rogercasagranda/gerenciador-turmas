@@ -17,8 +17,8 @@ import time                                   # Utilizado para timestamp seguro 
 from datetime import datetime, timedelta     # Importa utilitários de data e tempo
 from jose import jwt                         # Importa biblioteca JOSE para geração de JWT
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")  # Define chave secreta do JWT
-ALGORITHM = "HS256"                                             # Define algoritmo de assinatura
+SECRET_KEY = os.getenv("JWT_SECRET", "change-me-in-prod")  # Define chave secreta do JWT
+ALGORITHM = os.getenv("JWT_ALG", "HS256")                 # Define algoritmo de assinatura
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))  # Define expiração padrão
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -34,7 +34,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 # Importa FastAPI e utilidades
 # ======================================================
 from fastapi import FastAPI, Request, HTTPException, Depends   # Importa classes e funções da FastAPI
-from fastapi.responses import RedirectResponse, JSONResponse, FileResponse   # Importa respostas JSON, redirecionamentos e arquivos
+from fastapi.responses import RedirectResponse, JSONResponse, FileResponse, Response   # Importa respostas JSON, redirecionamentos e arquivos
 from fastapi.middleware.cors import CORSMiddleware              # Importa CORS middleware para liberar origens
 from fastapi.staticfiles import StaticFiles                     # Importa utilitário para servir arquivos estáticos
 
@@ -100,8 +100,6 @@ app = FastAPI()                                      # Cria instância principal
 # um erro "Not Found" caso a URL do frontend não esteja disponível.
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 FRONTEND_PUBLIC_URL = os.getenv("FRONTEND_PUBLIC_URL")  # URL do front para redirecionar pós-auth
-COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN")
-IS_PROD = os.getenv("ENVIRONMENT", "").lower() == "production"
 
 
 @app.get("/")
@@ -121,6 +119,11 @@ def root():
 def health():
     """Endpoint de saúde para monitoramento."""
     return {"status": "ok"}
+
+
+@app.get("/favicon.ico")
+def favicon():
+    return Response(status_code=204)
 
 # ======================================================
 # Configura CORS de forma ampla (padrão já aprovado)
@@ -254,6 +257,7 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     token_payload = {
         "sub": str(usuario.id_usuario),
         "email": email,
+        "nome": usuario.nome,
         "role": role,
         "groups": grupos,
         "permissions": perms_payload,
@@ -261,40 +265,25 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     }
     token = create_access_token(token_payload)
     logger.info(f"[{cid}] JWT size={len(token)} bytes")
-    response = JSONResponse(
-        {
-            "message": "Login realizado com sucesso",
-            "token": token,
-            "user": {
-                "id": usuario.id_usuario,
-                "email": email,
-                "role": role,
-                "grupos": grupos,
-                "permissoes": permissoes,
-                "is_master": is_master,
-            },
-        }
-    )
-    response.set_cookie(
-        key="pp_sess",
-        value=token,
-        httponly=True,
-        secure=IS_PROD,
-        samesite="Lax",
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        path="/",
-        domain=COOKIE_DOMAIN,
-    )
-    return response  # Retorna token e dados básicos do usuário com cookie
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": usuario.id_usuario,
+            "email": email,
+            "nome": usuario.nome,
+            "perfis": grupos,
+            "permissoes": permissoes,
+            "is_master": is_master,
+        },
+    }
 
 # ======================================================
-# Rota de logout: remove cookie de sessão
+# Rota de logout mantida apenas para compatibilidade; não usa cookies
 # ======================================================
 @app.post("/logout")
 def logout():
-    response = JSONResponse({"message": "Logout realizado com sucesso"})
-    response.delete_cookie("pp_sess", path="/", domain=COOKIE_DOMAIN)
-    return response
+    return JSONResponse({"message": "Logout realizado com sucesso"})
 
 # ======================================================
 # (As rotas /google-login e /google-callback permanecem como no seu código aprovado)
@@ -358,6 +347,7 @@ def google_callback(request: Request):
 
         user_data = user_info_response.json()                # Converte resposta para dicionário
         user_email = user_data.get("email")                  # Extrai e-mail do usuário
+        user_name = user_data.get("name")                    # Extrai nome do usuário
         if not user_email:
             logger.warning(f"[{cid}] Email ausente na resposta do Google")
             raise HTTPException(status_code=400, detail="Email não encontrado na resposta do Google")
@@ -402,6 +392,7 @@ def google_callback(request: Request):
             token_payload = {
                 "sub": str(id_usuario),
                 "email": user_email,
+                "nome": user_name,
                 "role": role,
                 "groups": grupos,
                 "permissions": perms_payload,

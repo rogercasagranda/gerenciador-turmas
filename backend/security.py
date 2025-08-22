@@ -4,8 +4,8 @@ from typing import Dict, Any
 from fastapi import Header, HTTPException, status
 from jose import jwt, JWTError
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
-ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+SECRET_KEY = os.getenv("JWT_SECRET", "change-me-in-prod")
+ALGORITHM = os.getenv("JWT_ALG", "HS256")
 
 
 def verify_jwt(token: str) -> Dict[str, Any]:
@@ -27,4 +27,5 @@ def get_current_user(authorization: str | None = Header(None)) -> Dict[str, Any]
         "email": payload.get("email"),
         "nome": payload.get("nome"),
         "perfis": payload.get("perfis") or payload.get("groups") or [],
+        "permissoes": payload.get("permissoes") or payload.get("permissions") or [],
     }
