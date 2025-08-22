@@ -5,7 +5,7 @@
 // ============================================================
 
 // Declara API base a partir das variáveis de ambiente do Vite
-export const API_BASE = import.meta.env.VITE_API_URL
+export const API_BASE = import.meta.env.VITE_API_URL;
 
 // ============================================================
 // Gestão de token (JWT)
@@ -13,7 +13,7 @@ export const API_BASE = import.meta.env.VITE_API_URL
 
 // Obtém token do localStorage (persistente) ou, se ausente, do sessionStorage
 export function getAuthToken(): string | null {
-  return localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
+  return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
 }
 
 // Salva token conforme “Continuar conectado” (true → localStorage, false → sessionStorage)
@@ -58,13 +58,12 @@ function logoutControlled(): void {
 // Wrapper fetch com Content-Type e Authorization automáticos
 // ============================================================
 
-export function authFetch(path: string, init: RequestInit = {}) {
-  const token = getAuthToken()
-  const headers = new Headers(init.headers || {})
-  headers.set('Content-Type', 'application/json')
-  if (token) headers.set('Authorization', `Bearer ${token}`)
-  const url = `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`
-  return fetch(url, { ...init, headers })
+export async function authFetch(path: string, init: RequestInit = {}) {
+  const token = getAuthToken();
+  const headers = new Headers(init.headers || {});
+  headers.set('Content-Type', 'application/json');
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  return fetch(`${API_BASE}${path}`, { ...init, headers });
 }
 
 // ============================================================
