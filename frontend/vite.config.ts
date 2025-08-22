@@ -7,7 +7,8 @@ import legacy from '@vitejs/plugin-legacy'
 import { fileURLToPath, URL } from 'node:url'
 
 // Permite definir o base path via variável de ambiente para suportar subdiretórios
-const base = process.env.BASE_PATH || './'
+const base = process.env.VITE_BASE_PATH || '/'
+
 
 // Exporta a configuração do Vite
 export default defineConfig({

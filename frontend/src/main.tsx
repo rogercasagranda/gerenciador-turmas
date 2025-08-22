@@ -10,22 +10,36 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { loadThemeFromStorage } from './utils/theme';
 import './index.css';
 import './styles/Layout.css';
+import ErrorBoundary from './components/ErrorBoundary';
 
 loadThemeFromStorage();
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as string}>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <App />
-      </BrowserRouter>
-    </GoogleOAuthProvider>
-  </React.StrictMode>,
-);
+
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  console.error('Elemento #root não encontrado');
+} else {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as string}>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <ErrorBoundary>
+            <App />
+          </ErrorBoundary>
+        </BrowserRouter>
+      </GoogleOAuthProvider>
+    </React.StrictMode>,
+  );
+}
+
 
 // Register service worker after page load
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js');
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      return Promise.all(regs.map((r) => r.unregister()));
+    }).finally(() => {
+      navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`);
+    });
   });
 }
 
