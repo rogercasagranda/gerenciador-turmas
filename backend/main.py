@@ -9,6 +9,7 @@ import psycopg2                               # Importa psycopg2 para conexão s
 from psycopg2 import Error as PsycopgError    # Importa a classe de erro específica do psycopg2
 from zoneinfo import ZoneInfo                 # Importa ZoneInfo para definir fuso horário
 import uuid                                   # Gera correlation_id quando ausente
+import time                                   # Utilizado para timestamp seguro no redirect
 
 # ======================================================
 # JWT: criação de token de acesso
@@ -98,6 +99,7 @@ app = FastAPI()                                      # Cria instância principal
 # responde com uma mensagem padrão. Isso evita que usuários recebam
 # um erro "Not Found" caso a URL do frontend não esteja disponível.
 FRONTEND_URL = os.getenv("FRONTEND_URL")
+FRONTEND_PUBLIC_URL = os.getenv("FRONTEND_PUBLIC_URL")  # URL do front para redirecionar pós-auth
 COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN")
 IS_PROD = os.getenv("ENVIRONMENT", "").lower() == "production"
 
@@ -123,12 +125,13 @@ def health():
 # ======================================================
 # Configura CORS de forma ampla (padrão já aprovado)
 # ======================================================
+allowed_origins = ["http://localhost:5173"]
+if FRONTEND_PUBLIC_URL:
+    allowed_origins.insert(0, FRONTEND_PUBLIC_URL)
+
 app.add_middleware(                                  # Adiciona middleware de CORS
     CORSMiddleware,                                  # Define a classe do middleware
-    allow_origins=[
-        "https://gerenciador-turmas-f.onrender.com",
-        "http://localhost:5173",
-    ],                                               # Domínios permitidos (adicione staging se necessário)
+    allow_origins=allowed_origins,                   # Domínios permitidos
     allow_credentials=False,                         # JWT via header; não usa cookies
     allow_methods=["*"],                             # Libera todos os métodos
     allow_headers=["Authorization", "Content-Type"],
@@ -374,12 +377,13 @@ def google_callback(request: Request):
 
             if not result:                                   # Verifica se usuário não existe
                 logger.warning(f"[{cid}] Usuário não pré-cadastrado (GOOGLE): {user_email}")
-                from fastapi.responses import RedirectResponse                            # Importa RedirectResponse
-                frontend_origin = os.getenv("FRONTEND_ORIGIN")                           # Lê origem do front
-                if not frontend_origin:
-                    logger.error(f"[{cid}] FRONTEND_ORIGIN não configurado")
-                raise HTTPException(status_code=500, detail="FRONTEND_ORIGIN não configurado")
-                return RedirectResponse(url=f"{frontend_origin}/login?err=USER_NOT_FOUND", status_code=302)
+                if not FRONTEND_PUBLIC_URL:
+                    logger.error(f"[{cid}] FRONTEND_PUBLIC_URL não configurado")
+                    raise HTTPException(status_code=500, detail="FRONTEND_PUBLIC_URL não configurado")
+                return RedirectResponse(
+                    url=f"{FRONTEND_PUBLIC_URL}/login?err=USER_NOT_FOUND",
+                    status_code=302,
+                )
 
             logger.info(f"[{cid}] Usuário autorizado: {user_email}")
             id_usuario, tipo_perfil, is_master_db = result       # Extrai dados do usuário
@@ -403,17 +407,15 @@ def google_callback(request: Request):
                 "permissions": perms_payload,
                 "is_master": is_master,
             }
-            token = create_access_token(token_payload)
-            logger.info(f"[{cid}] Google login gerou JWT size={len(token)} bytes")
-            from fastapi.responses import RedirectResponse
-            frontend_origin = os.getenv("FRONTEND_ORIGIN")
-            if not frontend_origin:
-                logger.error(f"[{cid}] FRONTEND_ORIGIN não configurado")
-                raise HTTPException(status_code=500, detail="FRONTEND_ORIGIN não configurado")
-            return RedirectResponse(
-                url=f"{frontend_origin}/#/oauth-ok?token={token}",
-                status_code=302,
+            access_token = create_access_token(token_payload)
+            logger.info(f"[{cid}] Google login gerou JWT size={len(access_token)} bytes")
+            if not FRONTEND_PUBLIC_URL:
+                logger.error(f"[{cid}] FRONTEND_PUBLIC_URL não configurado")
+                raise HTTPException(status_code=500, detail="FRONTEND_PUBLIC_URL não configurado")
+            redirect_url = (
+                f"{FRONTEND_PUBLIC_URL}/#/auth/callback?token={access_token}&t={int(time.time())}"
             )
+            return RedirectResponse(url=redirect_url, status_code=302)
 
         except PsycopgError as db_err:                       # Captura erro de banco
             logger.error(f"[{cid}] Erro ao consultar banco de dados: {db_err}")
