@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { getAuthToken } from '@/services/api'
+import { apiFetch, getAuthToken } from '@/services/api'
 
 interface Props {
   children: React.ReactElement
@@ -12,22 +12,31 @@ const RouteGuard: React.FC<Props> = ({ children }) => {
   const token = getAuthToken()
 
   const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>({})
+  const [loaded, setLoaded] = useState(false)
 
-  const loadPermissions = useCallback(() => {
-    try {
-      const raw = localStorage.getItem('permissions.effective')
-      setPermissions(raw ? JSON.parse(raw) : {})
-    } catch {
-      setPermissions({})
-    }
+  const fetchPermissions = useCallback(() => {
+    apiFetch('/me/permissions/effective')
+      .then((data: Record<string, Record<string, boolean>>) => {
+        const perms = data || {}
+        setPermissions(perms)
+        try { localStorage.setItem('permissions.effective', JSON.stringify(perms)) } catch {}
+      })
+      .catch(() => {
+        setPermissions({})
+        try { localStorage.removeItem('permissions.effective') } catch {}
+      })
+      .finally(() => {
+        setLoaded(true)
+        window.dispatchEvent(new Event('permissions:updated'))
+      })
   }, [])
 
   useEffect(() => {
-    loadPermissions()
-    const handler = () => loadPermissions()
+    fetchPermissions()
+    const handler = () => fetchPermissions()
     window.addEventListener('permissions:refresh', handler)
     return () => window.removeEventListener('permissions:refresh', handler)
-  }, [loadPermissions])
+  }, [fetchPermissions])
 
   useEffect(() => {
     const handler = () => navigate('/login')
@@ -39,10 +48,14 @@ const RouteGuard: React.FC<Props> = ({ children }) => {
     return <Navigate to="/login" replace />
   }
 
+  if (!loaded) {
+    return null
+  }
+
   const path = location.pathname.toLowerCase()
   const base = path.split('?')[0]
   const hasView = !!permissions[base]?.view
-  if (base.startsWith('/configuracao') && !hasView && base !== '/403') {
+  if (base !== '/home' && base !== '/403' && !hasView) {
     console.warn('Acesso negado à rota', base)
     return <Navigate to="/403" replace />
   }

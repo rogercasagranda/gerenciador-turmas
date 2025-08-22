@@ -1,8 +1,9 @@
 import React from 'react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import Home from './Home'
+import RouteGuard from '@/routes/RouteGuard'
 
 function mockPerfil(perfil: string, perms?: Record<string, Record<string, boolean>>) {
   const effective =
@@ -23,10 +24,12 @@ function mockPerfil(perfil: string, perms?: Record<string, Record<string, boolea
       text: () => Promise.resolve(JSON.stringify(body))
     }) as any
   })
+  localStorage.setItem('permissions.effective', JSON.stringify(effective))
 }
 
 afterEach(() => {
   vi.resetAllMocks()
+  localStorage.clear()
 })
 
 test.skip('menu de feriados visível para diretor', async () => {
@@ -56,10 +59,13 @@ test('rota de feriados bloqueada para professor', async () => {
   localStorage.setItem('auth_token', 'x')
   render(
     <MemoryRouter initialEntries={['/cadastro/feriados']}>
-      <Home />
+      <Routes>
+        <Route path='/cadastro/*' element={<RouteGuard><Home /></RouteGuard>} />
+        <Route path='/403' element={<RouteGuard><Home /></RouteGuard>} />
+      </Routes>
     </MemoryRouter>
   )
-  await waitFor(() => expect(screen.getByText(/Bem-vindo/)).toBeInTheDocument())
+  await waitFor(() => expect(screen.getByText('403 - Acesso negado')).toBeInTheDocument())
   expect(screen.queryByText('Cadastro de Feriados')).not.toBeInTheDocument()
 })
 
@@ -68,10 +74,13 @@ test('rota de ano letivo bloqueada para professor', async () => {
   localStorage.setItem('auth_token', 'x')
   render(
     <MemoryRouter initialEntries={['/cadastro/ano-letivo']}>
-      <Home />
+      <Routes>
+        <Route path='/cadastro/*' element={<RouteGuard><Home /></RouteGuard>} />
+        <Route path='/403' element={<RouteGuard><Home /></RouteGuard>} />
+      </Routes>
     </MemoryRouter>
   )
-  await waitFor(() => expect(screen.getByText(/Bem-vindo/)).toBeInTheDocument())
+  await waitFor(() => expect(screen.getByText('403 - Acesso negado')).toBeInTheDocument())
   expect(screen.queryByText('Cadastro de Ano Letivo')).not.toBeInTheDocument()
 })
 
