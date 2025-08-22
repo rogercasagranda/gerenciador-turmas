@@ -5,7 +5,7 @@
 // ============================================================
 
 // Declara API base a partir das variáveis de ambiente do Vite
-export const API_BASE = (import.meta.env.VITE_API_URL as string).replace(/\/+$/, "")
+export const API_BASE = import.meta.env.VITE_API_URL
 
 // ============================================================
 // Gestão de token (JWT)
@@ -58,24 +58,24 @@ function logoutControlled(): void {
 // Wrapper fetch com Content-Type e Authorization automáticos
 // ============================================================
 
-export function authFetch(input: string, init: RequestInit = {}) {
+export function authFetch(path: string, init: RequestInit = {}) {
   const token = getAuthToken()
   const headers = new Headers(init.headers || {})
-  if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
+  headers.set('Content-Type', 'application/json')
   if (token) headers.set('Authorization', `Bearer ${token}`)
-  return fetch(input, { ...init, headers })
+  const url = `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`
+  return fetch(url, { ...init, headers })
 }
 
 // ============================================================
-// Fetch que prefixa API_BASE e trata erros JSON
+// Fetch que trata erros JSON
 // ============================================================
 
 export async function apiFetch(
   input: string,
   init: RequestInit = {},
 ): Promise<any> {
-  const url = `${API_BASE}${input.startsWith('/') ? '' : '/'}${input}`
-  const res = await authFetch(url, init)
+  const res = await authFetch(input, init)
 
   if (res.status === 401) {
     clearAuthToken()
@@ -181,8 +181,9 @@ export async function apiRequest<T = unknown>(
     withAuth = true,
   } = options
 
-  // Monta URL final removendo barras duplicadas
-  const url = `${API_BASE}/${path.replace(/^\/+/, "")}`
+  // Monta path relativo garantindo uma única barra
+  const rel = `/${path.replace(/^\/+/, "")}`
+  const fullUrl = `${API_BASE}${rel}`
 
   // Prepara headers base mesclando customizados do chamador
   const baseHeaders: Record<string, string> = {
@@ -197,13 +198,19 @@ export async function apiRequest<T = unknown>(
 
   try {
     // Executa fetch (autenticado ou não) com corpo serializado e signal de abort
-    const fetchImpl = withAuth ? authFetch : fetch
-    const res = await fetchImpl(url, {
-      method,
-      headers: baseHeaders,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-      signal: controller.signal,
-    })
+    const res = await (withAuth
+      ? authFetch(rel, {
+          method,
+          headers: baseHeaders,
+          body: body !== undefined ? JSON.stringify(body) : undefined,
+          signal: controller.signal,
+        })
+      : fetch(fullUrl, {
+          method,
+          headers: baseHeaders,
+          body: body !== undefined ? JSON.stringify(body) : undefined,
+          signal: controller.signal,
+        }))
 
     // Tenta identificar conteúdo JSON
     const contentType = res.headers.get("content-type") || ""

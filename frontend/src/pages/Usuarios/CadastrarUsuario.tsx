@@ -96,39 +96,36 @@ const CadastrarUsuario: React.FC = () => {
 
         const headers = authHeaders()
         if (!headers) return
-        const r = await fetch(`${API_BASE}/usuarios/me`, { headers })
-        if (r.ok) {
-          const m = (await r.json()) as MeuPerfil
+        const m = await apiFetch('/usuarios/me') as MeuPerfil
 
-          const p = toCanonical(m.tipo_perfil || '')
-          const isMaster = Boolean(m.is_master || p === 'master')
-          const autorizado = isMaster || PERFIS_PERMITIDOS.has(p)
-          if (!autorizado) { safeAlert('ACESSO NEGADO'); return }
-          setMeuId(m.id_usuario)
-          setMeuPerfil(p)
-          setSouMaster(isMaster)
+        const p = toCanonical(m.tipo_perfil || '')
+        const isMaster = Boolean(m.is_master || p === 'master')
+        const autorizado = isMaster || PERFIS_PERMITIDOS.has(p)
+        if (!autorizado) { safeAlert('ACESSO NEGADO'); return }
+        setMeuId(m.id_usuario)
+        setMeuPerfil(p)
+        setSouMaster(isMaster)
 
-        } else if (r.status === 401) {
+        try { await apiFetch('/usuarios/log-perfil') } catch {}
+      } catch (e: any) {
+        if (e?.status === 401) {
           navigate('/login')
           return
-        } else {
-
-          const claims = getClaimsFromToken()
-          const p = toCanonical((claims?.role || claims?.perfil || claims?.tipo_perfil || '').toString())
-          const id = claims?.sub ? Number(claims.sub) : undefined
-          const isMaster = p === 'master'
-          const autorizado = isMaster || PERFIS_PERMITIDOS.has(p)
-          if (!autorizado) { safeAlert('ACESSO NEGADO'); return }
-          setMeuId(id)
-          setMeuPerfil(p)
-          setSouMaster(isMaster)
         }
 
-        try { await fetch(`${API_BASE}/usuarios/log-perfil`, { headers }) } catch {}
-      } catch {}
+        const claims = getClaimsFromToken()
+        const p = toCanonical((claims?.role || claims?.perfil || claims?.tipo_perfil || '').toString())
+        const id = claims?.sub ? Number(claims.sub) : undefined
+        const isMaster = p === 'master'
+        const autorizado = isMaster || PERFIS_PERMITIDOS.has(p)
+        if (!autorizado) { safeAlert('ACESSO NEGADO'); return }
+        setMeuId(id)
+        setMeuPerfil(p)
+        setSouMaster(isMaster)
+      }
     }
     check()
-  }, [API_BASE, navigate])
+  }, [navigate])
 
 
   // Se entrou com ?id, carrega dados para editar

@@ -4,7 +4,7 @@ import ListPage from '../../../components/ListPage'
 import '../../../styles/CadastrarUsuario.css'
 
 import { AnoLetivo, getAnoLetivos } from '../../../services/anoLetivo'
-import { API_BASE, getAuthToken } from '../../../services/api'
+import { apiFetch, getAuthToken } from '../../../services/api'
 import { safeAlert } from '@/utils/safeAlert'
 
 const PERFIS_PERMITIDOS = new Set(['master', 'diretor'])
@@ -29,22 +29,19 @@ const AnoLetivoPage: React.FC = () => {
   useEffect(() => {
     const token = getAuthToken()
     if (!token) { navigate('/login'); return }
-    const headers: Record<string, string> = { Authorization: `Bearer ${token}` }
     const carregar = async () => {
       try {
-        const r = await fetch(`${API_BASE}/usuarios/me`, { headers })
-        if (r.status === 401) { navigate('/login'); return }
-        if (r.status === 403) { safeAlert('ACESSO NEGADO'); return }
-        if (r.ok) {
-          const me = await r.json()
-          const perfil = toCanonical(me.tipo_perfil || '')
-          const autorizado = me.is_master || PERFIS_PERMITIDOS.has(perfil)
-          setPodeGerenciar(Boolean(autorizado))
-        }
-        try { await fetch(`${API_BASE}/usuarios/log-perfil`, { headers }) } catch {}
+        const me = await apiFetch('/usuarios/me')
+        const perfil = toCanonical(me.tipo_perfil || '')
+        const autorizado = me.is_master || PERFIS_PERMITIDOS.has(perfil)
+        if (!autorizado) { safeAlert('ACESSO NEGADO'); return }
+        setPodeGerenciar(Boolean(autorizado))
+        try { await apiFetch('/usuarios/log-perfil') } catch {}
         const lista = await getAnoLetivos()
         setAnos(lista)
-      } catch {
+      } catch (e: any) {
+        if (e?.status === 401) { navigate('/login'); return }
+        if (e?.status === 403) { safeAlert('ACESSO NEGADO'); return }
         setAnos([])
       } finally {
         setCarregado(true)

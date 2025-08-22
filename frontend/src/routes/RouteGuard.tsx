@@ -17,6 +17,7 @@ const RouteGuard: React.FC<Props> = ({ children }) => {
   const [user, setUser] = useState<any>(null)
 
   const fetchSession = useCallback(async () => {
+    if (!getAuthToken()) return
     try {
       const u = await apiFetch('/me')
       const perms = await apiFetch('/me/permissions/effective')
@@ -33,11 +34,12 @@ const RouteGuard: React.FC<Props> = ({ children }) => {
   }, [navigate])
 
   useEffect(() => {
+    if (!token) return
     fetchSession()
     const handler = () => fetchSession()
     window.addEventListener('permissions:refresh', handler)
     return () => window.removeEventListener('permissions:refresh', handler)
-  }, [fetchSession])
+  }, [fetchSession, token])
 
   useEffect(() => {
     const handler = () => {
