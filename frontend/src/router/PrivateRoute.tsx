@@ -13,13 +13,17 @@ interface Props {
  * - Com token: renderiza children e valida /me de forma lazy
  * - 401 no /me: limpa storage e redireciona para login
  */
+let validatedToken: string | null = null
+
 const PrivateRoute: React.FC<Props> = ({ children }) => {
   const navigate = useBaseNavigate()
   const token = getAuthToken()
 
   useEffect(() => {
     if (!token) return
+    if (validatedToken === token) return
     let active = true
+
     authFetch('/me', { method: 'GET' })
       .then(res => {
         if (!active) return
@@ -29,6 +33,7 @@ const PrivateRoute: React.FC<Props> = ({ children }) => {
         }
       })
       .catch(() => {})
+
     return () => {
       active = false
     }
