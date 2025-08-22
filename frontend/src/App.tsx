@@ -6,6 +6,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import LoginPageWrapper from './pages/Login/LoginPageWrapper'
 import Home from './pages/Home/Home'
 import OAuthOk from './pages/OAuthOk'
+import GoogleCallback from './pages/Auth/GoogleCallback'
 
 import PoliticaDeCookies from './pages/PoliticaDeCookies'
 import PrivateRoute from './router/PrivateRoute'
@@ -22,6 +23,7 @@ const App: React.FC = () => {
       {/* Tela de login (layout travado) */}
       <Route path="/login" element={<LoginPageWrapper />} />
       <Route path="/oauth-ok" element={<OAuthOk />} />
+      <Route path="/auth/callback" element={<GoogleCallback />} />
 
       {/* Política de Cookies */}
       <Route path="/politica-de-cookies" element={<PoliticaDeCookies />} />

@@ -36,7 +36,7 @@ afterEach(() => {
 
 test.skip('menu de feriados visível para diretor', async () => {
   mockPerfil('diretor')
-  localStorage.setItem('auth_token', 'x')
+  localStorage.setItem('authToken', 'x')
   render(
     <MemoryRouter initialEntries={['/home']}>
       <Home />
@@ -47,7 +47,7 @@ test.skip('menu de feriados visível para diretor', async () => {
 
 test.skip('menu de ano letivo visível para diretor', async () => {
   mockPerfil('diretor')
-  localStorage.setItem('auth_token', 'x')
+  localStorage.setItem('authToken', 'x')
   render(
     <MemoryRouter initialEntries={['/home']}>
       <Home />
@@ -58,7 +58,7 @@ test.skip('menu de ano letivo visível para diretor', async () => {
 
 test('rota de feriados bloqueada para professor', async () => {
   mockPerfil('professor')
-  localStorage.setItem('auth_token', 'x')
+  localStorage.setItem('authToken', 'x')
   render(
     <MemoryRouter initialEntries={['/cadastro/feriados']}>
       <Routes>
@@ -73,7 +73,7 @@ test('rota de feriados bloqueada para professor', async () => {
 
 test('rota de ano letivo bloqueada para professor', async () => {
   mockPerfil('professor')
-  localStorage.setItem('auth_token', 'x')
+  localStorage.setItem('authToken', 'x')
   render(
     <MemoryRouter initialEntries={['/cadastro/ano-letivo']}>
       <Routes>
@@ -88,7 +88,7 @@ test('rota de ano letivo bloqueada para professor', async () => {
 
 test('menu oculta item quando permissão ausente', async () => {
   mockPerfil('diretor', {})
-  localStorage.setItem('auth_token', 'x')
+  localStorage.setItem('authToken', 'x')
   render(
     <MemoryRouter initialEntries={['/home']}>
       <Home />
