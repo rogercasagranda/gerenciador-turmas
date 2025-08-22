@@ -5,7 +5,7 @@ import '../../styles/CadastrarUsuario.css'
 import '../../styles/Forms.css'
 import useDirtyForm from '@/hooks/useDirtyForm'
 
-import { API_BASE, apiFetch, getAuthToken } from '@/services/api'
+import { authFetch, getAuthToken } from '@/services/api'
 import { safeAlert } from '@/utils/safeAlert'
 
 
@@ -71,16 +71,6 @@ const CadastrarUsuario: React.FC = () => {
   const navigate = useBaseNavigate()
 
 
-  // Obtém headers com JWT ou redireciona para login
-  const authHeaders = () => {
-    const t = getAuthToken()
-    if (!t) {
-      navigate('/login')
-      return null
-    }
-    return { Authorization: `Bearer ${t}` }
-  }
-
 
   const { isDirty, setDirty, confirmIfDirty } = useDirtyForm()
 
@@ -93,11 +83,10 @@ const CadastrarUsuario: React.FC = () => {
   useEffect(() => {
     const check = async () => {
       try {
-
-        const headers = authHeaders()
-        if (!headers) return
-        const m = await apiFetch('/usuarios/me') as MeuPerfil
-
+        if (!getAuthToken()) { navigate('/login'); return }
+        const mRes = await authFetch('/usuarios/me', { method: 'GET' })
+        if (mRes.status === 401) { navigate('/login'); return }
+        const m = await mRes.json() as MeuPerfil
         const p = toCanonical(m.tipo_perfil || '')
         const isMaster = Boolean(m.is_master || p === 'master')
         const autorizado = isMaster || PERFIS_PERMITIDOS.has(p)
@@ -106,7 +95,7 @@ const CadastrarUsuario: React.FC = () => {
         setMeuPerfil(p)
         setSouMaster(isMaster)
 
-        try { await apiFetch('/usuarios/log-perfil') } catch {}
+        try { await authFetch('/usuarios/log-perfil', { method: 'GET' }) } catch {}
       } catch (e: any) {
         if (e?.status === 401) {
           navigate('/login')
@@ -131,14 +120,15 @@ const CadastrarUsuario: React.FC = () => {
   // Se entrou com ?id, carrega dados para editar
   useEffect(() => {
     if (!idEdicao) return
-    const headers = authHeaders()
-    if (!headers) return
+    if (!getAuthToken()) { navigate('/login'); return }
     setCarregandoEdicao(true); setErro(''); setSucesso('')
 
-    axios
-      .get(`${API_BASE}/usuarios/${idEdicao}`, { headers })
-      .then((res) => {
-        const u = res.data
+    authFetch(`/usuarios/${idEdicao}`, { method: 'GET' })
+      .then(async (res) => {
+        if (res.status === 401) { navigate('/login'); return }
+        if (res.status === 403) { safeAlert('ACESSO NEGADO'); return }
+        if (!res.ok) throw new Error()
+        const u = await res.json()
 
         setNome(u.nome)
         setEmail(u.email)
@@ -148,14 +138,11 @@ const CadastrarUsuario: React.FC = () => {
         setNumeroCelular(u.numero_celular)
         setDirty(false)
       })
-
-      .catch((e) => {
-        if (e?.response?.status === 401) navigate('/login')
-        else if (e?.response?.status === 403) safeAlert('ACESSO NEGADO')
-        else setErro(e?.response?.data?.detail || 'Falha ao carregar usuário.')
+      .catch(() => {
+        setErro('Falha ao carregar usuário.')
       })
       .finally(() => setCarregandoEdicao(false))
-  }, [API_BASE, idEdicao, navigate])
+  }, [idEdicao, navigate])
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -165,20 +152,19 @@ const CadastrarUsuario: React.FC = () => {
     if (!email.trim()) { setErro('O e-mail é obrigatório.'); return }
     if (!numeroCelular.trim()) { setErro('O número de celular é obrigatório.'); return }
 
-    const headers = authHeaders()
-    if (!headers) return
-    const jsonHeaders: Record<string, string> = { ...headers, 'Content-Type': 'application/json' }
-
     try {
       setEnviando(true)
       const body: any = { nome, email, tipo_perfil: perfil, ddi, ddd, numero_celular: numeroCelular }
 
+      const url = idEdicao ? `/usuarios/${idEdicao}` : '/usuarios'
+      const method = idEdicao ? 'PUT' : 'POST'
+      const res = await authFetch(url, { method, body: JSON.stringify(body) })
+      if (res.status === 401) { navigate('/login'); return }
+      if (res.status === 403) { safeAlert('ACESSO NEGADO'); return }
+      if (!res.ok) throw new Error()
       if (idEdicao) {
-        await axios.put(`${API_BASE}/usuarios/${idEdicao}`, body, { headers: jsonHeaders })
         setSucesso('Usuário atualizado com sucesso.')
       } else {
-        await axios.post(`${API_BASE}/usuarios`, body, { headers: jsonHeaders })
-
         setSucesso('Usuário cadastrado com sucesso.')
         setNome(''); setEmail(''); setPerfil('professor'); setDdi('55'); setDdd('54'); setNumeroCelular('')
       }
@@ -186,14 +172,9 @@ const CadastrarUsuario: React.FC = () => {
       setDirty(false)
       setTimeout(() => navigate('/usuarios/consultar'), 700)
     } catch (err: any) {
-
-      if (err?.response?.status === 401) navigate('/login')
-      else if (err?.response?.status === 403) safeAlert('ACESSO NEGADO')
-      else
-        setErro(
-          err?.response?.data?.detail || (idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.'),
-        )
-
+      if (err?.status === 401) navigate('/login')
+      else if (err?.status === 403) safeAlert('ACESSO NEGADO')
+      else setErro(idEdicao ? 'Falha ao atualizar usuário.' : 'Erro ao cadastrar usuário.')
     } finally {
       setEnviando(false)
     }
@@ -213,18 +194,19 @@ const CadastrarUsuario: React.FC = () => {
     if (!primeira) return
     const segunda = window.confirm('Confirme novamente: deseja realmente excluir?')
     if (!segunda) return
-    const headers = authHeaders()
-    if (!headers) return
+    if (!getAuthToken()) { navigate('/login'); return }
     try {
-
-      await apiFetch(`/usuarios/${idEdicao}`, { method: 'DELETE' })
+      const res = await authFetch(`/usuarios/${idEdicao}`, { method: 'DELETE' })
+      if (res.status === 401) { navigate('/login'); return }
+      if (res.status === 403) { safeAlert('ACESSO NEGADO'); return }
+      if (!res.ok) throw new Error()
       alert('Usuário excluído com sucesso.')
       navigate('/usuarios/consultar')
 
     } catch (e: any) {
       if (e?.status === 401) navigate('/login')
       else if (e?.status === 403) safeAlert('ACESSO NEGADO')
-      else setErro(e?.payload?.detail || 'Falha ao excluir usuário.')
+      else setErro('Falha ao excluir usuário.')
 
     }
   }

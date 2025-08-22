@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import useBaseNavigate from '@/hooks/useBaseNavigate'
-import { apiFetch } from '@/services/api'
+import { authFetch } from '@/services/api'
 import LogsConfig from './LogsConfig'
 import LogsOverview from './LogsOverview'
 import '../../styles/Logs.css'
@@ -33,8 +33,12 @@ const Logs: React.FC = () => {
     if (dataInicio) params.data_inicio = dataInicio
     if (dataFim) params.data_fim = dataFim
     const qs = new URLSearchParams(params).toString()
-    apiFetch(`/logs${qs ? `?${qs}` : ''}`)
-      .then((r: any) => setLogs(r))
+    authFetch(`/logs${qs ? `?${qs}` : ''}`, { method: 'GET' })
+      .then(async (res) => {
+        if (!res.ok) throw new Error()
+        const r: any = await res.json()
+        setLogs(r)
+      })
       .catch(() => setLogs([]))
   }
 

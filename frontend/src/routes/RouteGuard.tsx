@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { apiFetch, getAuthToken, clearAuthToken } from '@/services/api'
+import { authFetch, getAuthToken, clearAuthToken } from '@/services/api'
 import useBaseNavigate from '@/hooks/useBaseNavigate'
 
 interface Props {
@@ -19,8 +19,12 @@ const RouteGuard: React.FC<Props> = ({ children }) => {
   const fetchSession = useCallback(async () => {
     if (!getAuthToken()) return
     try {
-      const u = await apiFetch('/me')
-      const perms = await apiFetch('/me/permissions/effective')
+      const uRes = await authFetch('/me', { method: 'GET' })
+      if (!uRes.ok) throw new Error()
+      const u = await uRes.json()
+      const pRes = await authFetch('/me/permissions/effective', { method: 'GET' })
+      if (!pRes.ok) throw new Error()
+      const perms = await pRes.json()
       setUser(u)
       setPermissions(perms)
       try { localStorage.setItem('permissions.effective', JSON.stringify(perms)) } catch {}

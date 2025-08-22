@@ -4,7 +4,7 @@ import ListPage from '../../../components/ListPage'
 import '../../../styles/CadastrarUsuario.css'
 
 import { AnoLetivo, getAnoLetivos } from '../../../services/anoLetivo'
-import { apiFetch, getAuthToken } from '../../../services/api'
+import { authFetch, getAuthToken } from '../../../services/api'
 import { safeAlert } from '@/utils/safeAlert'
 
 const PERFIS_PERMITIDOS = new Set(['master', 'diretor'])
@@ -31,12 +31,15 @@ const AnoLetivoPage: React.FC = () => {
     if (!token) { navigate('/login'); return }
     const carregar = async () => {
       try {
-        const me = await apiFetch('/usuarios/me')
+        const meRes = await authFetch('/usuarios/me', { method: 'GET' })
+        if (meRes.status === 401) { navigate('/login'); return }
+        if (meRes.status === 403) { safeAlert('ACESSO NEGADO'); return }
+        const me = await meRes.json()
         const perfil = toCanonical(me.tipo_perfil || '')
         const autorizado = me.is_master || PERFIS_PERMITIDOS.has(perfil)
         if (!autorizado) { safeAlert('ACESSO NEGADO'); return }
         setPodeGerenciar(Boolean(autorizado))
-        try { await apiFetch('/usuarios/log-perfil') } catch {}
+        try { await authFetch('/usuarios/log-perfil', { method: 'GET' }) } catch {}
         const lista = await getAnoLetivos()
         setAnos(lista)
       } catch (e: any) {

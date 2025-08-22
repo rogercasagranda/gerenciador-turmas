@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'                        // Importa React/useState/useEffect
 import { useParams } from 'react-router-dom' // Navegação
 import useBaseNavigate from '@/hooks/useBaseNavigate'
-import { API_BASE, apiFetch, getAuthToken } from '@/services/api'
+import { authFetch, getAuthToken } from '@/services/api'
 import { safeAlert } from '@/utils/safeAlert'
 import '../../styles/CadastrarUsuario.css'                                 // Reaproveita CSS do cadastro
 import '../../styles/Forms.css'
@@ -43,26 +43,21 @@ const EditarUsuario: React.FC = () => {                                   // Def
   useEffect(() => {                                                        // Efeito de carregamento
     setErro('')                                                            // Limpa erro
 
-    const token = getAuthToken()                                          // Lê token
-    if (!token) { navigate('/login'); return }                            // Sem token -> login
-    const headers: Record<string, string> = { Authorization: `Bearer ${token}` }
-
-    axios.get(`${API_BASE}/usuarios/${id}`, { headers })                  // GET /usuarios/{id}
-      .then((res) => {
-        const u = res.data
+    if (!getAuthToken()) { navigate('/login'); return }
+    authFetch(`/usuarios/${id}`, { method: 'GET' })
+      .then(async (res) => {
+        if (res.status === 401) { navigate('/login'); return }
+        if (res.status === 403) { safeAlert('ACESSO NEGADO'); return }
+        if (!res.ok) throw new Error()
+        const u = await res.json()
         u.tipo_perfil = toCanonical(u.tipo_perfil)
         setUsuario(u)
         setDirty(false)
-      })                                // Guarda usuário
-      .catch((e) => {                                                     // Trata erro
-        if (e?.response?.status === 401) navigate('/login')
-        else if (e?.response?.status === 403) safeAlert('ACESSO NEGADO')
-        else {
-          const msg = e?.response?.data?.detail || 'Falha ao carregar usuário.' // Extrai mensagem
-          setErro(msg)                                                      // Define erro
-        }
-      })                                                                  // Finaliza then/catch
-  }, [API_BASE, id, navigate, setDirty])                                                      // Dependências
+      })
+      .catch(() => {
+        setErro('Falha ao carregar usuário.')
+      })
+  }, [id, navigate, setDirty])
 
 
   const handleSubmit = async (e: React.FormEvent) => {                    // Define envio
@@ -76,16 +71,12 @@ const EditarUsuario: React.FC = () => {                                   // Def
     if (!usuario.numero_celular.trim()) { setErro('O número de celular é obrigatório.'); return } // Valida número
 
 
-    const token = getAuthToken()                                          // Lê token
-    if (!token) { navigate('/login'); return }                            // Sem token -> login
-    const headers: Record<string, string> = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
-
+    if (!getAuthToken()) { navigate('/login'); return }
 
     try {                                                                 // Tenta enviar
       setEnviando(true)                                                   // Marca envio
-      await apiFetch(`/usuarios/${usuario.id}`, {
+      const res = await authFetch(`/usuarios/${usuario.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nome: usuario.nome,
           email: usuario.email,
@@ -95,6 +86,9 @@ const EditarUsuario: React.FC = () => {                                   // Def
           numero_celular: usuario.numero_celular,
         }),
       })
+      if (res.status === 401) { navigate('/login'); return }
+      if (res.status === 403) { safeAlert('ACESSO NEGADO'); return }
+      if (!res.ok) throw new Error()
 
       setSucesso('Usuário atualizado com sucesso.')                       // Mensagem de sucesso
       setDirty(false)
@@ -103,10 +97,7 @@ const EditarUsuario: React.FC = () => {                                   // Def
 
       if (err?.status === 401) navigate('/login')
       else if (err?.status === 403) safeAlert('ACESSO NEGADO')
-      else {
-        const msg = err?.payload?.detail || 'Falha ao atualizar usuário.' // Extrai mensagem
-        setErro(msg)                                                        // Define erro
-      }
+      else setErro('Falha ao atualizar usuário.')
 
     } finally {                                                           // Sempre executa
       setEnviando(false)                                                  // Desmarca envio

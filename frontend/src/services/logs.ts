@@ -1,4 +1,4 @@
-import { apiFetch } from './api'
+import { authFetch } from './api'
 
 
 export interface LogConfigPayload {
@@ -8,11 +8,11 @@ export interface LogConfigPayload {
 
 export async function cadastrarConfig(data: LogConfigPayload): Promise<void> {
   try {
-    await apiFetch('/logs/config', {
+    const res = await authFetch('/logs/config', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
+    if (!res.ok) throw new Error()
   } catch (e: any) {
     throw new Error(e?.message || 'Erro ao salvar configuração')
   }

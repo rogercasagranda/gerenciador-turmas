@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 // Importa navegação
 import useBaseNavigate from '@/hooks/useBaseNavigate'
 
-import { apiFetch, getAuthToken } from '@/services/api'
+import { authFetch, getAuthToken } from '@/services/api'
 import { safeAlert } from '@/utils/safeAlert'
 
 
@@ -53,30 +53,23 @@ const ConsultarUsuario: React.FC = () => {
 
 
 
-  // Função utilitária: monta headers de autenticação
-  const authHeaders = () => {
-    const token = getAuthToken()
-    if (!token) {
-      navigate('/login')
-      return null
-    }
-    return { Authorization: `Bearer ${token}` }
-  }
-
   // Guarda de rota por perfil + carga inicial
   useEffect(() => {
     const carregar = async () => {
-      if (!authHeaders()) return
+      if (!getAuthToken()) { navigate('/login'); return }
 
       try {
         // Valida perfil (tolerante a 422/500; só 401 derruba sessão)
-        const me = await apiFetch('/usuarios/me') as MeuPerfil
+        const meRes = await authFetch('/usuarios/me', { method: 'GET' })
+        if (meRes.status === 401) { navigate('/login'); return }
+        const me = await meRes.json() as MeuPerfil
         const p = toCanonical(me.tipo_perfil || '')
         const autorizado = me.is_master || PERFIS_PERMITIDOS.has(p)
         if (!autorizado) { safeAlert('ACESSO NEGADO'); return }
 
         setCarregando(true)
-        const r = await apiFetch('/usuarios') as Usuario[]
+        const rRes = await authFetch('/usuarios', { method: 'GET' })
+        const r = await rRes.json() as Usuario[]
         setLista(Array.isArray(r) ? r : [])
         setErro('')
       } catch (e: any) {
