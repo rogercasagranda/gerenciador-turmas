@@ -13,7 +13,8 @@
 
 .btn:focus,
 .btn:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 .btn-sm {
