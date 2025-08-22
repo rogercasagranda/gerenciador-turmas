@@ -99,7 +99,7 @@ app = FastAPI()                                      # Cria instância principal
 # responde com uma mensagem padrão. Isso evita que usuários recebam
 # um erro "Not Found" caso a URL do frontend não esteja disponível.
 FRONTEND_URL = os.getenv("FRONTEND_URL")
-FRONTEND_PUBLIC_URL = os.getenv("FRONTEND_PUBLIC_URL")  # URL do front para redirecionar pós-auth
+FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN")
 
 
 @app.get("/")
@@ -126,18 +126,14 @@ def favicon():
     return Response(status_code=204)
 
 # ======================================================
-# Configura CORS de forma ampla (padrão já aprovado)
+# Configura CORS — restringe à origem do frontend
 # ======================================================
-allowed_origins = ["http://localhost:5173"]
-if FRONTEND_PUBLIC_URL:
-    allowed_origins.insert(0, FRONTEND_PUBLIC_URL)
-
-app.add_middleware(                                  # Adiciona middleware de CORS
-    CORSMiddleware,                                  # Define a classe do middleware
-    allow_origins=allowed_origins,                   # Domínios permitidos
-    allow_credentials=False,                         # JWT via header; não usa cookies
-    allow_methods=["*"],                             # Libera todos os métodos
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[os.getenv("FRONTEND_ORIGIN")],
+    allow_methods=["*"],
     allow_headers=["Authorization", "Content-Type"],
+    allow_credentials=False,
 )
 
 # ======================================================
@@ -367,11 +363,11 @@ def google_callback(request: Request):
 
             if not result:                                   # Verifica se usuário não existe
                 logger.warning(f"[{cid}] Usuário não pré-cadastrado (GOOGLE): {user_email}")
-                if not FRONTEND_PUBLIC_URL:
-                    logger.error(f"[{cid}] FRONTEND_PUBLIC_URL não configurado")
-                    raise HTTPException(status_code=500, detail="FRONTEND_PUBLIC_URL não configurado")
+                if not FRONTEND_ORIGIN:
+                    logger.error(f"[{cid}] FRONTEND_ORIGIN não configurado")
+                    raise HTTPException(status_code=500, detail="FRONTEND_ORIGIN não configurado")
                 return RedirectResponse(
-                    url=f"{FRONTEND_PUBLIC_URL}/login?err=USER_NOT_FOUND",
+                    url=f"{FRONTEND_ORIGIN}/login?err=USER_NOT_FOUND",
                     status_code=302,
                 )
 
@@ -400,11 +396,11 @@ def google_callback(request: Request):
             }
             access_token = create_access_token(token_payload)
             logger.info(f"[{cid}] Google login gerou JWT size={len(access_token)} bytes")
-            if not FRONTEND_PUBLIC_URL:
-                logger.error(f"[{cid}] FRONTEND_PUBLIC_URL não configurado")
-                raise HTTPException(status_code=500, detail="FRONTEND_PUBLIC_URL não configurado")
+            if not FRONTEND_ORIGIN:
+                logger.error(f"[{cid}] FRONTEND_ORIGIN não configurado")
+                raise HTTPException(status_code=500, detail="FRONTEND_ORIGIN não configurado")
             redirect_url = (
-                f"{FRONTEND_PUBLIC_URL}/#/auth/callback?token={access_token}&t={int(time.time())}"
+                f"{FRONTEND_ORIGIN}/#/auth/callback?token={access_token}&t={int(time.time())}"
             )
             return RedirectResponse(url=redirect_url, status_code=302)
 
