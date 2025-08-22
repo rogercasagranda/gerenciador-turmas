@@ -8,7 +8,7 @@ import Home from './pages/Home/Home'
 import OAuthOk from './pages/OAuthOk'
 
 import PoliticaDeCookies from './pages/PoliticaDeCookies'
-import RouteGuard from './routes/RouteGuard'
+import PrivateRoute from './router/PrivateRoute'
 import routesConfig from './routes/routesConfig'
 
 
@@ -28,18 +28,18 @@ const App: React.FC = () => {
 
 
       {/* Página principal Home */}
-      <Route path="/home" element={<RouteGuard><Home /></RouteGuard>} />
+      <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
 
       {/* Rotas de cadastro; montam a Home para exibir conteúdo interno */}
-      <Route path="/cadastro/*" element={<RouteGuard><Home /></RouteGuard>} />
+      <Route path="/cadastro/*" element={<PrivateRoute><Home /></PrivateRoute>} />
 
       {/* Rotas de configuração definidas no arquivo de rotas */}
       {routesConfig.map((r) => (
-        <Route key={r.path} path={r.path} element={<RouteGuard><Home /></RouteGuard>} />
+        <Route key={r.path} path={r.path} element={<PrivateRoute><Home /></PrivateRoute>} />
       ))}
 
       {/* Página de acesso negado */}
-      <Route path="/403" element={<RouteGuard><Home /></RouteGuard>} />
+      <Route path="/403" element={<PrivateRoute><Home /></PrivateRoute>} />
 
       {/* Fallback opcional para rotas desconhecidas */}
       <Route path="*" element={<Navigate to="/login" replace />} />

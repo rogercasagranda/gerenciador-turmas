@@ -3,7 +3,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import Home from './Home'
-import RouteGuard from '@/routes/RouteGuard'
+import PrivateRoute from '@/router/PrivateRoute'
 
 function mockPerfil(perfil: string, perms?: Record<string, Record<string, boolean>>) {
   const effective =
@@ -62,8 +62,8 @@ test('rota de feriados bloqueada para professor', async () => {
   render(
     <MemoryRouter initialEntries={['/cadastro/feriados']}>
       <Routes>
-        <Route path='/cadastro/*' element={<RouteGuard><Home /></RouteGuard>} />
-        <Route path='/403' element={<RouteGuard><Home /></RouteGuard>} />
+        <Route path='/cadastro/*' element={<PrivateRoute><Home /></PrivateRoute>} />
+        <Route path='/403' element={<PrivateRoute><Home /></PrivateRoute>} />
       </Routes>
     </MemoryRouter>
   )
@@ -77,8 +77,8 @@ test('rota de ano letivo bloqueada para professor', async () => {
   render(
     <MemoryRouter initialEntries={['/cadastro/ano-letivo']}>
       <Routes>
-        <Route path='/cadastro/*' element={<RouteGuard><Home /></RouteGuard>} />
-        <Route path='/403' element={<RouteGuard><Home /></RouteGuard>} />
+        <Route path='/cadastro/*' element={<PrivateRoute><Home /></PrivateRoute>} />
+        <Route path='/403' element={<PrivateRoute><Home /></PrivateRoute>} />
       </Routes>
     </MemoryRouter>
   )
