@@ -7,12 +7,12 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { HashRouter } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { loadThemeFromStorage } from './utils/theme';
+import { initTheme } from './utils/theme';
 import './index.css';
 import './styles/Layout.css';
 import ErrorBoundary from './components/ErrorBoundary';
 
-loadThemeFromStorage();
+initTheme();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

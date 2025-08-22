@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "lint": "eslint src/theme src/utils/theme.ts src/main.tsx src/pages/Configuracoes/ConfigurarTema.tsx --ext .ts,.tsx"
   },
   "dependencies": {
     "@react-oauth/google": "^0.8.0",
@@ -27,6 +28,10 @@
     "typescript": "5.3.3",
     "vite": "5.1.4",
     "vitest": "^1.4.0",
-    "eslint-plugin-react": "^7.33.2"
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "typescript-eslint": "^8.8.0"
   }
 }

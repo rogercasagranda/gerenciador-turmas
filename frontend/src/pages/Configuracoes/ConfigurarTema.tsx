@@ -1,23 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import '../../styles/ConfigTema.css'
-import { applyTheme, loadThemeFromStorage, saveTheme, saveMode, THEME_OPTIONS, ThemeName, ModeKey } from '../../theme/utils'
+import { listThemes, getCurrentTheme, setCurrentTheme, getCurrentMode, setCurrentMode, ThemeSlug, Mode } from '../../utils/theme'
 import { put } from '../../services/http'
 
 const ConfigurarTema: React.FC = () => {
-  const [selectedTheme, setSelectedTheme] = useState<ThemeName>('roxo')
-  const [selectedMode, setSelectedMode] = useState<ModeKey>('light')
+  const [selectedTheme, setSelectedTheme] = useState<ThemeSlug>(getCurrentTheme())
+  const [selectedMode, setSelectedMode] = useState<Mode>(getCurrentMode())
   const [showToast, setShowToast] = useState(false)
 
   useEffect(() => {
-    const { theme, mode } = loadThemeFromStorage()
-    setSelectedTheme(theme)
-    setSelectedMode(mode)
+    setSelectedTheme(getCurrentTheme())
+    setSelectedMode(getCurrentMode())
   }, [])
 
   const handleSalvar = async () => {
-    saveTheme(selectedTheme)
-    saveMode(selectedMode)
-    applyTheme(selectedTheme, selectedMode)
+    setCurrentTheme(selectedTheme)
+    setCurrentMode(selectedMode)
     try {
       await put('/me/preferences/theme', { themeName: selectedTheme, themeMode: selectedMode })
     } catch {
@@ -32,7 +30,7 @@ const ConfigurarTema: React.FC = () => {
       <h2>Configurar Tema</h2>
       <p>Escolha uma cor para o tema do aplicativo:</p>
       <div className="theme-grid">
-        {THEME_OPTIONS.map((opt) => (
+        {listThemes().map((opt) => (
             <button
               type="button"
               key={opt}

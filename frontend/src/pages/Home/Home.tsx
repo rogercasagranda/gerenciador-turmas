@@ -6,7 +6,7 @@ import useBaseNavigate from '@/hooks/useBaseNavigate'
 // Importa CSS da Home (layout travado)
 import '../../styles/Home.css'
 import '../../styles/Home.lock.css'
-import { loadThemeFromStorage } from '../../theme/utils'
+import { initTheme } from '../../utils/theme'
 import { authFetch, getAuthToken, logoutLocal } from '@/services/api'
 
 const toCanonical = (perfil: string) => (perfil || '').toLowerCase()
@@ -110,7 +110,7 @@ const Home: React.FC = () => {
           try { localStorage.setItem('permissions.effective', JSON.stringify(perms)) } catch {}
         }
         if (id) try { localStorage.setItem('user_id', String(id)) } catch {}
-        loadThemeFromStorage()
+        initTheme()
       })
       .catch(() => {
         const claims = getClaimsFromToken()
