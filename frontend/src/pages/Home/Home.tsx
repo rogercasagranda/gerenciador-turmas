@@ -1,5 +1,5 @@
 // Importa React e hooks necessários
-import React, { useEffect, useState, useCallback, Suspense, useMemo } from 'react'
+import React, { useEffect, useState, useCallback, Suspense, useMemo, useRef } from 'react'
 // Importa utilitários de rota
 import { useLocation } from 'react-router-dom'
 import useBaseNavigate from '@/hooks/useBaseNavigate'
@@ -53,6 +53,12 @@ const Home: React.FC = () => {
   const [submenuAcessosAberto, setSubmenuAcessosAberto] = useState(false) // Controle do submenu Acessos
   const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>({})
   const [isMaster, setIsMaster] = useState(false)
+
+  const cadastroRef = useRef<HTMLDivElement>(null)
+  const usuariosRef = useRef<HTMLDivElement>(null)
+  const configRef = useRef<HTMLDivElement>(null)
+  const logsRef = useRef<HTMLDivElement>(null)
+  const acessosRef = useRef<HTMLDivElement>(null)
 
   const loadPermissions = useCallback(() => {
     try {
@@ -113,9 +119,45 @@ const Home: React.FC = () => {
         const master = role === 'MASTER' || (Array.isArray(perms) && perms.includes('*'))
         setIsMaster(master)
       })
-  }, [navigate])
+    }, [navigate])
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (cadastroRef.current && !cadastroRef.current.contains(e.target as Node)) {
+        setSubmenuCadastroAberto(false)
+      }
+      if (configRef.current && !configRef.current.contains(e.target as Node)) {
+        setSubmenuConfigAberto(false)
+      }
+      if (acessosRef.current && !acessosRef.current.contains(e.target as Node)) {
+        setSubmenuAcessosAberto(false)
+      }
+      if (usuariosRef.current && !usuariosRef.current.contains(e.target as Node)) {
+        setSubmenuUsuariosAberto(false)
+      }
+      if (logsRef.current && !logsRef.current.contains(e.target as Node)) {
+        setSubmenuLogsAberto(false)
+      }
+    }
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSubmenuCadastroAberto(false)
+        setSubmenuConfigAberto(false)
+        setSubmenuAcessosAberto(false)
+        setSubmenuUsuariosAberto(false)
+        setSubmenuLogsAberto(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   // Fecha drawer a cada navegação
   useEffect(() => {
@@ -307,27 +349,26 @@ const Home: React.FC = () => {
           aria-label="Menu lateral"
         >
             <nav className="nav">
-              {canCadastro && (
-                <div
-                  className="nav-item"
-                  onMouseEnter={() => setSubmenuCadastroAberto(true)}
-                  onMouseLeave={() => setSubmenuCadastroAberto(false)}
-                >
-                  <button
-                    className="btn btn-md nav-link"
-                    onClick={() => setSubmenuCadastroAberto(!submenuCadastroAberto)}
-                    aria-haspopup="true"
-                    aria-expanded={submenuCadastroAberto}
+                {canCadastro && (
+                  <div
+                    className={`nav-item ${submenuCadastroAberto ? 'is-open' : ''}`}
+                    ref={cadastroRef}
                   >
-                    Cadastro
-                    <span className={`caret ${submenuCadastroAberto ? 'caret--up' : 'caret--down'}`} />
-                  </button>
-                  <div className={`submenu ${submenuCadastroAberto ? 'submenu--open' : ''}`}>
-                    {can('/cadastro/turmas') && (
-                      <button className="btn btn-md submenu-link" onClick={() => navigate('/cadastro/turmas')}>
-                        Turmas
-                      </button>
-                    )}
+                    <button
+                      className="btn btn-md nav-link"
+                      onClick={() => setSubmenuCadastroAberto(!submenuCadastroAberto)}
+                      aria-haspopup="true"
+                      aria-expanded={submenuCadastroAberto}
+                    >
+                      Cadastro
+                      <span className={`caret ${submenuCadastroAberto ? 'caret--up' : 'caret--down'}`} />
+                    </button>
+                    <div className="submenu">
+                      {can('/cadastro/turmas') && (
+                        <button className="btn btn-md submenu-link" onClick={() => navigate('/cadastro/turmas')}>
+                          Turmas
+                        </button>
+                      )}
                     {can('/cadastro/alunos') && (
                       <button className="btn btn-md submenu-link" onClick={() => navigate('/cadastro/alunos')}>
                         Alunos
@@ -379,55 +420,53 @@ const Home: React.FC = () => {
               </button>
             </div>
 
-            <div
-              className="nav-item"
-              onMouseEnter={() => setSubmenuConfigAberto(true)}
-              onMouseLeave={() => setSubmenuConfigAberto(false)}
-            >
-              <button
-                className="btn btn-md nav-link"
-                onClick={() => setSubmenuConfigAberto(!submenuConfigAberto)}
-                aria-haspopup="true"
-                aria-expanded={submenuConfigAberto}
+              <div
+                className={`nav-item ${submenuConfigAberto ? 'is-open' : ''}`}
+                ref={configRef}
               >
-                Configuração
-                <span className={`caret ${submenuConfigAberto ? 'caret--up' : 'caret--down'}`} />
-              </button>
-              <div className={`submenu ${submenuConfigAberto ? 'submenu--open' : ''}`}>
-                {can('/configuracao/tema') && (
-                  <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/tema')}>
-                    Configurar Tema
-                  </button>
-                )}
+                <button
+                  className="btn btn-md nav-link"
+                  onClick={() => setSubmenuConfigAberto(!submenuConfigAberto)}
+                  aria-haspopup="true"
+                  aria-expanded={submenuConfigAberto}
+                >
+                  Configuração
+                  <span className={`caret ${submenuConfigAberto ? 'caret--up' : 'caret--down'}`} />
+                </button>
+                <div className="submenu">
+                  {can('/configuracao/tema') && (
+                    <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/tema')}>
+                      Configurar Tema
+                    </button>
+                  )}
                 {can('/configuracao/ano-letivo') && (
                   <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/ano-letivo')}>
                     Ano Letivo
                   </button>
                 )}
 
-                {(can('/configuracao/acessos/consultar') ||
-                  can('/configuracao/acessos/usuario') ||
-                  can('/configuracao/acessos/grupo')) && (
-                  <div
-                    className="nav-item"
-                    onMouseEnter={() => setSubmenuAcessosAberto(true)}
-                    onMouseLeave={() => setSubmenuAcessosAberto(false)}
-                  >
-                    <button
-                      className="btn btn-md submenu-link"
-                      onClick={() => setSubmenuAcessosAberto(!submenuAcessosAberto)}
-                      aria-haspopup="true"
-                      aria-expanded={submenuAcessosAberto}
+                  {(can('/configuracao/acessos/consultar') ||
+                    can('/configuracao/acessos/usuario') ||
+                    can('/configuracao/acessos/grupo')) && (
+                    <div
+                      className={`nav-item ${submenuAcessosAberto ? 'is-open' : ''}`}
+                      ref={acessosRef}
                     >
-                      Acessos e Permissões
-                      <span className={`caret ${submenuAcessosAberto ? 'caret--up' : 'caret--down'}`} />
-                    </button>
-                    <div className={`submenu ${submenuAcessosAberto ? 'submenu--open' : ''}`}>
-                      {can('/configuracao/acessos/consultar') && (
-                        <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/acessos/consultar')}>
-                          Consultar
-                        </button>
-                      )}
+                      <button
+                        className="btn btn-md submenu-link"
+                        onClick={() => setSubmenuAcessosAberto(!submenuAcessosAberto)}
+                        aria-haspopup="true"
+                        aria-expanded={submenuAcessosAberto}
+                      >
+                        Acessos e Permissões
+                        <span className={`caret ${submenuAcessosAberto ? 'caret--up' : 'caret--down'}`} />
+                      </button>
+                      <div className="submenu">
+                        {can('/configuracao/acessos/consultar') && (
+                          <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/acessos/consultar')}>
+                            Consultar
+                          </button>
+                        )}
                       {can('/configuracao/acessos/usuario') && (
                         <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/acessos/usuario')}>
                           Usuário
@@ -442,28 +481,27 @@ const Home: React.FC = () => {
                   </div>
                 )}
 
-                {(can('/configuracao/usuarios/cadastrar') ||
-                  can('/configuracao/usuarios/consultar')) && (
-                  <div
-                    className="nav-item"
-                    onMouseEnter={() => setSubmenuUsuariosAberto(true)}
-                    onMouseLeave={() => setSubmenuUsuariosAberto(false)}
-                  >
-                    <button
-                      className="btn btn-md submenu-link"
-                      onClick={() => setSubmenuUsuariosAberto(!submenuUsuariosAberto)}
-                      aria-haspopup="true"
-                      aria-expanded={submenuUsuariosAberto}
+                  {(can('/configuracao/usuarios/cadastrar') ||
+                    can('/configuracao/usuarios/consultar')) && (
+                    <div
+                      className={`nav-item ${submenuUsuariosAberto ? 'is-open' : ''}`}
+                      ref={usuariosRef}
                     >
-                      Usuários
-                      <span className={`caret ${submenuUsuariosAberto ? 'caret--up' : 'caret--down'}`} />
-                    </button>
-                    <div className={`submenu ${submenuUsuariosAberto ? 'submenu--open' : ''}`}>
-                      {can('/configuracao/usuarios/cadastrar') && (
-                        <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/usuarios/cadastrar')}>
-                          Cadastrar
-                        </button>
-                      )}
+                      <button
+                        className="btn btn-md submenu-link"
+                        onClick={() => setSubmenuUsuariosAberto(!submenuUsuariosAberto)}
+                        aria-haspopup="true"
+                        aria-expanded={submenuUsuariosAberto}
+                      >
+                        Usuários
+                        <span className={`caret ${submenuUsuariosAberto ? 'caret--up' : 'caret--down'}`} />
+                      </button>
+                      <div className="submenu">
+                        {can('/configuracao/usuarios/cadastrar') && (
+                          <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/usuarios/cadastrar')}>
+                            Cadastrar
+                          </button>
+                        )}
                       {can('/configuracao/usuarios/consultar') && (
                         <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/usuarios/consultar')}>
                           Consultar
@@ -473,28 +511,27 @@ const Home: React.FC = () => {
                   </div>
                 )}
 
-                {isMaster && (
-                  <div
-                    className="nav-item"
-                    onMouseEnter={() => setSubmenuLogsAberto(true)}
-                    onMouseLeave={() => setSubmenuLogsAberto(false)}
-                  >
-                    <button
-                      className="btn btn-md submenu-link"
-                      onClick={() => setSubmenuLogsAberto(!submenuLogsAberto)}
-                      aria-haspopup="true"
-                      aria-expanded={submenuLogsAberto}
+                  {isMaster && (
+                    <div
+                      className={`nav-item ${submenuLogsAberto ? 'is-open' : ''}`}
+                      ref={logsRef}
                     >
-                      Logs
-                      <span className={`caret ${submenuLogsAberto ? 'caret--up' : 'caret--down'}`} />
-                    </button>
-                    <div className={`submenu ${submenuLogsAberto ? 'submenu--open' : ''}`}>
-                      <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/logs?tab=overview')}>
-                        Visão geral
+                      <button
+                        className="btn btn-md submenu-link"
+                        onClick={() => setSubmenuLogsAberto(!submenuLogsAberto)}
+                        aria-haspopup="true"
+                        aria-expanded={submenuLogsAberto}
+                      >
+                        Logs
+                        <span className={`caret ${submenuLogsAberto ? 'caret--up' : 'caret--down'}`} />
                       </button>
-                      <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/logs?tab=config')}>
-                        Configurar
-                      </button>
+                      <div className="submenu">
+                        <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/logs?tab=overview')}>
+                          Visão geral
+                        </button>
+                        <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/logs?tab=config')}>
+                          Configurar
+                        </button>
                     </div>
                   </div>
                 )}

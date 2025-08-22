@@ -165,8 +165,8 @@
   margin-top: 6px;                /* Define espaçamento superior */
 }
 
-/* Submenu visível quando aberto */
-.submenu--open { /* Torna o submenu visível */
+/* Submenu visível quando o item está aberto */
+.nav-item.is-open > .submenu {
   display: flex;                  /* Define layout vertical */
   flex-direction: column;         /* Organiza itens de cima para baixo */
   gap: 6px;                       /* Define espaçamento entre os links */
