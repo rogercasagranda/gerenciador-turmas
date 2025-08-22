@@ -1,6 +1,7 @@
 // Importa React e hooks
 import React, { useEffect, useState } from 'react'                        // Importa React/useState/useEffect
-import { useNavigate, useParams } from 'react-router-dom' // Navegação
+import { useParams } from 'react-router-dom' // Navegação
+import useBaseNavigate from '@/hooks/useBaseNavigate'
 import { API_BASE, apiFetch, getAuthToken } from '@/services/api'
 import { safeAlert } from '@/utils/safeAlert'
 import '../../styles/CadastrarUsuario.css'                                 // Reaproveita CSS do cadastro
@@ -35,7 +36,7 @@ const EditarUsuario: React.FC = () => {                                   // Def
   const [enviando, setEnviando] = useState<boolean>(false)                // Estado envio
 
   const { id } = useParams()                                              // Lê id da rota
-  const navigate = useNavigate()                                          // Navegação
+  const navigate = useBaseNavigate()                                      // Navegação
 
   const { isDirty, setDirty, confirmIfDirty } = useDirtyForm()
 

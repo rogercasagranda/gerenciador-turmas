@@ -3,8 +3,8 @@ import '../styles/Login.lock.css'
 // Importa os hooks necessários do React
 import React, { useState, useEffect } from "react";
 
-// Importa o hook de navegação do React Router
-import { useNavigate } from "react-router-dom";
+// Importa o hook de navegação com suporte a BASE_URL
+import useBaseNavigate from '@/hooks/useBaseNavigate'
 
 // Base da API
 import { API_BASE, getAuthToken, setAuthToken } from "@/services/api";
@@ -32,7 +32,7 @@ const Login: React.FC = () => {
   const [keepConnected, setKeepConnected] = useState(false);
 
   // Hook de navegação
-  const navigate = useNavigate();
+  const navigate = useBaseNavigate();
 
   // Redireciona para Home se já houver token armazenado
   useEffect(() => {

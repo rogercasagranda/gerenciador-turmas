@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
+import useBaseNavigate from '@/hooks/useBaseNavigate'
 import '../../styles/CadastrarUsuario.css'
 import '../../styles/Forms.css'
 import useDirtyForm from '@/hooks/useDirtyForm'
@@ -67,7 +68,7 @@ const CadastrarUsuario: React.FC = () => {
   const [enviando, setEnviando] = useState(false)
   const [carregandoEdicao, setCarregandoEdicao] = useState(false)
 
-  const navigate = useNavigate()
+  const navigate = useBaseNavigate()
 
 
   // Obtém headers com JWT ou redireciona para login
