@@ -5,9 +5,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
-# Importa o roteador da rota de login padrão
-from app.routes import login
-
 # Importa o roteador da rota de autenticação com Google
 from app.routes import auth_google_route
 
@@ -26,9 +23,6 @@ app.add_middleware(
     allow_methods=["*"],            # Permite todos os métodos (GET, POST, etc.)
     allow_headers=["*"],            # Permite todos os headers
 )
-
-# Inclui o roteador padrão de login tradicional
-app.include_router(login.router)
 
 # Inclui o roteador responsável pela rota /google-login
 app.include_router(auth_google_route.router)
