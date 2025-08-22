@@ -13,6 +13,7 @@ def setup_app_env():
     os.environ.setdefault("GOOGLE_CLIENT_SECRET", "secret")
     os.environ.setdefault("GOOGLE_REDIRECT_URI", "https://api.example/google-callback")
     os.environ.setdefault("DATABASE_URL", "sqlite:///test.db")
+    os.environ.setdefault("SECRET_KEY", "test-secret")
 
 
 setup_app_env()
