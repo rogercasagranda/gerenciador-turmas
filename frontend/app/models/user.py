@@ -1,7 +1,7 @@
 # Define a estrutura da tabela de usuários no banco de dados
 
 from sqlalchemy import Column, Integer, String
-from app.core.database import Base
+from ..core.database import Base
 
 class User(Base):
     __tablename__ = "usuarios"
