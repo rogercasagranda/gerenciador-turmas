@@ -40,6 +40,7 @@ psycopg2-binary==2.9.10
 python-jose>=3.5.0
 alembic==1.14.0
 slowapi==0.1.9
+openpyxl==3.1.5
 
 
 
