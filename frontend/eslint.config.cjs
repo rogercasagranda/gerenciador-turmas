@@ -10,12 +10,16 @@ module.exports = {
     'no-restricted-syntax': [
       'error',
       {
-        selector: "Literal[value=/theme-(roxo|azul|verde|laranja|amarelo|cinza|rosa|violeta|ciano|teal)/]",
-        message: 'Uso de theme-<cor> proibido'
+        selector: "Literal[value=/\\.theme-[a-z]+/i]",
+        message: 'Uso de class .theme-* proibido'
       },
       {
-        selector: "Literal[value=/data-theme=['\"](?:roxo|azul|verde|laranja|amarelo|cinza|rosa|violeta|ciano|teal)['\"]/]",
+        selector: "Literal[value=/data-theme\\s*=\\s*['\"][a-z]+['\"]/i]",
         message: 'data-theme com literal proibido'
+      },
+      {
+        selector: "Literal[value=/['\"](roxo|azul|verde|laranja|cinza|teal|ciano|rosa|violeta|ambar)['\"]\\s*(tema|theme)/i]",
+        message: 'Cor literal de tema proibida'
       }
     ]
   },
