@@ -10,6 +10,7 @@ from psycopg2 import Error as PsycopgError    # Importa a classe de erro especí
 from zoneinfo import ZoneInfo                 # Importa ZoneInfo para definir fuso horário
 import uuid                                   # Gera correlation_id quando ausente
 import time                                   # Utilizado para timestamp seguro no redirect
+import secrets                                # Gera valores aleatórios para o parâmetro state do OAuth
 
 # ======================================================
 # JWT: criação de token de acesso
@@ -293,12 +294,26 @@ def logout():
 # (As rotas /google-login e /google-callback permanecem como no seu código aprovado)
 # ======================================================
 
+# Cache simples para armazenar o parâmetro state do OAuth
+_oauth_state_cache: dict[str, float] = {}
+STATE_TTL = 300  # segundos
+
+def _cleanup_expired_states() -> None:
+    """Remove valores de state expirados do cache."""
+    now = time.time()
+    expired = [s for s, exp in _oauth_state_cache.items() if exp < now]
+    for s in expired:
+        _oauth_state_cache.pop(s, None)
+
 # 🔓 Google login
 @app.get("/google-login")
 def google_login():
+    _cleanup_expired_states()                                          # Limpa states expirados
     client_id = os.getenv("GOOGLE_CLIENT_ID")                          # Lê client_id do .env
     redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")                    # Lê redirect_uri do .env
     scope = "openid%20email%20profile"                                 # Define escopos solicitados
+    state = secrets.token_urlsafe(16)                                   # Gera state aleatório
+    _oauth_state_cache[state] = time.time() + STATE_TTL                 # Armazena state com expiração
     google_oauth_url = (                                               # Monta URL de autorização
         f"https://accounts.google.com/o/oauth2/v2/auth"
         f"?client_id={client_id}"
@@ -307,6 +322,7 @@ def google_login():
         f"&scope={scope}"
         f"&access_type=offline"
         f"&prompt=consent"
+        f"&state={state}"
     )
     return RedirectResponse(google_oauth_url)                          # Redireciona para Google
 
@@ -315,6 +331,15 @@ def google_login():
 def google_callback(request: Request):
     cid = request.headers.get("x-cid") or str(uuid.uuid4())
     try:
+        state = request.query_params.get("state")                      # Lê state de retorno
+        if not state:
+            logger.warning(f"[{cid}] State ausente no retorno do Google")
+            raise HTTPException(status_code=400, detail="Parâmetro state ausente")
+        expiry = _oauth_state_cache.pop(state, None)
+        if not expiry or expiry < time.time():                         # Valida state
+            logger.warning(f"[{cid}] State inválido ou expirado: {state}")
+            raise HTTPException(status_code=400, detail="Parâmetro state inválido")
+
         code = request.query_params.get("code")                        # Lê código de autorização
         if not code:                                                   # Valida presença do código
             logger.warning(f"[{cid}] Código de autorização ausente")
