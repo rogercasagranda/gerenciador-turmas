@@ -1,12 +1,19 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Define a URL de conexão com o banco de dados Supabase
-DATABASE_URL = "postgresql://postgres:Zp#8vLq3@Wd9KmX@db.awoajcgpkovgegvfqpoa.supabase.co:5432/postgres"
+# Lê a URL de conexão do banco de dados de uma variável de ambiente
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL não está definida")
+
+# Configura argumentos especiais para bancos SQLite
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
 # Cria o engine para se conectar ao banco
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
 # Cria a factory para sessões de banco de dados
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

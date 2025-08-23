@@ -6,12 +6,12 @@ import pytest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
 # Define uma URL de banco temporária antes de importar os módulos
-os.environ["DATABASE_URL"] = "sqlite:///./test_auth.db"
+os.environ["DATABASE_URL"] = "sqlite:///./test_auth_front.db"
 
-from backend.app.core.database import Base, engine, SessionLocal  # noqa: E402
-from backend.app.core.security import get_password_hash  # noqa: E402
-from backend.app.models.user import User  # noqa: E402
-from backend.auth.auth_handler import verify_user  # noqa: E402
+from frontend.app.core.database import Base, engine, SessionLocal  # noqa: E402
+from frontend.app.core.security import get_password_hash  # noqa: E402
+from frontend.app.models.user import User  # noqa: E402
+from frontend.auth.auth_handler import verify_user  # noqa: E402
 
 
 @pytest.fixture()

@@ -1,13 +1,20 @@
 # backend/auth/auth_handler.py
 
-import hashlib
+from sqlalchemy.orm import Session
 
-# Usuário Master pré-definido para testes
-USERS = {
-    "admin": hashlib.sha256("admin123".encode()).hexdigest()
-}
+from backend.app.core.database import SessionLocal
+from backend.app.core.security import verify_password
+from backend.app.models.user import User
 
-def verify_user(username: str, password: str) -> bool:
-    """Verifica se o usuário existe e se a senha está correta (hash SHA-256)"""
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
-    return USERS.get(username) == password_hash
+
+def verify_user(username: str, password: str, db: Session | None = None) -> bool:
+    """Valida usuário e senha consultando o banco de dados"""
+    session = db or SessionLocal()
+    try:
+        user = session.query(User).filter(User.username == username).first()
+        if not user:
+            return False
+        return verify_password(password, user.hashed_password)
+    finally:
+        if db is None:
+            session.close()
