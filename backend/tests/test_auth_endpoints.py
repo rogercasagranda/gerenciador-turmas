@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 from fastapi.testclient import TestClient
+from urllib.parse import urlparse, parse_qs
 
 # ensure repository root on path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
@@ -89,7 +90,13 @@ def test_google_callback_redirect(monkeypatch):
     monkeypatch.setattr("backend.main.SessionLocal", lambda: DummySession())
     monkeypatch.setattr("backend.main.get_effective_permissions", lambda db, uid, role: ["perm"]) 
 
-    response = client.get("/google-callback?code=xyz", follow_redirects=False)
+    # Obtém state gerado pelo login
+    login_resp = client.get("/google-login", follow_redirects=False)
+    assert login_resp.status_code in (302, 307)
+    login_location = login_resp.headers["location"]
+    state = parse_qs(urlparse(login_location).query)["state"][0]
+
+    response = client.get(f"/google-callback?code=xyz&state={state}", follow_redirects=False)
     assert response.status_code == 302
     location = response.headers["location"]
     assert location.startswith(os.environ["FRONTEND_ORIGIN"] + "/#/auth/callback?token=")
