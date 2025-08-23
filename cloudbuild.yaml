@@ -5,7 +5,7 @@ substitutions:
   _REPO: "portal-repo"
   _IMAGE: "portal-api"
   # >>> AQUI: escolha o teu requirements "completo":
-  _REQ_PATH: "backend/requirements.prod.txt"
+  _REQ_PATH: "backend/requirements.txt"
 
 options:
   logging: CLOUD_LOGGING_ONLY
