@@ -1,61 +1,45 @@
 # cloudbuild.yaml
-# Pipeline: Build -> Push -> Deploy (Cloud Run)
-# Requisitos: APIs ativas (Cloud Build, Artifact Registry, Cloud Run) e repositório no Artifact Registry.
-
 substitutions:
   _PROJECT_ID: "portaldoprofessor"
-  _REGION: "us-central1"              # região do AR e do Cloud Run
-  _REPO: "portal-repo"                # nome do repositório no Artifact Registry
-  _SERVICE: "portal-api"              # nome do serviço no Cloud Run
-  _IMAGE: "portal-api"                # nome da imagem (sem tag)
+  _REGION: "us-central1"
+  _REPO: "portal-repo"
+  _IMAGE: "portal-api"
+  # >>> AQUI: escolha o teu requirements "completo":
+  _REQ_PATH: "backend/requirements.prod.txt"
 
 options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
-  # 1) Build da imagem (usa Dockerfile da raiz)
   - name: "gcr.io/cloud-builders/docker"
     args:
       [
         "build",
-        "-t",
-        "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/${_IMAGE}:${SHORT_SHA}",
-        ".",
+        "--build-arg","REQUIREMENTS_PATH=${_REQ_PATH}",
+        "-t","${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/${_IMAGE}:${SHORT_SHA}",
+        "."
       ]
 
-  # 2) Push pro Artifact Registry
   - name: "gcr.io/cloud-builders/docker"
     args:
       [
         "push",
-        "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/${_IMAGE}:${SHORT_SHA}",
+        "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/${_IMAGE}:${SHORT_SHA}"
       ]
 
-  # 3) Deploy no Cloud Run (mantém configurações anteriores)
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: gcloud
     args:
       [
-        "run",
-        "deploy",
-        "${_SERVICE}",
-        "--image",
-        "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/${_IMAGE}:${SHORT_SHA}",
-        "--region",
-        "${_REGION}",
-        "--platform",
-        "managed",
-        "--allow-unauthenticated",   # TROCAR para --no-allow-unauthenticated se quiser privado (IAM)
-        "--port",
-        "8080",
-        "--memory",
-        "512Mi",
-        "--cpu",
-        "1",
-        "--concurrency",
-        "80",
-        "--max-instances",
-        "10",
+        "run","deploy","gerenciador-turmas",
+        "--image","${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/${_IMAGE}:${SHORT_SHA}",
+        "--region","${_REGION}",
+        "--platform","managed",
+        "--allow-unauthenticated",      # troque para --no-allow-unauthenticated se quiser privado (IAM)
+        "--port","8080",
+        "--memory","512Mi",
+        "--concurrency","80",
+        "--max-instances","10"
       ]
 
 images:
