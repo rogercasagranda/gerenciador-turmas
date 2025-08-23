@@ -29,20 +29,20 @@
 }
 
 :root[data-theme="roxo"] { --color-primary: #6D28D9; --color-primary-contrast: #ffffff; }
-:root[data-theme="vermelho"] { --color-primary: #EF4444; --color-primary-contrast: #ffffff; }
 :root[data-theme="azul"] { --color-primary: #3B82F6; --color-primary-contrast: #ffffff; }
 :root[data-theme="verde"] { --color-primary: #10B981; --color-primary-contrast: #ffffff; }
 :root[data-theme="laranja"] { --color-primary: #F59E0B; --color-primary-contrast: #111827; }
 :root[data-theme="cinza"] { --color-primary: #6B7280; --color-primary-contrast: #ffffff; }
-:root[data-theme="rosa"] { --color-primary: #EC4899; --color-primary-contrast: #ffffff; }
+:root[data-theme="teal"] { --color-primary: #14B8A6; --color-primary-contrast: #ffffff; }
 :root[data-theme="ciano"] { --color-primary: #06B6D4; --color-primary-contrast: #ffffff; }
+:root[data-theme="rosa"] { --color-primary: #EC4899; --color-primary-contrast: #ffffff; }
+:root[data-theme="violeta"] { --color-primary: #8B5CF6; --color-primary-contrast: #ffffff; }
+:root[data-theme="ambar"] { --color-primary: #FBBF24; --color-primary-contrast: #111827; }
 
 /* swatch tokens for configurator */
 :root {
   --theme-roxo: #6D28D9;
   --theme-roxo-on: #ffffff;
-  --theme-vermelho: #EF4444;
-  --theme-vermelho-on: #ffffff;
   --theme-azul: #3B82F6;
   --theme-azul-on: #ffffff;
   --theme-verde: #10B981;
@@ -51,10 +51,16 @@
   --theme-laranja-on: #111827;
   --theme-cinza: #6B7280;
   --theme-cinza-on: #ffffff;
-  --theme-rosa: #EC4899;
-  --theme-rosa-on: #ffffff;
+  --theme-teal: #14B8A6;
+  --theme-teal-on: #ffffff;
   --theme-ciano: #06B6D4;
   --theme-ciano-on: #ffffff;
+  --theme-rosa: #EC4899;
+  --theme-rosa-on: #ffffff;
+  --theme-violeta: #8B5CF6;
+  --theme-violeta-on: #ffffff;
+  --theme-ambar: #FBBF24;
+  --theme-ambar-on: #111827;
 }
 
 .card, .menu, .header {

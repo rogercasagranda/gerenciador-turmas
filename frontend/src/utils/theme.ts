@@ -5,6 +5,6 @@ export {
   listThemes,
   getCurrentMode,
   setCurrentMode
-} from '../theme/index';
+} from '../theme/theme';
 
-export type { ThemeSlug, Mode } from '../theme/index';
+export type { ThemeSlug, Mode } from '../theme/theme';

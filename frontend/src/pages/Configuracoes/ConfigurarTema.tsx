@@ -14,8 +14,6 @@ const ConfigurarTema: React.FC = () => {
   }, [])
 
   const handleSalvar = async () => {
-    setCurrentTheme(selectedTheme)
-    setCurrentMode(selectedMode)
     try {
       await put('/me/preferences/theme', { themeName: selectedTheme, themeMode: selectedMode })
     } catch {
@@ -29,15 +27,16 @@ const ConfigurarTema: React.FC = () => {
     <section>
       <h2>Configurar Tema</h2>
       <p>Escolha uma cor para o tema do aplicativo:</p>
-      <div className="theme-grid">
+      <div className="config-grid">
         {listThemes().map((opt) => (
-            <button
-              type="button"
-              key={opt}
-              aria-label={opt}
-              className={`btn btn-md theme-swatch ${opt}${selectedTheme === opt ? ' selected' : ''}`}
-              onClick={() => setSelectedTheme(opt)}
-            />
+          <button
+            type="button"
+            key={opt}
+            aria-label={opt}
+            className={`btn btn-md color-swatch${selectedTheme === opt ? ' selected' : ''}`}
+            style={{ '--swatch-color': `var(--theme-${opt})` } as React.CSSProperties}
+            onClick={() => { setCurrentTheme(opt); setSelectedTheme(opt); }}
+          />
         ))}
       </div>
 
@@ -46,21 +45,29 @@ const ConfigurarTema: React.FC = () => {
           <input
             type="checkbox"
             checked={selectedMode === 'dark'}
-            onChange={(e) => setSelectedMode(e.target.checked ? 'dark' : 'light')}
+            onChange={(e) => {
+              const mode = e.target.checked ? 'dark' : 'light';
+              setCurrentMode(mode);
+              setSelectedMode(mode);
+            }}
           />
           Ativar modo escuro
         </label>
       </div>
 
-      <div className="theme-preview" data-preview-theme={selectedTheme} data-preview-mode={selectedMode}>
+      <div
+        className="preview-box"
+        data-preview-mode={selectedMode}
+        style={{ '--primary': `var(--theme-${selectedTheme})`, '--on-primary': `var(--theme-${selectedTheme}-on)` } as React.CSSProperties}
+      >
         <div className="preview-header"></div>
-          <button className="btn btn-md btn-primary">Botão Primário</button>
+        <button className="btn btn-md btn-primary">Botão Primário</button>
       </div>
 
       {showToast && <div className="toast-success">Tema alterado com sucesso</div>}
 
-      <div className="theme-actions">
-          <button className="btn btn-md btn-primary" onClick={handleSalvar}>Salvar alterações</button>
+      <div className="config-actions">
+        <button className="btn btn-md btn-primary" onClick={handleSalvar}>Salvar alterações</button>
       </div>
     </section>
   )

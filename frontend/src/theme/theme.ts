@@ -1,12 +1,14 @@
 export const ThemeRegistry = {
   ROXO: 'roxo',
-  VERMELHO: 'vermelho',
   AZUL: 'azul',
   VERDE: 'verde',
   LARANJA: 'laranja',
   CINZA: 'cinza',
+  TEAL: 'teal',
+  CIANO: 'ciano',
   ROSA: 'rosa',
-  CIANO: 'ciano'
+  VIOLETA: 'violeta',
+  AMBAR: 'ambar'
 } as const;
 
 export type ThemeSlug = (typeof ThemeRegistry)[keyof typeof ThemeRegistry];
