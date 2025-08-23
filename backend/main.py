@@ -24,6 +24,31 @@ if not SECRET_KEY:
 ALGORITHM = os.getenv("JWT_ALG", "HS256")                 # Define algoritmo de assinatura
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))  # Define expiração padrão
 
+# ======================================================
+# Controle de tentativas de login
+# ======================================================
+FAILED_LOGINS: dict[str, tuple[int, datetime]] = {}
+MAX_FAILED_ATTEMPTS = 5
+LOCK_TIME = timedelta(minutes=15)
+
+def register_failure(identifier: str) -> None:
+    now = datetime.utcnow()
+    count, first = FAILED_LOGINS.get(identifier, (0, now))
+    if now - first > LOCK_TIME:
+        FAILED_LOGINS[identifier] = (1, now)
+    else:
+        FAILED_LOGINS[identifier] = (count + 1, first)
+
+def is_locked(identifier: str) -> bool:
+    record = FAILED_LOGINS.get(identifier)
+    if not record:
+        return False
+    count, first = record
+    if datetime.utcnow() - first > LOCK_TIME:
+        del FAILED_LOGINS[identifier]
+        return False
+    return count >= MAX_FAILED_ATTEMPTS
+
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     # Cria payload com expiração
     to_encode = data.copy()                                                     # Copia dados de entrada
@@ -40,6 +65,13 @@ from fastapi import FastAPI, Request, HTTPException, Depends   # Importa classes
 from fastapi.responses import RedirectResponse, JSONResponse, FileResponse, Response   # Importa respostas JSON, redirecionamentos e arquivos
 from fastapi.middleware.cors import CORSMiddleware              # Importa CORS middleware para liberar origens
 from fastapi.staticfiles import StaticFiles                     # Importa utilitário para servir arquivos estáticos
+
+# ======================================================
+# Rate limiting
+# ======================================================
+from slowapi import Limiter, _rate_limit_exceeded_handler       # Importa limitador e handler do SlowAPI
+from slowapi.errors import RateLimitExceeded                    # Importa exceção de limite excedido
+from slowapi.util import get_remote_address                     # Utiliza endereço remoto como chave
 
 # ======================================================
 # Importa utilitários de configuração e modelos
@@ -93,9 +125,12 @@ env_path = Path(__file__).resolve().parent / ".env"  # Define caminho absoluto d
 load_dotenv(dotenv_path=env_path)                    # Carrega as variáveis do .env
 
 # ======================================================
-# Instancia aplicação FastAPI
+# Instancia aplicação FastAPI com limitador
 # ======================================================
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()                                      # Cria instância principal do app FastAPI
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # URL do frontend para redirecionamento raiz
 # Mantemos a variável para compatibilidade, mas o endpoint raiz agora
@@ -180,6 +215,7 @@ class LoginPayload(BaseModel):                                       # Declara c
 # Rota de login: aceita JSON e form-data, mapeia aliases
 # ======================================================
 @app.post("/login")                                                  # Define endpoint POST /login
+@limiter.limit("5/minute")                                           # Aplica limite de 5 requisições por minuto por IP
 async def login(request: Request, db=Depends(get_db)):               # Declara função com injeção de sessão do DB
     content_type = request.headers.get("content-type", "")           # Obtém o Content-Type da requisição
 
@@ -211,14 +247,21 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
         raise HTTPException(status_code=422, detail="Payload inválido: envie 'email' e 'senha'.")  # Retorna 422
 
     cid = request.headers.get("x-cid") or str(uuid.uuid4())
-    logger.info(f"[{cid}] Tentativa de login com e-mail: {email}")
+    logger.info(f"[{cid}] Tentativa de login")
+    if is_locked(email):
+        logger.warning(f"[{cid}] Muitas tentativas de login")
+        raise HTTPException(
+            status_code=429,
+            detail="Muitas tentativas de login. Tente novamente mais tarde."
+        )
 
     # --------------------------------------------------
     # Consulta usuário via ORM
     # --------------------------------------------------
     usuario = db.query(Usuarios).filter(Usuarios.email.ilike(email)).first()  # Busca usuário por e-mail (case-insensitive)
     if not usuario:                                                       # Verifica inexistência
-        logger.warning(f"[{cid}] Usuário não pré-cadastrado (LOCAL): {email}")
+        logger.warning(f"[{cid}] Usuário não pré-cadastrado (LOCAL)")
+        register_failure(email)
         return JSONResponse(                                               # Retorna 403 com código e mensagem
             status_code=403,
             content={"code": "USER_NOT_FOUND", "message": "Cadastro não encontrado, procure a secretaria da sua escola"}
@@ -228,13 +271,15 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # Valida senha com bcrypt
     # --------------------------------------------------
     if not usuario.senha_hash:                                             # Verifica ausência de senha local
-        logger.warning(f"[{cid}] Usuário sem senha local configurada: {email}")
+        logger.warning(f"[{cid}] Usuário sem senha local configurada")
+        register_failure(email)
         return JSONResponse(                                               # Retorna 403 com código e mensagem
             status_code=403,
             content={"code": "NO_LOCAL_PASSWORD", "message": "Cadastro não possui senha local, utilize o login com Google"}
         )
     if not bcrypt.checkpw(senha.encode("utf-8"), usuario.senha_hash.encode("utf-8")):  # Compara hash
-        logger.warning(f"[{cid}] Senha incorreta para o e-mail: {email}")
+        logger.warning(f"[{cid}] Credenciais inválidas")
+        register_failure(email)
         raise HTTPException(                                                            # Retorna 401 padronizado
             status_code=401,
             detail="SEU USUÁRIO E/OU SENHA ESTÃO INCORRETAS, TENTE NOVAMENTE"
@@ -246,6 +291,7 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     logger.info(
         f"[{cid}] Login realizado com sucesso user_id={usuario.id_usuario} role={usuario.tipo_perfil}"
     )
+    FAILED_LOGINS.pop(email, None)
     # Monta grupos e permissões do usuário
     grupos = [
         g.nome
