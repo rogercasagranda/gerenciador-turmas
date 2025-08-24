@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException, status
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 import logging
 
 from backend.database import get_db
 from backend.security import get_current_user
 from backend.services.permissions import get_effective_permissions
 from backend.routes.usuarios import token_data_from_request, to_canonical
+from backend.models.usuarios import Usuarios
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -46,5 +48,27 @@ def effective_permissions(request: Request, db: Session = Depends(get_db)):
         "role": role,
         "permissions": perms,
     }
+
+
+class ThemePreference(BaseModel):
+    themeName: str
+    themeMode: str
+
+
+@router.put("/me/preferences/theme", status_code=status.HTTP_204_NO_CONTENT)
+def update_theme(
+    payload: ThemePreference,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user_id = int(current_user["id"])
+    user = db.query(Usuarios).filter(Usuarios.id_usuario == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    prefs = user.preferences or {}
+    prefs["themeName"] = payload.themeName
+    prefs["themeMode"] = payload.themeMode
+    user.preferences = prefs
+    db.commit()
 
 
