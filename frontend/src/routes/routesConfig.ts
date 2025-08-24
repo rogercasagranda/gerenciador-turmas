@@ -50,12 +50,6 @@ export const routesConfig: AppRoute[] = [
     meta: { area: 'config', menu: true, requiresAuth: true },
   },
   {
-    path: '/configuracao/ano-letivo',
-    name: 'Ano Letivo',
-    component: lazy(() => import('@/pages/Configuracoes/AnoLetivo/AnoLetivoPage')),
-    meta: { area: 'config', menu: true, requiresAuth: true },
-  },
-  {
     path: '/configuracao/logs',
     name: 'Logs',
     component: lazy(() => import('@/pages/Logs/Logs')),

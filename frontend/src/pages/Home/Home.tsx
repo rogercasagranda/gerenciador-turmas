@@ -16,7 +16,6 @@ const CadastrarUsuario = React.lazy(() => import('../Usuarios/CadastrarUsuario')
 const ConsultarUsuario  = React.lazy(() => import('../Usuarios/ConsultarUsuario'))
 const Logs = React.lazy(() => import('../Logs/Logs'))
 const ConfigurarTema = React.lazy(() => import('../Configuracoes/ConfigurarTema'))
-const ConfigAnoLetivo = React.lazy(() => import('../Configuracoes/AnoLetivo/AnoLetivoPage'))
 const AcessosConsultar = React.lazy(() => import('../Configuracoes/Acessos/Consultar'))
 const AcessoUsuario = React.lazy(() => import('../Configuracoes/Acessos/Usuario'))
 const AcessoGrupo = React.lazy(() => import('../Configuracoes/Acessos/Grupo'))
@@ -288,10 +287,6 @@ const Home: React.FC = () => {
       )
     }
 
-    if (path.includes('/configuracao/ano-letivo')) {
-      return renderWithAuth(can('/configuracao/ano-letivo', 'view'), <ConfigAnoLetivo />)
-    }
-
     if (path.includes('/configuracao/logs')) {
       if (!isMaster) {
         return (
@@ -439,12 +434,6 @@ const Home: React.FC = () => {
                       Configurar Tema
                     </button>
                   )}
-                {can('/configuracao/ano-letivo') && (
-                  <button className="btn btn-md submenu-link" onClick={() => navigate('/configuracao/ano-letivo')}>
-                    Ano Letivo
-                  </button>
-                )}
-
                   {(can('/configuracao/acessos/consultar') ||
                     can('/configuracao/acessos/usuario') ||
                     can('/configuracao/acessos/grupo')) && (
