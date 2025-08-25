@@ -169,10 +169,12 @@ def favicon():
 # ======================================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_ORIGIN")],
-    allow_methods=["*"],
-    allow_headers=["Authorization", "Content-Type"],
-    allow_credentials=False,
+    allow_origins=[
+        os.getenv("FRONTEND_ORIGIN", "https://portaldoprofessor.web.app/")
+    ],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+    allow_credentials=False,  # true só se usar cookies/sessão
 )
 
 # ======================================================
