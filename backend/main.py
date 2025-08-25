@@ -78,7 +78,7 @@ from slowapi.util import get_remote_address                     # Utiliza endere
 # Importa utilitários de configuração e modelos
 # ======================================================
 from dotenv import load_dotenv                 # Importa load_dotenv para carregar variáveis do arquivo .env
-from pydantic import BaseModel, Field, ConfigDict  # Importa BaseModel, Field e ConfigDict para validação flexível
+from pydantic import BaseModel, ConfigDict  # Importa BaseModel e ConfigDict para validação flexível
 
 # ======================================================
 # Importa camada de acesso a dados (AJUSTE DE IMPORTS PARA EXECUTAR PELA RAIZ)
@@ -169,10 +169,12 @@ def favicon():
 # ======================================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_ORIGIN")],
-    allow_methods=["*"],
-    allow_headers=["Authorization", "Content-Type"],
-    allow_credentials=False,
+    allow_origins=[
+        os.getenv("FRONTEND_ORIGIN", "https://portaldoprofessor.web.app/")
+    ],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+    allow_credentials=False,  # true só se usar cookies/sessão
 )
 
 # ======================================================
@@ -205,12 +207,15 @@ async def startup_event():  # Declara função assíncrona de inicialização
     logger.info("Backend iniciado com sucesso")  # Log único de inicialização
 
 # ======================================================
-# Modelo de payload com alias para compatibilizar o front
+# Modelo de payload com variações de campos aceitas pelo front
 # ======================================================
-class LoginPayload(BaseModel):                                       # Declara classe Pydantic para login
-    email: str | None = Field(default=None, alias="usuario")         # Aceita 'usuario' como alias de 'email'
-    senha: str | None = Field(default=None, alias="password")        # Aceita 'password' como alias de 'senha'
-    model_config = ConfigDict(populate_by_name=True, extra="ignore") # Permite popular por nome e ignora extras
+class LoginPayload(BaseModel):  # Declara classe Pydantic para login
+    usuario: str | None = None  # Aceita campo "usuario"
+    username: str | None = None  # Aceita campo "username"
+    email: str | None = None  # Aceita campo "email"
+    senha: str | None = None  # Aceita campo "senha"
+    password: str | None = None  # Aceita campo "password"
+    model_config = ConfigDict(extra="ignore")  # Ignora campos extras enviados pelo front
 
 # ======================================================
 # Rota de login: aceita JSON e form-data, mapeia aliases
@@ -232,20 +237,21 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # --------------------------------------------------
     # Normaliza chaves aceitando variações do front
     # --------------------------------------------------
+    payload = LoginPayload.model_validate(raw)  # Valida e mapeia campos flexíveis
     email = (
-        raw.get("email")
-        or raw.get("usuario")
-        or raw.get("username")
+        payload.email
+        or payload.username
+        or payload.usuario
         or ""
     ).strip().lower()  # Normaliza e-mail e força minúsculas
-    senha = (raw.get("senha") or raw.get("password") or "").strip()                        # Normaliza senha
+    senha = (payload.senha or payload.password or "").strip()  # Normaliza senha
 
     # --------------------------------------------------
     # Validação mínima do payload
     # --------------------------------------------------
-    if not email or not senha:                                       # Verifica se faltam campos
+    if not email or not senha:  # Verifica se faltam campos
         logger.warning("Payload inválido no /login (faltando email/senha)")  # Registra aviso
-        raise HTTPException(status_code=422, detail="Payload inválido: envie 'email' e 'senha'.")  # Retorna 422
+        raise HTTPException(status_code=400, detail="Credenciais ausentes")  # Retorna 400
 
     cid = request.headers.get("x-cid") or str(uuid.uuid4())
     logger.info(f"[{cid}] Tentativa de login")
@@ -260,23 +266,29 @@ async def login(request: Request, db=Depends(get_db)):               # Declara f
     # Consulta usuário via ORM
     # --------------------------------------------------
     usuario = db.query(Usuarios).filter(Usuarios.email.ilike(email)).first()  # Busca usuário por e-mail (case-insensitive)
-    if not usuario:                                                       # Verifica inexistência
+    if not usuario:  # Verifica inexistência
         logger.warning(f"[{cid}] Usuário não pré-cadastrado (LOCAL)")
         register_failure(email)
-        return JSONResponse(                                               # Retorna 403 com código e mensagem
-            status_code=403,
-            content={"code": "USER_NOT_FOUND", "message": "Cadastro não encontrado, procure a secretaria da sua escola"}
+        return JSONResponse(
+            status_code=401,
+            content={
+                "code": "USER_NOT_FOUND",
+                "message": "Cadastro não encontrado, procure a secretaria da sua escola",
+            },
         )
 
     # --------------------------------------------------
     # Valida senha com bcrypt
     # --------------------------------------------------
-    if not usuario.senha_hash:                                             # Verifica ausência de senha local
+    if not usuario.senha_hash:  # Verifica ausência de senha local
         logger.warning(f"[{cid}] Usuário sem senha local configurada")
         register_failure(email)
-        return JSONResponse(                                               # Retorna 403 com código e mensagem
-            status_code=403,
-            content={"code": "NO_LOCAL_PASSWORD", "message": "Cadastro não possui senha local, utilize o login com Google"}
+        return JSONResponse(
+            status_code=401,
+            content={
+                "code": "NO_LOCAL_PASSWORD",
+                "message": "Cadastro não possui senha local, utilize o login com Google",
+            },
         )
     if not bcrypt.checkpw(senha.encode("utf-8"), usuario.senha_hash.encode("utf-8")):  # Compara hash
         logger.warning(f"[{cid}] Credenciais inválidas")

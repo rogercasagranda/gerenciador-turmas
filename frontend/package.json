@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "lint": "eslint src/theme src/utils/theme.ts src/main.tsx src/pages/Configuracoes/ConfigurarTema.tsx --ext .ts,.tsx"
+    "lint": "eslint src/utils/theme.ts src/main.tsx src/pages/Configuracoes/ConfigurarTema.tsx"
   },
   "dependencies": {
     "@react-oauth/google": "^0.8.0",

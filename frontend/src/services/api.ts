@@ -4,8 +4,10 @@
 // Mantém API base via .env (VITE_API_URL) e token JWT (local/session)
 // ============================================================
 
+
 // Declara API base a partir das variáveis de ambiente do Vite (sem barras finais)
 export const API_BASE = (import.meta.env.VITE_API_URL as string).replace(/\/+$/, '');
+
 
 // ============================================================
 // Gestão de token (JWT)
@@ -288,12 +290,8 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
   const lembrar = Boolean(data.lembrar)
   // Remove campo lembrar do body enviado ao backend
   const { lembrar: _, ...payload } = data
-  // Chama rota de login do backend (respeita aliases)
-  const res = await apiRequest<LoginResponse>("/login", {
-    method: "POST",
-    body: payload,
-    withAuth: false, // Não envia Authorization antes de logar
-  })
+  // Chama rota de login do backend usando axios
+  const { data: res } = await api.post<LoginResponse>("/login", payload)
   // Persiste token no armazenamento conforme flag
   if (res?.access_token) {
     setAuthToken(res.access_token, lembrar)

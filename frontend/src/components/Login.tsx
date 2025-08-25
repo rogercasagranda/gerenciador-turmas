@@ -7,7 +7,9 @@ import React, { useState, useEffect } from "react";
 import useBaseNavigate from '@/hooks/useBaseNavigate'
 
 // Base da API e utilidades de autenticação
+
 import { API_BASE, getAuthToken, login, authFetch, ApiError } from "@/services/api";
+
 import { syncThemePreference } from '@/services/themePreferences'
 
 // Importa o arquivo CSS da tela de login
@@ -67,6 +69,7 @@ const Login: React.FC = () => {
     e.preventDefault(); // Previne comportamento padrão
 
     try {
+
       await login({ usuario: username, senha: password, lembrar: keepConnected });
       try {
         const res = await authFetch('/me/permissions/effective');
@@ -90,6 +93,7 @@ const Login: React.FC = () => {
           setPopupMessage('Cadastro não encontrado, procure a secretaria da sua escola');
         }
       }
+
       setShowPopup(true);
       setCountdown(5);
     }
