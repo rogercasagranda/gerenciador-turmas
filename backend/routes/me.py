@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, Request, HTTPException, status
 from sqlalchemy.orm import Session
+
 from pydantic import BaseModel
 from typing import ClassVar, Set
+
 import logging
 
 from backend.database import get_db
@@ -52,10 +54,12 @@ def effective_permissions(request: Request, db: Session = Depends(get_db)):
 
 
 class ThemePreference(BaseModel):
+
     """Schema de preferência de tema do usuário."""
 
     themeName: str
     themeMode: str
+
 
     allowed_names: ClassVar[Set[str]] = {
         "roxo",
@@ -97,22 +101,38 @@ def read_theme(
 
 @router.put("/me/preferences/theme", status_code=status.HTTP_204_NO_CONTENT)
 def update_theme(
-    payload: ThemePreference,
+    payload: dict,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Atualiza a preferência de tema do usuário autenticado."""
 
     ThemePreference.validate_values(payload)
+
 
     user_id = int(current_user["id"])
     user = db.query(Usuarios).filter(Usuarios.id_usuario == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     prefs = user.preferences or {}
-    prefs["themeName"] = payload.themeName
-    prefs["themeMode"] = payload.themeMode
+    prefs["themeName"] = pref.themeName
+    prefs["themeMode"] = pref.themeMode
     user.preferences = prefs
     db.commit()
+
+
+@router.get("/me/preferences/theme")
+def get_theme(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user_id = int(current_user["id"])
+    user = db.query(Usuarios).filter(Usuarios.id_usuario == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    prefs = user.preferences or {}
+    return {
+        "themeName": prefs.get("themeName", "roxo"),
+        "themeMode": prefs.get("themeMode", "light"),
+    }
 
 

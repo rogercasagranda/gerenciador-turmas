@@ -53,8 +53,7 @@ def _create_client():
 
     return TestClient(app), TestingSessionLocal
 
-def test_update_theme_preference():
-    client, SessionLocal = _create_client()
+def _seed_user(SessionLocal):
     with SessionLocal() as db:
         db.add(
             Usuarios(
@@ -70,13 +69,32 @@ def test_update_theme_preference():
         )
         db.commit()
 
+
+def test_get_theme_preference_default():
+    client, SessionLocal = _create_client()
+    _seed_user(SessionLocal)
+
+    resp = client.get("/me/preferences/theme")
+    assert resp.status_code == 200
+    assert resp.json() == {"themeName": "roxo", "themeMode": "light"}
+
+
+def test_update_and_get_theme_preference():
+    client, SessionLocal = _create_client()
+    _seed_user(SessionLocal)
+
     resp = client.put("/me/preferences/theme", json={"themeName": "azul", "themeMode": "dark"})
     assert resp.status_code == 204
+
+    resp = client.get("/me/preferences/theme")
+    assert resp.status_code == 200
+    assert resp.json() == {"themeName": "azul", "themeMode": "dark"}
 
     with SessionLocal() as db:
         user = db.query(Usuarios).filter_by(id_usuario=1).first()
         assert user.preferences["themeName"] == "azul"
         assert user.preferences["themeMode"] == "dark"
+
 
 
 def test_get_theme_preference():
@@ -118,6 +136,7 @@ def test_update_theme_preference_invalid():
             )
         )
         db.commit()
+
 
     resp = client.put("/me/preferences/theme", json={"themeName": "invalido", "themeMode": "dark"})
     assert resp.status_code == 400
