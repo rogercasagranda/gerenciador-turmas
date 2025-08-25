@@ -71,7 +71,11 @@ export function initTheme(): void {
       } else {
         window.localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
       }
-      if (savedMode) currentMode = savedMode; else window.localStorage.setItem(MODE_STORAGE_KEY, currentMode);
+      if (savedMode === 'light' || savedMode === 'dark') {
+        currentMode = savedMode;
+      } else {
+        window.localStorage.setItem(MODE_STORAGE_KEY, currentMode);
+      }
     } catch { /* ignore */ }
   }
   if (typeof document !== 'undefined') {

@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import '../../styles/ConfigTema.css'
-import { listThemes, getCurrentTheme, setCurrentTheme, getCurrentMode, setCurrentMode, ThemeSlug, Mode } from '../../utils/theme'
+import {
+  listThemes,
+  getCurrentTheme,
+  setCurrentTheme,
+  getCurrentMode,
+  setCurrentMode,
+  ThemeSlug,
+  Mode,
+} from '../../utils/theme';
 import { put } from '../../services/http'
 
 const ConfigurarTema: React.FC = () => {
@@ -57,8 +65,7 @@ const ConfigurarTema: React.FC = () => {
 
       <div
         className="preview-box"
-        data-preview-mode={selectedMode}
-        style={{ '--primary': `var(--theme-${selectedTheme})`, '--on-primary': `var(--theme-${selectedTheme}-on)` } as React.CSSProperties}
+        style={{ '--color-primary': `var(--theme-${selectedTheme})`, '--color-primary-contrast': `var(--theme-${selectedTheme}-on)` } as React.CSSProperties}
       >
         <div className="preview-header"></div>
         <button className="btn btn-md btn-primary">Botão Primário</button>
