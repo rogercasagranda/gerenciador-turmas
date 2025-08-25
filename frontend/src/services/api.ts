@@ -4,8 +4,34 @@
 // Mantém API base via .env (VITE_API_URL) e token JWT (local/session)
 // ============================================================
 
-// Declara API base a partir das variáveis de ambiente do Vite
-export const API_BASE = import.meta.env.VITE_API_URL;
+import axios from "axios";
+
+// Base da API obtida das variáveis de ambiente do Vite
+const baseURL = import.meta.env.VITE_API_URL; // ex.: https://gerenciador-turmas.onrender.com
+if (!baseURL) {
+  // Lança erro claro para detectar .env ausente
+  throw new Error("VITE_API_URL não definido no frontend/.env");
+}
+
+export const api = axios.create({
+  baseURL,
+  withCredentials: false, // usar true apenas se o back precisar de cookies
+  headers: { "Content-Type": "application/json" },
+});
+
+// (Opcional) Interceptores para logar erros:
+api.interceptors.response.use(
+  (r) => r,
+  (e) => {
+    console.error("[API ERROR]", e?.response?.status, e?.message);
+    return Promise.reject(e);
+  }
+);
+
+export default api;
+
+// Compatibilidade com funções existentes que usam API_BASE
+export const API_BASE = baseURL;
 
 // ============================================================
 // Gestão de token (JWT)
@@ -288,12 +314,8 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
   const lembrar = Boolean(data.lembrar)
   // Remove campo lembrar do body enviado ao backend
   const { lembrar: _, ...payload } = data
-  // Chama rota de login do backend (respeita aliases)
-  const res = await apiRequest<LoginResponse>("/login", {
-    method: "POST",
-    body: payload,
-    withAuth: false, // Não envia Authorization antes de logar
-  })
+  // Chama rota de login do backend usando axios
+  const { data: res } = await api.post<LoginResponse>("/login", payload)
   // Persiste token no armazenamento conforme flag
   if (res?.access_token) {
     setAuthToken(res.access_token, lembrar)
