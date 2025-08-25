@@ -20,6 +20,7 @@ def setup_app_env():
 setup_app_env()
 
 from backend.main import app, create_access_token
+from backend.database import get_db
 
 client = TestClient(app)
 
@@ -88,7 +89,7 @@ def test_google_callback_redirect(monkeypatch):
         def query(self, *args, **kwargs):
             return DummyQuery()
     monkeypatch.setattr("backend.main.SessionLocal", lambda: DummySession())
-    monkeypatch.setattr("backend.main.get_effective_permissions", lambda db, uid, role: ["perm"]) 
+    monkeypatch.setattr("backend.main.get_effective_permissions", lambda db, uid, role: ["perm"])
 
     # Obtém state gerado pelo login
     login_resp = client.get("/google-login", follow_redirects=False)
@@ -100,3 +101,35 @@ def test_google_callback_redirect(monkeypatch):
     assert response.status_code == 302
     location = response.headers["location"]
     assert location.startswith(os.environ["FRONTEND_ORIGIN"] + "/#/auth/callback?token=")
+
+
+# Dummy DB override returning no user
+def _override_db_no_user():
+    class DummyQuery:
+        def filter(self, *args, **kwargs):
+            return self
+        def first(self):
+            return None
+    class DummyDB:
+        def query(self, *args, **kwargs):
+            return DummyQuery()
+    yield DummyDB()
+
+
+def test_login_accepts_json_alias():
+    app.dependency_overrides[get_db] = _override_db_no_user
+    resp = client.post("/login", json={"username": "user@example.com", "password": "x"})
+    assert resp.status_code == 401
+    app.dependency_overrides.pop(get_db, None)
+
+
+def test_login_accepts_form_alias():
+    app.dependency_overrides[get_db] = _override_db_no_user
+    resp = client.post("/login", data={"usuario": "user@example.com", "senha": "x"})
+    assert resp.status_code == 401
+    app.dependency_overrides.pop(get_db, None)
+
+
+def test_login_missing_credentials():
+    resp = client.post("/login", json={"email": "user@example.com"})
+    assert resp.status_code == 400
