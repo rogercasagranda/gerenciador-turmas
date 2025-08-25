@@ -7,13 +7,9 @@ from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models.usuarios import Usuarios
 from backend.utils.audit import registrar_log, log_403
-import os
 import logging
 from jose import jwt, JWTError
-
-# Utiliza SECRET_KEY como padrão para assinatura do JWT
-SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
-ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+from backend.security import SECRET_KEY, ALGORITHM
 MAX_JWT_BYTES = 256 * 1024
 
 logger = logging.getLogger(__name__)
