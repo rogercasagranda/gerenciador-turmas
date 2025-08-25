@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Request, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
+from typing import Literal
 import logging
 
 from backend.database import get_db
@@ -51,13 +52,45 @@ def effective_permissions(request: Request, db: Session = Depends(get_db)):
 
 
 class ThemePreference(BaseModel):
-    themeName: str
-    themeMode: str
+    themeName: Literal[
+        "roxo",
+        "azul",
+        "verde",
+        "laranja",
+        "cinza",
+        "teal",
+        "ciano",
+        "rosa",
+        "violeta",
+        "ambar",
+    ]
+    themeMode: Literal["light", "dark"]
 
 
 @router.put("/me/preferences/theme", status_code=status.HTTP_204_NO_CONTENT)
 def update_theme(
-    payload: ThemePreference,
+    payload: dict,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        pref = ThemePreference(**payload)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail="Invalid theme preference") from e
+
+    user_id = int(current_user["id"])
+    user = db.query(Usuarios).filter(Usuarios.id_usuario == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    prefs = user.preferences or {}
+    prefs["themeName"] = pref.themeName
+    prefs["themeMode"] = pref.themeMode
+    user.preferences = prefs
+    db.commit()
+
+
+@router.get("/me/preferences/theme")
+def get_theme(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -66,9 +99,9 @@ def update_theme(
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     prefs = user.preferences or {}
-    prefs["themeName"] = payload.themeName
-    prefs["themeMode"] = payload.themeMode
-    user.preferences = prefs
-    db.commit()
+    return {
+        "themeName": prefs.get("themeName", "roxo"),
+        "themeMode": prefs.get("themeMode", "light"),
+    }
 
 
