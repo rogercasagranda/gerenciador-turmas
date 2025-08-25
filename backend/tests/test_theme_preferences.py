@@ -77,3 +77,47 @@ def test_update_theme_preference():
         user = db.query(Usuarios).filter_by(id_usuario=1).first()
         assert user.preferences["themeName"] == "azul"
         assert user.preferences["themeMode"] == "dark"
+
+
+def test_get_theme_preference():
+    client, SessionLocal = _create_client()
+    with SessionLocal() as db:
+        db.add(
+            Usuarios(
+                id_usuario=1,
+                nome="User",
+                email="user@example.com",
+                senha_hash="x",
+                tipo_perfil="Admin",
+                numero_celular="1",
+                ddd="11",
+                ddi="55",
+                preferences={"themeName": "verde", "themeMode": "light"},
+            )
+        )
+        db.commit()
+
+    resp = client.get("/me/preferences/theme")
+    assert resp.status_code == 200
+    assert resp.json() == {"themeName": "verde", "themeMode": "light"}
+
+
+def test_update_theme_preference_invalid():
+    client, SessionLocal = _create_client()
+    with SessionLocal() as db:
+        db.add(
+            Usuarios(
+                id_usuario=1,
+                nome="User",
+                email="user@example.com",
+                senha_hash="x",
+                tipo_perfil="Admin",
+                numero_celular="1",
+                ddd="11",
+                ddi="55",
+            )
+        )
+        db.commit()
+
+    resp = client.put("/me/preferences/theme", json={"themeName": "invalido", "themeMode": "dark"})
+    assert resp.status_code == 400

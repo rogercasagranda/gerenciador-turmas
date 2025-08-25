@@ -1,32 +1,31 @@
-# Contrato de Preferências de Tema
+# Preferências de Tema
 
-Este documento descreve um contrato preliminar para a sincronização de preferências de tema dos usuários.
+Esta API permite sincronizar o tema visual do usuário entre dispositivos.
 
 ## Endpoints
 
-### `GET /users/{id}/preferences/theme`
-Retorna a preferência de tema do usuário.
+### `GET /me/preferences/theme`
+Retorna a preferência de tema do usuário autenticado.
 
 #### Resposta
 ```json
-{ "theme": "dark" }
+{ "themeName": "roxo", "themeMode": "light" }
 ```
 
-### `PUT /users/{id}/preferences/theme`
-Atualiza a preferência de tema do usuário.
+### `PUT /me/preferences/theme`
+Atualiza a preferência de tema do usuário autenticado.
 
 #### Corpo da requisição
 ```json
-{ "theme": "light" }
+{ "themeName": "azul", "themeMode": "dark" }
 ```
 
 #### Resposta
-Código 204 sem corpo.
+`204 No Content`
 
-## Valores aceitos
-- `light`: tema claro
-- `dark`: tema escuro
-- `system`: acompanha o tema do sistema
+#### Erros
+- `400 Bad Request` – valores de tema inválidos
 
-Este contrato é apenas uma proposta e poderá ser alterado conforme a implementação evoluir.
-
+## Valores permitidos
+- **themeName**: `roxo`, `azul`, `verde`, `laranja`, `cinza`, `teal`, `ciano`, `rosa`, `violeta`, `ambar`
+- **themeMode**: `light`, `dark`
