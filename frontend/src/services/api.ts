@@ -4,34 +4,10 @@
 // Mantém API base via .env (VITE_API_URL) e token JWT (local/session)
 // ============================================================
 
-import axios from "axios";
 
-// Base da API obtida das variáveis de ambiente do Vite
-const baseURL = import.meta.env.VITE_API_URL; // ex.: https://gerenciador-turmas.onrender.com
-if (!baseURL) {
-  // Lança erro claro para detectar .env ausente
-  throw new Error("VITE_API_URL não definido no frontend/.env");
-}
+// Declara API base a partir das variáveis de ambiente do Vite (sem barras finais)
+export const API_BASE = (import.meta.env.VITE_API_URL as string).replace(/\/+$/, '');
 
-export const api = axios.create({
-  baseURL,
-  withCredentials: false, // usar true apenas se o back precisar de cookies
-  headers: { "Content-Type": "application/json" },
-});
-
-// (Opcional) Interceptores para logar erros:
-api.interceptors.response.use(
-  (r) => r,
-  (e) => {
-    console.error("[API ERROR]", e?.response?.status, e?.message);
-    return Promise.reject(e);
-  }
-);
-
-export default api;
-
-// Compatibilidade com funções existentes que usam API_BASE
-export const API_BASE = baseURL;
 
 // ============================================================
 // Gestão de token (JWT)
