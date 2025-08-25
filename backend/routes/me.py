@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, Request, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, ValidationError
-from typing import Literal
+
+from pydantic import BaseModel
+from typing import ClassVar, Set
+
 import logging
 
 from backend.database import get_db
@@ -52,7 +54,14 @@ def effective_permissions(request: Request, db: Session = Depends(get_db)):
 
 
 class ThemePreference(BaseModel):
-    themeName: Literal[
+
+    """Schema de preferência de tema do usuário."""
+
+    themeName: str
+    themeMode: str
+
+
+    allowed_names: ClassVar[Set[str]] = {
         "roxo",
         "azul",
         "verde",
@@ -63,8 +72,31 @@ class ThemePreference(BaseModel):
         "rosa",
         "violeta",
         "ambar",
-    ]
-    themeMode: Literal["light", "dark"]
+    }
+    allowed_modes: ClassVar[Set[str]] = {"light", "dark"}
+
+    @classmethod
+    def validate_values(cls, data: "ThemePreference") -> None:
+        if data.themeName not in cls.allowed_names or data.themeMode not in cls.allowed_modes:
+            raise HTTPException(status_code=400, detail="Valores de tema inválidos")
+
+
+@router.get("/me/preferences/theme", response_model=ThemePreference)
+def read_theme(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Retorna a preferência de tema do usuário autenticado."""
+
+    user_id = int(current_user["id"])
+    user = db.query(Usuarios).filter(Usuarios.id_usuario == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    prefs = user.preferences or {}
+    return {
+        "themeName": prefs.get("themeName", "roxo"),
+        "themeMode": prefs.get("themeMode", "light"),
+    }
 
 
 @router.put("/me/preferences/theme", status_code=status.HTTP_204_NO_CONTENT)
@@ -73,10 +105,9 @@ def update_theme(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    try:
-        pref = ThemePreference(**payload)
-    except ValidationError as e:
-        raise HTTPException(status_code=400, detail="Invalid theme preference") from e
+
+    ThemePreference.validate_values(payload)
+
 
     user_id = int(current_user["id"])
     user = db.query(Usuarios).filter(Usuarios.id_usuario == user_id).first()

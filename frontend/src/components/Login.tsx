@@ -8,6 +8,7 @@ import useBaseNavigate from '@/hooks/useBaseNavigate'
 
 // Base da API e utilidades de autenticação
 import { API_BASE, getAuthToken, setAuthToken, authFetch } from "@/services/api";
+import { syncThemePreference } from '@/services/themePreferences'
 
 // Importa o arquivo CSS da tela de login
 import "../styles/Login.css";
@@ -108,6 +109,7 @@ const Login: React.FC = () => {
               window.dispatchEvent(new Event('permissions:updated'));
             }
           } catch {}
+          await syncThemePreference();
         }
       } catch {}
       navigate('/home');
