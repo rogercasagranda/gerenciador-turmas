@@ -16,10 +16,10 @@ from backend.models import (
     GrupoPermissao,
     UsuarioPermissaoTemp,
 )
-import os
 from jose import jwt, JWTError
 from pydantic import BaseModel, EmailStr
 import logging
+from backend.security import SECRET_KEY, ALGORITHM
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +37,6 @@ CANON_TO_ENUM = {
 }
 
 
-SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET_KEY", "change-me-in-prod")
-ALGORITHM = "HS256"
 MAX_JWT_BYTES = 256 * 1024
 
 
