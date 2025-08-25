@@ -1,3 +1,22 @@
+# Autenticação
+
+### `POST /login`
+Autentica o usuário e retorna um token de acesso.
+
+#### Corpo da requisição
+```json
+{ "email": "user@dominio.com", "password": "senha" }
+```
+Campos equivalentes:
+- `email`, `username` ou `usuario`
+- `password` ou `senha`
+
+#### Respostas
+- `200 OK` – `{"access_token": "...", "token_type": "bearer"}`
+- `401 Unauthorized` – credenciais inválidas
+- `400 Bad Request` – campos ausentes
+
+
 # Preferências de Tema
 
 Esta API permite sincronizar o tema visual do usuário entre dispositivos.
