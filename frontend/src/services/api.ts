@@ -4,8 +4,8 @@
 // Mantém API base via .env (VITE_API_URL) e token JWT (local/session)
 // ============================================================
 
-// Declara API base a partir das variáveis de ambiente do Vite
-export const API_BASE = import.meta.env.VITE_API_URL;
+// Declara API base a partir das variáveis de ambiente do Vite (sem barras finais)
+export const API_BASE = (import.meta.env.VITE_API_URL as string).replace(/\/+$/, '');
 
 // ============================================================
 // Gestão de token (JWT)

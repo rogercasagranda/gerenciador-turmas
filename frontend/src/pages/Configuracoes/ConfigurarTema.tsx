@@ -9,7 +9,7 @@ import {
   ThemeSlug,
   Mode,
 } from '../../utils/theme';
-import { put } from '../../services/http'
+import { apiRequest } from '../../services/api'
 
 const ConfigurarTema: React.FC = () => {
   const [selectedTheme, setSelectedTheme] = useState<ThemeSlug>(getCurrentTheme())
@@ -23,7 +23,10 @@ const ConfigurarTema: React.FC = () => {
 
   const handleSalvar = async () => {
     try {
-      await put('/me/preferences/theme', { themeName: selectedTheme, themeMode: selectedMode })
+      await apiRequest('/me/preferences/theme', {
+        method: 'PUT',
+        body: { themeName: selectedTheme, themeMode: selectedMode },
+      })
     } catch {
       // ignore errors silently
     }
