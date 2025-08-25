@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import useBaseNavigate from '@/hooks/useBaseNavigate'
 
 // Base da API e utilidades de autenticação
-import { API_BASE, getAuthToken, setAuthToken, authFetch } from "@/services/api";
+import { API_BASE, api, getAuthToken, setAuthToken, authFetch } from "@/services/api";
 import { syncThemePreference } from '@/services/themePreferences'
 
 // Importa o arquivo CSS da tela de login
@@ -67,55 +67,40 @@ const Login: React.FC = () => {
     e.preventDefault(); // Previne comportamento padrão
 
     try {
-      const response = await fetch(`${API_BASE}/login`, {
-        method: "POST", // Método POST
-        headers: {
-          "Content-Type": "application/json", // Tipo do conteúdo
-        },
-        body: JSON.stringify({
-          usuario: username,
-          senha: password,
-        }),
+      // Realiza login utilizando cliente axios central
+      const { data } = await api.post('/login', {
+        usuario: username,
+        senha: password,
       });
 
-      // Se falhar, exibe o popup
-      if (!response.ok) {
-        if (response.status === 403) {
-          try {
-            const data = await response.json();
-            if (data && (data.code === 'USER_NOT_FOUND' || data?.detail?.code === 'USER_NOT_FOUND')) {
-              setPopupMessage('Cadastro não encontrado, procure a secretaria da sua escola');
-            }
-          } catch {}
-        }
-        setShowPopup(true);
-        setCountdown(5);
-        return;
+      const token = data.token || data.access_token;
+      if (token) {
+        setAuthToken(token, keepConnected);
+        try {
+          const res = await authFetch('/me/permissions/effective');
+          if (res.ok) {
+            const perms = await res.json();
+            try {
+              localStorage.setItem('permissions.effective', JSON.stringify(perms.permissions));
+            } catch {}
+            window.dispatchEvent(new Event('permissions:updated'));
+          }
+        } catch {}
+        await syncThemePreference();
       }
 
-      // Se sucesso, armazena token e consulta permissões antes de seguir
-      try {
-        const data = await response.json();
-        const token = data.token || data.access_token;
-        if (token) {
-          setAuthToken(token, keepConnected);
-          try {
-            const res = await authFetch('/me/permissions/effective');
-            if (res.ok) {
-              const perms = await res.json();
-              try {
-                localStorage.setItem('permissions.effective', JSON.stringify(perms.permissions));
-              } catch {}
-              window.dispatchEvent(new Event('permissions:updated'));
-            }
-          } catch {}
-          await syncThemePreference();
-        }
-      } catch {}
       navigate('/home');
-    } catch (error) {
-      // Exibe erro
-      console.error("Erro ao fazer login:", error);
+    } catch (error: any) {
+      // Trata erros de autenticação
+      if (error?.response?.status === 403) {
+        try {
+          const data = error.response.data;
+          if (data && (data.code === 'USER_NOT_FOUND' || data?.detail?.code === 'USER_NOT_FOUND')) {
+            setPopupMessage('Cadastro não encontrado, procure a secretaria da sua escola');
+          }
+        } catch {}
+      }
+      console.error('Erro ao fazer login:', error);
       setShowPopup(true);
       setCountdown(5);
     }
